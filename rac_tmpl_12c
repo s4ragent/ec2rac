@@ -1,5 +1,47 @@
 #/bin/bash
-rpm -ivh "http://pkgs.repoforge.org/rpmforge-release/rpmforge-release-0.5.3-1.el6.rf.x86_64.rpm"
-rpm -ivh "http://dl.fedoraproject.org/pub/epel/6/x86_64/epel-release-6-8.noarch.rpm"
-yum -y groupinstall "Desktop" "X Window System" "Japanese Support"
-yum -y install oracle-rdbms-server-12cR1-preinstall tigervnc-server screen nfs-utils dnsmasq scsi-target-utils iscsi-initiator-utils firefox.x86_64 xrdp expect tinc
+export LANG=C
+
+RPMFORGE_URL="http://pkgs.repoforge.org/rpmforge-release/rpmforge-release-0.5.3-1.el6.rf.x86_64.rpm"
+EPEL_URL="http://dl.fedoraproject.org/pub/epel/6/x86_64/epel-release-6-8.noarch.rpm"
+
+NETWORKS=("172.16.0.0" "172.17.0.0")
+SUBNET_MASK="255.255.0.0"
+NETWORK_NAME=("public" "priv")
+
+#ORACLE_BASE and ORACLE_HOME edit it if need this path must under /u01 ##
+MOUNT_PATH=/u01
+ORA_ORACLE_BASE=${MOUNT_PATH}/app/oracle
+ORA_ORACLE_HOME=${MOUNT_PATH}/app/oracle/product/12.1.0/dbhome_1
+GRID_ORACLE_BASE=${MOUNT_PATH}/app/grid
+GRID_ORACLE_HOME=${MOUNT_PATH}/app/12.1.0/grid
+MEDIA_PATH=${MOUNT_PATH}/media
+ORAINVENTORY=${MOUNT_PATH}/app/oraInventory
+
+##oracle & grid (unix user) password ###
+GRID_PASSWORD="P@ssw0rd"
+ORACLE_PASSWORD="P@ssw0rd"
+
+## scsi target name ###
+SCSI_TARGET_NAME="iqn.2013-10.org.jpoug:server.crs"
+
+
+case $1 in 
+  package) install_package()
+  ;;
+  *) echo "known option or no option"
+esac
+
+
+
+install_package ()
+{
+  rpm -ivh $RPMFORGE_URL
+  rpm -ivh $EPEL_URL
+  yum -y groupinstall "Desktop" "X Window System" "Japanese Support"
+  yum -y install oracle-rdbms-server-12cR1-preinstall tigervnc-server screen nfs-utils dnsmasq scsi-target-utils iscsi-initiator-utils firefox.x86_64 xrdp expect tinc
+}
+
+getnodename ()
+{
+  echo "node"`printf "%.3d" $1`
+}
