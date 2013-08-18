@@ -95,8 +95,7 @@ groupadd -g 1001 asmadmin
 groupadd -g 1002 asmdba
 groupadd -g 1003 asmoper
 useradd -u 501 -m -g oinstall -G dba,oper,asmdba -d /home/oracle -s /bin/bash -c"Oracle Software Owner" oracle
-useradd -u 1001 -m -g oinstall -G asmadmin,asmdba,asmoper -d /home/grid -s /bin/bash -c "Grid Infrastructure Owner" 
-grid
+useradd -u 1001 -m -g oinstall -G asmadmin,asmdba,asmoper -d /home/grid -s /bin/bash -c "Grid Infrastructure Owner" grid
 
 ##edit password ##
 echo "grid:$GRID_PASSWORD" | chpasswd
