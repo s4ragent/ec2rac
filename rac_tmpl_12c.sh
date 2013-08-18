@@ -60,9 +60,9 @@ changehostname ()
   HOSTNAME=`getnodename $1`
   sed -i 's/hostname/#hostname/' /etc/rc.local
   cat > /etc/sysconfig/network <<EOF
-  NETWORKING=yes
-  NETWORKING_IPV6=no
-  HOSTNAME=${HOSTNAME}.${NETWORK_NAME[0]}
+NETWORKING=yes
+NETWORKING_IPV6=no
+HOSTNAME=${HOSTNAME}.${NETWORK_NAME[0]}
 EOF
 }
 
