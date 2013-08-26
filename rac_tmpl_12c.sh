@@ -34,14 +34,10 @@ ORACLE_PASSWORD="P@ssw0rd"
 SCSI_TARGET_NAME="iqn.2013-10.org.jpoug:server.crs"
 
 
-case $1 in 
-  install_package) install_package()
-  ;;
-  *) echo "known option or no option"
-  ;;
+case "$1" in 
+  "install_package" ) install_package() ;;
+  * ) echo "known option or no option" ;;
 esac
-
-
 
 install_package ()
 {
@@ -183,6 +179,7 @@ export NLS_LANG=JAPANESE_JAPAN.UTF8
 export LANG=ja_JP.UTF-8
 export LC_ALL=ja_JP.UTF-8
 EOF
+fi
 }
 
 changelocale ()
