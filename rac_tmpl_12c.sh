@@ -35,7 +35,7 @@ SCSI_TARGET_NAME="iqn.2013-10.org.jpoug:server.crs"
 
 
 case "$1" in 
-  "install_package" ) install_package() ;;
+  "install_package" ) install_package ;;
   * ) echo "known option or no option" ;;
 esac
 
