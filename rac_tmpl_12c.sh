@@ -91,6 +91,22 @@ HOSTNAME=${HOSTNAME}.${NETWORK_NAME[0]}
 EOF
 }
 
+createsshkey ()
+{
+mkdir -p /work
+ssh-keygen -t rsa -P "" -f /work/id_rsa
+for user in oracle grid
+do
+        mkdir /home/$user/.ssh
+        cat /work/id_rsa.pub >> /home/$user/.ssh/authorized_keys
+        cp /work/id_rsa /home/$user/.ssh/
+        cp /work/known_hosts /home/$user/.ssh
+        chown -R ${user}.oinstall /home/$user/.ssh
+        chmod 700 /home/$user/.ssh
+        chmod 600 /home/$user/.ssh/*
+done
+}
+
 mountnfs ()
 {
 mkdir /work
