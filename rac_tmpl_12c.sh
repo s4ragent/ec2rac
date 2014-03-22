@@ -46,7 +46,7 @@ install_package ()
   cp /etc/xrdp/km-e0010411.ini /etc/xrdp/km-e0200411.ini 
   cp /etc/xrdp/km-e0010411.ini /etc/xrdp/km-e0210411.ini
   curl -L https://bugzilla.redhat.com/attachment.cgi?id=483052 -o ./tinc.init
-  cat | patch -p0 <<EOF
+  patch -p0 <<EOF
 --- tinc.init.orig      2011-08-18 17:02:44.000000000 -0700
 +++ tinc.init   2011-08-18 17:02:59.000000000 -0700
 @@ -43,12 +43,9 @@
