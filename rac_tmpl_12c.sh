@@ -68,6 +68,9 @@ install_package ()
 EOF
   install -o root -g root -m 755 tinc.init /etc/init.d/tinc
   rm tinc.init
+  rm km-e0010411.ini
+  easy_install-2.6 awscli
+  easy_install-2.6 boto
 }
 
 getnodename ()
