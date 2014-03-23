@@ -99,13 +99,6 @@ getprivip ()
   echo `getip 1 $1 100`
 }
 
-getscanip ()
-{
-  echo `getip 0 0 31`
-  echo `getip 0 0 32`
-  echo `getip 0 0 33`
-}
-
 getnodename ()
 {
   echo "node"`printf "%.3d" $1`
@@ -117,10 +110,26 @@ setupdns ()
 
   echo "### scan entry ###" >> /etc/hosts
   cat >>/etc/hosts <<EOF
-  ${SEGMENT}30 ${SCAN_NAME}.${NETWORK_NAME[0]}
-  ${SEGMENT}31 ${SCAN_NAME}.${NETWORK_NAME[0]}
-  ${SEGMENT}32 ${SCAN_NAME}.${NETWORK_NAME[0]}
+${SEGMENT}30 ${SCAN_NAME}.${NETWORK_NAME[0]}
+${SEGMENT}31 ${SCAN_NAME}.${NETWORK_NAME[0]}
+${SEGMENT}32 ${SCAN_NAME}.${NETWORK_NAME[0]}
 EOF
+
+echo "### public entry ###" >> /etc/hosts
+for i in `seq 1 200`
+do
+        echo "`getrealip $i` `getnodename $i`.${NETWORK_NAME[0]} `getnodename $i`" >> /etc/hosts
+done
+
+echo "### public-vip entry ###" >> /etc/hosts
+for i in `seq 1 200`
+do
+        echo "`getvip $i` `getnodename $i`-vip.${NETWORK_NAME[0]} `getnodename $i`-vip" >> /etc/hosts
+done
+
+###enable dnsmasq####
+chkconfig dnsmasq on
+/etc/init.d/dnsmasq start
 
 }
 
