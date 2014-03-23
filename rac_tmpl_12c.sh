@@ -31,7 +31,7 @@ GRID_PASSWORD="P@ssw0rd"
 ORACLE_PASSWORD="P@ssw0rd"
 
 ## scsi target name ###
-SCSI_TARGET_NAME="iqn.2013-10.org.jpoug:server.crs"
+SCSI_TARGET_NAME="iqn.2014-05.org.jpoug:server.crs"
 
 
 install_package ()
@@ -98,9 +98,22 @@ getprivip ()
   echo `getip 1 $1 100`
 }
 
+getscanip ()
+{
+  echo `getip 0 0 31`
+  echo `getip 0 0 32`
+  echo `getip 0 0 33`
+}
+
 getnodename ()
 {
   echo "node"`printf "%.3d" $1`
+}
+
+setupdns ()
+{
+  echo "### scan entry ###" >> /etc/hosts
+  echo `getscanip` >> /ets/hosts
 }
 
 changehostname ()
@@ -276,5 +289,6 @@ case "$1" in
   "changelocale" ) changelocale ;;
   "fdiskoraclehome" ) fdiskoraclehome ;;
   "createoraclehome" ) createoraclehome ;;
+  "setupdns" ) setupdns ;;
   * ) echo "known option or no option" ;;
 esac
