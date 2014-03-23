@@ -194,6 +194,7 @@ export LANG=ja_JP.UTF-8
 export LC_ALL=ja_JP.UTF-8
 EOF
 fi
+createsshkey
 }
 
 changelocale ()
@@ -239,5 +240,12 @@ chmod -R 775 ${MOUNT_PATH}
 
 case "$1" in 
   "install_package" ) install_package ;;
+  "changehostname" )  changehostname ;;
+  "createsshkey" ) createsshkey ;;
+  "mountnfs" ) mountnfs ;;
+  "createuser" ) createuser ;;
+  "changelocale" ) changelocale ;;
+  "fdiskoraclehome" ) fdiskoraclehome ;;
+  "createoraclehome" ) createoraclehome ;;
   * ) echo "known option or no option" ;;
 esac
