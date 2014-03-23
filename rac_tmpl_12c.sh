@@ -113,7 +113,7 @@ getnodename ()
 setupdns ()
 {
   echo "### scan entry ###" >> /etc/hosts
-  echo `getscanip` >> /ets/hosts
+  echo `getscanip` >> /etc/hosts
 }
 
 changehostname ()
