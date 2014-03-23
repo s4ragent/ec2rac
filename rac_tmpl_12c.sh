@@ -73,6 +73,31 @@ EOF
   easy_install-2.6 boto
 }
 
+
+## $1 network number, $2,$3 address ##
+## Ex.   network 172,16.0.0 , 172.17.0.0 >>>##
+## getip 0 1 2 >>> 172.16.1.2 ###
+getip ()
+{
+  SEGMENT=`echo ${NETWORKS[$1]} | perl -ne ' if (/([\d]+\.[\d]+\.)/){ print $1}'`
+  echo "${SEGMENT}${2}.${3}"
+}
+
+getrealip ()
+{
+  echo `getip 0 $1 100`
+}
+
+getvip ()
+{
+  echo `getip 0 $1 200`
+}
+
+getprivip ()
+{
+  echo `getip 1 $1 100`
+}
+
 getnodename ()
 {
   echo "node"`printf "%.3d" $1`
@@ -93,6 +118,10 @@ createsshkey ()
 {
 mkdir -p /work
 ssh-keygen -t rsa -P "" -f /work/id_rsa
+for i in `seq 1 200`
+do
+        echo "`getnodename $i`,`getrealip $i ` `cat /etc/ssh/ssh_host_rsa_key.pub`" >> /work/known_hosts
+done
 for user in oracle grid
 do
         mkdir /home/$user/.ssh
