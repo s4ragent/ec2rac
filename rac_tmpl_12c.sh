@@ -9,6 +9,7 @@ EPEL_URL="http://dl.fedoraproject.org/pub/epel/6/x86_64/epel-release-6-8.noarch.
 NETWORKS=("172.16.0.0" "172.17.0.0")
 SUBNET_MASK="255.255.0.0"
 NETWORK_NAME=("public" "priv")
+SCAN_NAME="scan"
 
 ##device character ####
 #/dev/sdi => /dev/xvdm#
@@ -112,8 +113,15 @@ getnodename ()
 
 setupdns ()
 {
+  SEGMENT=`echo ${NETWORKS[0]} | perl -ne ' if (/([\d]+\.[\d]+\.[\d]+\.)/){ print $1}'`
+
   echo "### scan entry ###" >> /etc/hosts
-  getscanip >> /etc/hosts
+  cat >>/etc/hosts <<EOF
+  ${SEGMENT}30 ${SCAN_NAME}.${NETWORK_NAME[0]}
+  ${SEGMENT}31 ${SCAN_NAME}.${NETWORK_NAME[0]}
+  ${SEGMENT}32 ${SCAN_NAME}.${NETWORK_NAME[0]}
+EOF
+
 }
 
 changehostname ()
