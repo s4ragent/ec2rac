@@ -117,6 +117,8 @@ EOF
 
 echo "### public,vip,local entry ###" >> /etc/hosts
 NODECOUNT=1
+MYIP=`ifconfig eth0 |grep 'inet addr' | awk -F '[: ]' '{print $13}'`
+echo "$MYIP `getnodename 0`.local " >> /etc/hosts
 for i in $NODELIST ;
 do
         echo "`getrealip $NODECOUNT` `getnodename $NODECOUNT`.${NETWORK_NAME[0]} `getnodename $NODECOUNT`" >> /etc/hosts
@@ -133,12 +135,9 @@ chkconfig dnsmasq on
 
 createtinc ()
 {
-NODECOUNT=1
-for i in $NODELIST ;
+for (( i = 0; i =< ${#NODELIST[@]}; ++i ))
 do
-        IP=`expr $NODECOUNT + 100`
-        NODENAME=`getnodename $NODECOUNT`
-        CNT=0
+        NODENAME=`getnodename $i`
         PORT=655
 
         for (( k = 0; k < ${#NETWORKS[@]}; ++k ))
@@ -147,17 +146,17 @@ do
                 mkdir -p /work/$NODENAME/$NETNAME/hosts
                 cat > /work/$NODENAME/$NETNAME/tinc.conf<<EOF
 Name = $NODENAME
-Interface = tap${CNT}
+Interface = tap${i}
 Mode = switch
 BindToAddress * $PORT
 EOF
                 cat > /work/$NODENAME/$NETNAME/hosts/$NODENAME<<EOF
-Address = $i $PORT
+Address = ${NODENAME}.local $PORT
 Cipher = none
 Digest = none
 EOF
 
-SEGMENT=`echo ${NETWORKS[$CNT]} | perl -ne ' if (/([\d]+\.[\d]+\.[\d]+\.)/){ print $1}'`
+SEGMENT=`echo ${NETWORKS[$i]} | perl -ne ' if (/([\d]+\.[\d]+\.[\d]+\.)/){ print $1}'`
 cat > /work/$NODENAME/$NETNAME/tinc-up<<EOF
 #!/bin/sh
 ifconfig \$INTERFACE ${SEGMENT}${IP} netmask $SUBNET_MASK
