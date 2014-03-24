@@ -115,16 +115,13 @@ ${SEGMENT}31 ${SCAN_NAME}.${NETWORK_NAME[0]}
 ${SEGMENT}32 ${SCAN_NAME}.${NETWORK_NAME[0]}
 EOF
 
-echo "### public entry ###" >> /etc/hosts
-for i in `seq 1 200`
+echo "### public,vip entry ###" >> /etc/hosts
+NODECOUNT=1
+for i in $NODELIST ;
 do
-        echo "`getrealip $i` `getnodename $i`.${NETWORK_NAME[0]} `getnodename $i`" >> /etc/hosts
-done
-
-echo "### public-vip entry ###" >> /etc/hosts
-for i in `seq 1 200`
-do
-        echo "`getvip $i` `getnodename $i`-vip.${NETWORK_NAME[0]} `getnodename $i`-vip" >> /etc/hosts
+        echo "`getrealip $NODECOUNT` `getnodename $NODECOUNT`.${NETWORK_NAME[0]} `getnodename $NODECOUNT`" >> /etc/hosts
+        echo "`getvip $NODECOUNT` `getnodename $NODECOUNT`-vip.${NETWORK_NAME[0]} `getnodename $NODECOUNT`-vip" >> /etc/hosts
+        NODECOUNT=`expr $NODECOUNT + 1`
 done
 
 ###enable dnsmasq####
