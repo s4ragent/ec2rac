@@ -131,6 +131,63 @@ chkconfig dnsmasq on
 
 }
 
+createtinc ()
+{
+NODECOUNT=1
+for i in $NODELIST ;
+do
+        IP=`expr $NODECOUNT + 100`
+        NODENAME=`getnodename $NODECOUNT`
+        CNT=0
+        PORT=655
+
+        for (( k = 0; k < ${#NETWORKS[@]}; ++k ))
+        do
+                NETNAME=${NETWORK_NAME[$k]}
+                mkdir -p /work/$NODENAME/$NETNAME/hosts
+                cat > /work/$NODENAME/$NETNAME/tinc.conf<<EOF
+Name = $NODENAME
+Interface = tap${CNT}
+Mode = switch
+BindToAddress * $PORT
+EOF
+                cat > /work/$NODENAME/$NETNAME/hosts/$NODENAME<<EOF
+Address = $i $PORT
+Cipher = none
+Digest = none
+EOF
+
+SEGMENT=`echo ${NETWORKS[$CNT]} | perl -ne ' if (/([\d]+\.[\d]+\.[\d]+\.)/){ print $1}'`
+cat > /work/$NODENAME/$NETNAME/tinc-up<<EOF
+#!/bin/sh
+ifconfig \$INTERFACE ${SEGMENT}${IP} netmask $SUBNET_MASK
+EOF
+
+cat > /work/$NODENAME/$NETNAME/tinc-down<<EOF
+#!/bin/sh
+ifconfig \$INTERFACE down
+EOF
+
+chmod 755 /work/$NODENAME/$NETNAME/tinc-up
+chmod 755 /work/$NODENAME/$NETNAME/tinc-down
+
+expect -c "
+spawn tincd --config /work/$NODENAME/$NETNAME -K
+expect \"Please enter a file to save private RSA key to\"
+sleep 3
+send \"\r\n\"
+expect \"Please enter a file to save public RSA key to\"
+sleep 3
+send \"\r\n\"
+"
+
+                CNT=`expr $CNT + 1`
+                PORT=`expr $PORT + 1`
+        done
+        NODECOUNT=`expr $NODECOUNT + 1`
+done
+}
+
 changehostname ()
 {
   HOSTNAME=`getnodename $1`
