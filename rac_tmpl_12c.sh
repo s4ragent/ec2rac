@@ -115,12 +115,13 @@ ${SEGMENT}31 ${SCAN_NAME}.${NETWORK_NAME[0]}
 ${SEGMENT}32 ${SCAN_NAME}.${NETWORK_NAME[0]}
 EOF
 
-echo "### public,vip entry ###" >> /etc/hosts
+echo "### public,vip,local entry ###" >> /etc/hosts
 NODECOUNT=1
 for i in $NODELIST ;
 do
         echo "`getrealip $NODECOUNT` `getnodename $NODECOUNT`.${NETWORK_NAME[0]} `getnodename $NODECOUNT`" >> /etc/hosts
         echo "`getvip $NODECOUNT` `getnodename $NODECOUNT`-vip.${NETWORK_NAME[0]} `getnodename $NODECOUNT`-vip" >> /etc/hosts
+        echo "$i `getnodename $NODECOUNT`.local " >> /etc/hosts
         NODECOUNT=`expr $NODECOUNT + 1`
 done
 
