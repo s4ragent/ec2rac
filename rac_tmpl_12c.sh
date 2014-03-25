@@ -134,7 +134,7 @@ chkconfig dnsmasq on
 
 createtinc ()
 {
-for (( i = 0; i =< ${#NODELIST[@]}; ++i ))
+for i in `seq 0 200`
 do
         NODENAME=`getnodename $i`
         PORT=655
@@ -149,6 +149,12 @@ Interface = tap${i}
 Mode = switch
 BindToAddress * $PORT
 EOF
+
+                if [ $i != 0 ] ; then
+                    echo "ConnectTo = `getnodename 0`.local" >> /work/$NODENAME/$NETNAME/tinc.conf
+                fi
+
+
                 cat > /work/$NODENAME/$NETNAME/hosts/$NODENAME<<EOF
 Address = ${NODENAME}.local $PORT
 Cipher = none
