@@ -106,6 +106,7 @@ getnodename ()
 
 setupdns ()
 {
+  NODELIST=`aws ec2 describe-instances --region ap-northeast-1 --query 'Reservations[].Instances[][?contains(Tags[?Key==\`Name\`].Value, \`node\`)==\`true\`].[NetworkInterfaces[].PrivateIpAddress]' --output text`
   SEGMENT=`echo ${NETWORKS[0]} | perl -ne ' if (/([\d]+\.[\d]+\.[\d]+\.)/){ print $1}'`
 
   echo "### scan entry ###" >> /etc/hosts
@@ -116,9 +117,7 @@ ${SEGMENT}32 ${SCAN_NAME}.${NETWORK_NAME[0]}
 EOF
 
 echo "### public,vip,local entry ###" >> /etc/hosts
-NODECOUNT=1
-MYIP=`ifconfig eth0 |grep 'inet addr' | awk -F '[: ]' '{print $13}'`
-echo "$MYIP `getnodename 0`.local " >> /etc/hosts
+NODECOUNT=0
 for i in $NODELIST ;
 do
         echo "`getrealip $NODECOUNT` `getnodename $NODECOUNT`.${NETWORK_NAME[0]} `getnodename $NODECOUNT`" >> /etc/hosts
