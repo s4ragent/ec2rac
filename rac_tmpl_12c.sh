@@ -147,7 +147,7 @@ do
                 cp /work/id_rsa /work/$NODENAME/$NETNAME/rsa_key.priv
                 cat > /work/$NODENAME/$NETNAME/tinc.conf<<EOF
 Name = $NODENAME
-Interface = tap${i}
+Interface = tap${k}
 Mode = switch
 BindToAddress * $PORT
 EOF
@@ -203,7 +203,7 @@ do
                 mkdir -p /work/$NODENAME/$NETNAME/hosts
                 cat > /work/$NODENAME/$NETNAME/tinc.conf<<EOF
 Name = $NODENAME
-Interface = tap${i}
+Interface = tap${k}
 Mode = switch
 BindToAddress * $PORT
 EOF
