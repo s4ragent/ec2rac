@@ -2,6 +2,7 @@
 export LANG=C
 
 INSTALL_LANG=ja
+NUMBER_OF_NODES=10
 
 RPMFORGE_URL="http://pkgs.repoforge.org/rpmforge-release/rpmforge-release-0.5.3-1.el6.rf.x86_64.rpm"
 EPEL_URL="http://dl.fedoraproject.org/pub/epel/6/x86_64/epel-release-6-8.noarch.rpm"
@@ -134,7 +135,7 @@ chkconfig dnsmasq on
 
 createtinc ()
 {
-for i in `seq 0 200`
+for i in `seq 0 $NUMBER_OF_NODES`
 do
         NODENAME=`getnodename $i`
         PORT=655
@@ -191,7 +192,7 @@ done
 
 createtinc2 ()
 {
-for i in `seq 0 200`
+for i in `seq 0 $NUMBER_OF_NODES`
 do
         NODENAME=`getnodename $i`
         PORT=655
@@ -269,7 +270,7 @@ createsshkey ()
 mkdir -p /work
 ssh-keygen -t rsa -P "" -f /work/id_rsa
 ssh-keygen -e -f id_rsa.pub >id_rsa.pub.pem
-for i in `seq 0 200`
+for i in `seq 0 $NUMBER_OF_NODES`
 do
         echo "`getnodename $i`,`getrealip $i ` `cat /etc/ssh/ssh_host_rsa_key.pub`" >> /work/known_hosts
 done
