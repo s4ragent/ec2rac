@@ -165,7 +165,7 @@ Digest = none
 EOF
 cat /work/id_rsa.pub.pem >> /work/$NODENAME/$NETNAME/hosts/$NODENAME
 
-                if [ $i != 0 ] ; then
+                if [ $k != 0 ] ; then
                     IP=`getprivip $i`
                 else
                     IP=`getrealip $i`
