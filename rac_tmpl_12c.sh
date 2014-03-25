@@ -143,6 +143,63 @@ do
         do
                 NETNAME=${NETWORK_NAME[$k]}
                 mkdir -p /work/$NODENAME/$NETNAME/hosts
+                cp /work/id_rsa /work/$NODENAME/$NETNAME/rsa_key.priv
+                cat > /work/$NODENAME/$NETNAME/tinc.conf<<EOF
+Name = $NODENAME
+Interface = tap${i}
+Mode = switch
+BindToAddress * $PORT
+EOF
+
+                if [ $i != 0 ] ; then
+                    echo "ConnectTo = `getnodename 0`.local" >> /work/$NODENAME/$NETNAME/tinc.conf
+                fi
+
+
+                cat > /work/$NODENAME/$NETNAME/hosts/$NODENAME<<EOF
+Address = ${NODENAME}.local $PORT
+Cipher = none
+Digest = none
+
+EOF
+cat /work/id_rsa.pub.pem >> /work/$NODENAME/$NETNAME/hosts/$NODENAME
+
+                if [ $i != 0 ] ; then
+                    IP=`getprivip $i`
+                else
+                    IP=`getrealip $i`
+                fi
+                cat > /work/$NODENAME/$NETNAME/tinc-up<<EOF
+#!/bin/sh
+ifconfig \$INTERFACE ${IP} netmask $SUBNET_MASK
+EOF
+
+                cat > /work/$NODENAME/$NETNAME/tinc-down<<EOF
+#!/bin/sh
+ifconfig \$INTERFACE down
+EOF
+
+                chmod 755 /work/$NODENAME/$NETNAME/tinc-up
+                chmod 755 /work/$NODENAME/$NETNAME/tinc-down
+
+                PORT=`expr $PORT + 1`
+        done
+        NODECOUNT=`expr $NODECOUNT + 1`
+done
+}
+
+
+createtinc2 ()
+{
+for i in `seq 0 200`
+do
+        NODENAME=`getnodename $i`
+        PORT=655
+
+        for (( k = 0; k < ${#NETWORKS[@]}; ++k ))
+        do
+                NETNAME=${NETWORK_NAME[$k]}
+                mkdir -p /work/$NODENAME/$NETNAME/hosts
                 cat > /work/$NODENAME/$NETNAME/tinc.conf<<EOF
 Name = $NODENAME
 Interface = tap${i}
@@ -211,7 +268,8 @@ createsshkey ()
 {
 mkdir -p /work
 ssh-keygen -t rsa -P "" -f /work/id_rsa
-for i in `seq 1 201`
+ssh-keygen -e -f id_rsa.pub >id_rsa.pub.pem
+for i in `seq 0 200`
 do
         echo "`getnodename $i`,`getrealip $i ` `cat /etc/ssh/ssh_host_rsa_key.pub`" >> /work/known_hosts
 done
