@@ -161,21 +161,25 @@ Cipher = none
 Digest = none
 EOF
 
-SEGMENT=`echo ${NETWORKS[$i]} | perl -ne ' if (/([\d]+\.[\d]+\.[\d]+\.)/){ print $1}'`
-cat > /work/$NODENAME/$NETNAME/tinc-up<<EOF
+                if [ $i != 0 ] ; then
+                    IP=`getprivip $i`
+                elif
+                    IP=`getrealip $i`
+                fi
+                cat > /work/$NODENAME/$NETNAME/tinc-up<<EOF
 #!/bin/sh
-ifconfig \$INTERFACE ${SEGMENT}${IP} netmask $SUBNET_MASK
+ifconfig \$INTERFACE ${IP} netmask $SUBNET_MASK
 EOF
 
-cat > /work/$NODENAME/$NETNAME/tinc-down<<EOF
+                cat > /work/$NODENAME/$NETNAME/tinc-down<<EOF
 #!/bin/sh
 ifconfig \$INTERFACE down
 EOF
 
-chmod 755 /work/$NODENAME/$NETNAME/tinc-up
-chmod 755 /work/$NODENAME/$NETNAME/tinc-down
+                chmod 755 /work/$NODENAME/$NETNAME/tinc-up
+                chmod 755 /work/$NODENAME/$NETNAME/tinc-down
 
-expect -c "
+                expect -c "
 spawn tincd --config /work/$NODENAME/$NETNAME -K
 expect \"Please enter a file to save private RSA key to\"
 sleep 3
@@ -207,7 +211,7 @@ createsshkey ()
 {
 mkdir -p /work
 ssh-keygen -t rsa -P "" -f /work/id_rsa
-for i in `seq 1 200`
+for i in `seq 1 201`
 do
         echo "`getnodename $i`,`getrealip $i ` `cat /etc/ssh/ssh_host_rsa_key.pub`" >> /work/known_hosts
 done
