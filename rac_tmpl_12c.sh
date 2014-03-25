@@ -35,7 +35,7 @@ ORACLE_PASSWORD="P@ssw0rd"
 SCSI_TARGET_NAME="iqn.2014-05.org.jpoug:server.crs"
 
 
-install_package ()
+installpackage ()
 {
   rpm -ivh $RPMFORGE_URL
   rpm -ivh $EPEL_URL
@@ -361,7 +361,7 @@ chmod -R 775 ${MOUNT_PATH}
 }
 
 case "$1" in 
-  "install_package" ) install_package ;;
+  "installpackage" ) installpackage ;;
   "changehostname" )  changehostname ;;
   "createsshkey" ) createsshkey ;;
   "mountnfs" ) mountnfs ;;
@@ -370,5 +370,6 @@ case "$1" in
   "fdiskoraclehome" ) fdiskoraclehome ;;
   "createoraclehome" ) createoraclehome ;;
   "setupdns" ) setupdns ;;
+  "createtinc" ) createtinc ;;
   * ) echo "known option or no option" ;;
 esac
