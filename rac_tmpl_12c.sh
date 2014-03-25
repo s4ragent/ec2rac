@@ -163,7 +163,7 @@ EOF
 
                 if [ $i != 0 ] ; then
                     IP=`getprivip $i`
-                elif
+                else
                     IP=`getrealip $i`
                 fi
                 cat > /work/$NODENAME/$NETNAME/tinc-up<<EOF
