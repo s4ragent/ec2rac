@@ -87,17 +87,12 @@ getip ()
 
 getrealip ()
 {
-  echo `getip 0 $1 100`
+  echo `getip  $1 $2 100`
 }
 
 getvip ()
 {
-  echo `getip 0 $1 200`
-}
-
-getprivip ()
-{
-  echo `getip 1 $1 100`
+  echo `getip  $1 $2 200`
 }
 
 getnodename ()
@@ -112,17 +107,17 @@ setupdns ()
 
   echo "### scan entry ###" >> /etc/hosts
   cat >>/etc/hosts <<EOF
-${SEGMENT}30 ${SCAN_NAME}.${NETWORK_NAME[0]}
-${SEGMENT}31 ${SCAN_NAME}.${NETWORK_NAME[0]}
-${SEGMENT}32 ${SCAN_NAME}.${NETWORK_NAME[0]}
+`getip  0 0 30` ${SCAN_NAME}.${NETWORK_NAME[0]}
+`getip  0 0 31` ${SCAN_NAME}.${NETWORK_NAME[0]}
+`getip  0 0 32` ${SCAN_NAME}.${NETWORK_NAME[0]}
 EOF
 
 echo "### public,vip,local entry ###" >> /etc/hosts
 NODECOUNT=0
 for i in $NODELIST ;
 do
-        echo "`getrealip $NODECOUNT` `getnodename $NODECOUNT`.${NETWORK_NAME[0]} `getnodename $NODECOUNT`" >> /etc/hosts
-        echo "`getvip $NODECOUNT` `getnodename $NODECOUNT`-vip.${NETWORK_NAME[0]} `getnodename $NODECOUNT`-vip" >> /etc/hosts
+        echo "`getrealip 0 $NODECOUNT` `getnodename $NODECOUNT`.${NETWORK_NAME[0]} `getnodename $NODECOUNT`" >> /etc/hosts
+        echo "`getvip 0 $NODECOUNT` `getnodename $NODECOUNT`-vip.${NETWORK_NAME[0]} `getnodename $NODECOUNT`-vip" >> /etc/hosts
         echo "$i `getnodename $NODECOUNT`.local " >> /etc/hosts
         NODECOUNT=`expr $NODECOUNT + 1`
 done
