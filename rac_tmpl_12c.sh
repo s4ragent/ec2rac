@@ -76,23 +76,32 @@ EOF
 }
 
 
-## $1 network number, $2,$3 address ##
+## $1 network number, $2 real/vip/priv $3 nodenumber ###
 ## Ex.   network 172,16.0.0 , 172.17.0.0 >>>##
-## getip 0 1 2 >>> 172.16.1.2 ###
+## getip 0 vip 2 >>> 172.16.2.200 ###
 getip ()
 {
-  SEGMENT=`echo ${NETWORKS[$1]} | perl -ne ' if (/([\d]+\.[\d]+\.)/){ print $1}'`
-  echo "${SEGMENT}${2}.${3}"
-}
-
-getrealip ()
-{
-  echo `getip  $1 $2 100`
-}
-
-getvip ()
-{
-  echo `getip  $1 $2 200`
+  if [ $SUBNET_MASK == "255.255.255.0" ] ; then
+      SEGMENT=`echo ${NETWORKS[$1]} | perl -ne ' if (/([\d]+\.[\d]+\.[\d]+\.)/){ print $1}'`
+      if [ $2 == "real" ] ; then
+        IP=`expr $3 + 100`
+        echo "${SEGMENT}.${IP}"
+      elif [ $2 == "vip" ] ; then
+        IP=`expr $3 + 200`
+        echo "${SEGMENT}.${IP}"
+      elif [ $2 == "scan" ] ; then
+        echo "${SEGMENT}.30 ${SCAN_NAME}.${NETWORK_NAME[0]} ${SCAN_NAME}"
+        echo "${SEGMENT}.31 ${SCAN_NAME}.${NETWORK_NAME[0]} ${SCAN_NAME}"
+        echo "${SEGMENT}.32 ${SCAN_NAME}.${NETWORK_NAME[0]} ${SCAN_NAME}"
+      fi
+  else
+      SEGMENT=`echo ${NETWORKS[$1]} | perl -ne ' if (/([\d]+\.[\d]+\.)/){ print $1}'`
+      if [ $2 == "real" ] ; then
+        echo "${SEGMENT}.${3}.100"
+      elif [ $2 == "vip" ] ; then
+        echo "${SEGMENT}.${3}.200"
+      fi
+  fi
 }
 
 getnodename ()
@@ -106,19 +115,14 @@ setupdns ()
   SEGMENT=`echo ${NETWORKS[0]} | perl -ne ' if (/([\d]+\.[\d]+\.[\d]+\.)/){ print $1}'`
 
   echo "### scan entry ###" >> /etc/hosts
-  cat >>/etc/hosts <<EOF
-`getip  0 0 30` ${SCAN_NAME}.${NETWORK_NAME[0]}
-`getip  0 0 31` ${SCAN_NAME}.${NETWORK_NAME[0]}
-`getip  0 0 32` ${SCAN_NAME}.${NETWORK_NAME[0]}
-EOF
+  getip 0 scan >> /etc/hosts
 
-echo "### public,vip,local entry ###" >> /etc/hosts
+echo "### public,vip entry###" >> /etc/hosts
 NODECOUNT=0
 for i in $NODELIST ;
 do
-        echo "`getrealip 0 $NODECOUNT` `getnodename $NODECOUNT`.${NETWORK_NAME[0]} `getnodename $NODECOUNT`" >> /etc/hosts
-        echo "`getvip 0 $NODECOUNT` `getnodename $NODECOUNT`-vip.${NETWORK_NAME[0]} `getnodename $NODECOUNT`-vip" >> /etc/hosts
-        echo "$i `getnodename $NODECOUNT`.local " >> /etc/hosts
+        echo "`getip 0 real $NODECOUNT` `getnodename $NODECOUNT`.${NETWORK_NAME[0]} `getnodename $NODECOUNT`" >> /etc/hosts
+        echo "`getip 0 vip $NODECOUNT` `getnodename $NODECOUNT`-vip.${NETWORK_NAME[0]} `getnodename $NODECOUNT`-vip" >> /etc/hosts
         NODECOUNT=`expr $NODECOUNT + 1`
 done
 
@@ -265,9 +269,10 @@ createsshkey ()
 mkdir -p /work
 ssh-keygen -t rsa -P "" -f /work/id_rsa
 ssh-keygen -e -f id_rsa.pub >id_rsa.pub.pem
+cat /work/id_rsa.pub >> /home/root/.ssh/authorized_keys
 for i in `seq 0 $NUMBER_OF_NODES`
 do
-        echo "`getnodename $i`,`getrealip $i ` `cat /etc/ssh/ssh_host_rsa_key.pub`" >> /work/known_hosts
+        echo "`getnodename $i`,`getip 0 real $i ` `cat /etc/ssh/ssh_host_rsa_key.pub`" >> /work/known_hosts
 done
 for user in oracle grid
 do
@@ -279,17 +284,6 @@ do
         chmod 700 /home/$user/.ssh
         chmod 600 /home/$user/.ssh/*
 done
-}
-
-mountnfs ()
-{
-mkdir /work
-echo "storage.local:/work        /work                   nfs     rw,bg,hard,nointr,tcp,vers=3,timeo=600,rsize=32768,wsize=32768,actimeo=0        0 0" >> /etc/fstab
-chkconfig netfs on
-chkconfig rpcbind on
-/etc/init.d/netfs restart
-/etc/init.d/rpcbind restart
-mount /work
 }
 
 createuser ()
