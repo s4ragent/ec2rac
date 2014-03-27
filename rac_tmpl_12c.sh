@@ -105,7 +105,6 @@ getip ()
         echo "${SEGMENT}.31 ${SCAN_NAME}.${NETWORK_NAME[0]} ${SCAN_NAME}"
         echo "${SEGMENT}.32 ${SCAN_NAME}.${NETWORK_NAME[0]} ${SCAN_NAME}"
       fi
-      fi
   fi
 }
 
