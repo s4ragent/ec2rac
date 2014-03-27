@@ -90,9 +90,9 @@ getip ()
         IP=`expr $3 + 200`
         echo "${SEGMENT}${IP}"
       elif [ $2 == "scan" ] ; then
-        echo "${SEGMENT}.30 ${SCAN_NAME}.${NETWORK_NAME[0]} ${SCAN_NAME}"
-        echo "${SEGMENT}.31 ${SCAN_NAME}.${NETWORK_NAME[0]} ${SCAN_NAME}"
-        echo "${SEGMENT}.32 ${SCAN_NAME}.${NETWORK_NAME[0]} ${SCAN_NAME}"
+        echo "${SEGMENT}30 ${SCAN_NAME}.${NETWORK_NAME[0]} ${SCAN_NAME}"
+        echo "${SEGMENT}31 ${SCAN_NAME}.${NETWORK_NAME[0]} ${SCAN_NAME}"
+        echo "${SEGMENT}32 ${SCAN_NAME}.${NETWORK_NAME[0]} ${SCAN_NAME}"
       fi
   else
       SEGMENT=`echo ${NETWORKS[$1]} | perl -ne ' if (/([\d]+\.[\d]+\.)/){ print $1}'`
@@ -102,9 +102,9 @@ getip ()
         echo "${SEGMENT}${3}.200"
       elif [ $2 == "scan" ] ; then
         SEGMENT=`echo ${NETWORKS[$1]} | perl -ne ' if (/([\d]+\.[\d]+\.[\d]+\.)/){ print $1}'`
-        echo "${SEGMENT}.30 ${SCAN_NAME}.${NETWORK_NAME[0]} ${SCAN_NAME}"
-        echo "${SEGMENT}.31 ${SCAN_NAME}.${NETWORK_NAME[0]} ${SCAN_NAME}"
-        echo "${SEGMENT}.32 ${SCAN_NAME}.${NETWORK_NAME[0]} ${SCAN_NAME}"
+        echo "${SEGMENT}30 ${SCAN_NAME}.${NETWORK_NAME[0]} ${SCAN_NAME}"
+        echo "${SEGMENT}31 ${SCAN_NAME}.${NETWORK_NAME[0]} ${SCAN_NAME}"
+        echo "${SEGMENT}32 ${SCAN_NAME}.${NETWORK_NAME[0]} ${SCAN_NAME}"
       fi
   fi
 }
