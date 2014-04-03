@@ -113,9 +113,20 @@ getnodename ()
   echo "node"`printf "%.3d" $1`
 }
 
-updatenodelist()
+setnodelist()
 {
   NODELIST=`aws ec2 describe-instances --region ap-northeast-1 --query 'Reservations[].Instances[][?contains(Tags[?Key==\`Name\`].Value, \`node\`)==\`true\`].[NetworkInterfaces[].PrivateIpAddress]' --output text`
+  JSON={\"IPs\":{\"S\":\"$NODELIST\"}}
+  aws dynamodb delete-table --region ap-northeast-1 --table-name Nodelist
+  sleep 5
+  aws dynamodb create-table --region ap-northeast-1 --table-name Nodelist --attribute-definitions AttributeName=IPs,AttributeType=S --key-schema AttributeName=IPs,KeyType=HASH --provisioned-throughput ReadCapacityUnits=1,WriteCapacityUnits=1
+  sleep 5
+  aws dynamodb put-item --region ap-northeast-1 --table-name Nodelist --item $JSON
+}
+
+getnodelist()
+{
+  NODELIST=`aws dynamodb scan --region ap-northeast-1 --table-name Nodelist --output text  | perl -ne ' if (/([\d].+)/){ print $1}'`
 }
 
 setupdns ()
