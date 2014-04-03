@@ -2,9 +2,6 @@
 export LANG=C
 
 INSTALL_LANG=ja
-NUMBER_OF_NODES=10
-SERVER="192.168.0.100"
-
 
 RPMFORGE_URL="http://pkgs.repoforge.org/rpmforge-release/rpmforge-release-0.5.3-1.el6.rf.x86_64.rpm"
 EPEL_URL="http://dl.fedoraproject.org/pub/epel/6/x86_64/epel-release-6-8.noarch.rpm"
@@ -116,9 +113,14 @@ getnodename ()
   echo "node"`printf "%.3d" $1`
 }
 
-setupdns ()
+updatenodelist()
 {
   NODELIST=`aws ec2 describe-instances --region ap-northeast-1 --query 'Reservations[].Instances[][?contains(Tags[?Key==\`Name\`].Value, \`node\`)==\`true\`].[NetworkInterfaces[].PrivateIpAddress]' --output text`
+}
+
+setupdns ()
+{
+  
   SEGMENT=`echo ${NETWORKS[0]} | perl -ne ' if (/([\d]+\.[\d]+\.[\d]+\.)/){ print $1}'`
 
   echo "### scan entry ###" >> /etc/hosts
@@ -139,11 +141,13 @@ chkconfig dnsmasq on
 
 }
 
+
 createtinc ()
 {
-for i in `seq 0 $NUMBER_OF_NODES`
+NODECOUNT=0
+for i in $NODELIST ;
 do
-        NODENAME=`getnodename $i`
+        NODENAME=`getnodename $NODECOUNT`
         PORT=655
 
         for (( k = 0; k < ${#NETWORKS[@]}; ++k ))
@@ -158,24 +162,21 @@ Mode = switch
 BindToAddress * $PORT
 EOF
 
-                if [ $i != 0 ] ; then
-                    echo "ConnectTo = `getnodename 0`.local" >> /work/$NODENAME/$NETNAME/tinc.conf
+                if [ $NODECOUNT != 0 ] ; then
+                    echo "ConnectTo = `getnodename 0`" >> /work/$NODENAME/$NETNAME/tinc.conf
                 fi
 
 
                 cat > /work/$NODENAME/$NETNAME/hosts/$NODENAME<<EOF
-Address = ${NODENAME}.local $PORT
+Address = $i $PORT
 Cipher = none
 Digest = none
 
 EOF
 cat /work/id_rsa.pub.pem >> /work/$NODENAME/$NETNAME/hosts/$NODENAME
 
-                if [ $k != 0 ] ; then
-                    IP=`getprivip $i`
-                else
-                    IP=`getrealip $i`
-                fi
+                
+                IP=`getip $k real $NODECOUNT`
                 cat > /work/$NODENAME/$NETNAME/tinc-up<<EOF
 #!/bin/sh
 ifconfig \$INTERFACE ${IP} netmask $SUBNET_MASK
@@ -196,7 +197,7 @@ done
 }
 
 
-createtinc2 ()
+createtinc3 ()
 {
 for i in `seq 0 $NUMBER_OF_NODES`
 do
