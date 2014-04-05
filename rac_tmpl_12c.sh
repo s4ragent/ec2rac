@@ -153,7 +153,59 @@ chkconfig dnsmasq on
 }
 
 
-createtinc ()
+createtinc()
+{
+PORT=655
+NODENAME=`getnodename $1`
+for (( k = 0; k < ${#NETWORKS[@]}; ++k ))
+do
+    NETNAME=${NETWORK_NAME[$k]}     
+    mkdir -p /etc/tinc/$NETNAME/hosts
+    cat > /etc/tinc/$NETNAME/tinc.conf<<EOF
+Name = $NODENAME
+Interface = tap${k}
+Mode = switch
+BindToAddress * $PORT
+EOF
+    if [ $1 != 0 ] ; then
+        echo "ConnectTo = `getnodename 0`" >> /etc/tinc/$NETNAME/tinc.conf<<EOF
+    fi
+    cp /work/id_rsa /etc/tinc/$NETNAME/rsa_key.priv
+    
+    IP=`getip $k real $NODECOUNT`
+    cat > /etc/tinc/$NETNAME/tinc-up<<EOF
+#!/bin/sh
+ifconfig \$INTERFACE ${IP} netmask $SUBNET_MASK
+EOF
+
+    cat > /etc/tinc/$NETNAME/tinc-down<<EOF
+#!/bin/sh
+ifconfig \$INTERFACE down
+EOF
+
+    chmod 755 /etc/tinc/$NETNAME/tinc-up
+    chmod 755 /etc/tinc/$NETNAME/tinc-down
+    
+    NODECOUNT=0
+    for i in $NODELIST ;
+    do
+      $NODENAME2=NODENAME=`getnodename $NODECOUNT`
+      cat > /etc/tinc/$NETNAME/hosts/$NODENAME2<<EOF
+Address = $i $PORT
+Cipher = none
+Digest = none
+
+EOF
+      cat /work/id_rsa.pub.pem >> /etc/tinc/$NETNAME/hosts/$NODENAME2
+    NODECOUNT=`expr $NODECOUNT + 1`
+    done
+    PORT=`expr $PORT + 1`
+done
+    
+
+      
+
+createtinc2 ()
 {
 NODECOUNT=0
 for i in $NODELIST ;
