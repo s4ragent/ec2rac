@@ -1,6 +1,6 @@
 #/bin/bash
 export LANG=C
-
+NODELIST="192.168.0.100 192.168.0.101 192.168.0.102"
 INSTALL_LANG=ja
 
 RPMFORGE_URL="http://pkgs.repoforge.org/rpmforge-release/rpmforge-release-0.5.3-1.el6.rf.x86_64.rpm"
@@ -116,18 +116,24 @@ getnodename ()
 setnodelist()
 {
   NODELIST=`aws ec2 describe-instances --region ap-northeast-1 --query 'Reservations[].Instances[][?contains(Tags[?Key==\`Name\`].Value, \`node\`)==\`true\`].[NetworkInterfaces[].PrivateIpAddress]' --output text`
-  JSON={\"IPs\":{\"S\":\"$NODELIST\"}}
-  aws dynamodb delete-table --region ap-northeast-1 --table-name Nodelist
-  sleep 5
-  aws dynamodb create-table --region ap-northeast-1 --table-name Nodelist --attribute-definitions AttributeName=IPs,AttributeType=S --key-schema AttributeName=IPs,KeyType=HASH --provisioned-throughput ReadCapacityUnits=1,WriteCapacityUnits=1
-  sleep 5
-  aws dynamodb put-item --region ap-northeast-1 --table-name Nodelist --item $JSON
+  sed -i 's/NODELIST="
 }
 
-getnodelist()
-{
-  NODELIST=`aws dynamodb scan --region ap-northeast-1 --table-name Nodelist --output text  | perl -ne ' if (/([\d].+)/){ print $1}'`
-}
+#setnodelist()
+#{
+#  NODELIST=`aws ec2 describe-instances --region ap-northeast-1 --query 'Reservations[].Instances[][?contains(Tags[?Key==\`Name\`].Value, \`node\`)==\`true\`].[NetworkInterfaces[].PrivateIpAddress]' --output text`
+#  JSON={\"IPs\":{\"S\":\"$NODELIST\"}}
+#  aws dynamodb delete-table --region ap-northeast-1 --table-name Nodelist
+#  sleep 5
+#  aws dynamodb create-table --region ap-northeast-1 --table-name Nodelist --attribute-definitions AttributeName=IPs,AttributeType=S --key-schema AttributeName=IPs,KeyType=HASH --provisioned-throughput ReadCapacityUnits=1,WriteCapacityUnits=1
+#  sleep 5
+#  aws dynamodb put-item --region ap-northeast-1 --table-name Nodelist --item $JSON
+#}
+
+#getnodelist()
+#{
+#  NODELIST=`aws dynamodb scan --region ap-northeast-1 --table-name Nodelist --output text  | perl -ne ' if (/([\d].+)/){ print $1}'`
+#}
 
 setupdns ()
 {
