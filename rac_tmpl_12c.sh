@@ -1,6 +1,7 @@
 #/bin/bash
 export LANG=C
-NODELIST="192.168.0.100 192.168.0.101 192.168.0.102"
+SERVER="192.168.0.100"
+NODELIST="192.168.0.101 192.168.0.102"
 INSTALL_LANG=ja
 
 RPMFORGE_URL="http://pkgs.repoforge.org/rpmforge-release/rpmforge-release-0.5.3-1.el6.rf.x86_64.rpm"
@@ -116,7 +117,7 @@ getnodename ()
 setnodelist()
 {
   NODELIST=`aws ec2 describe-instances --region ap-northeast-1 --query 'Reservations[].Instances[][?contains(Tags[?Key==\`Name\`].Value, \`node\`)==\`true\`].[NetworkInterfaces[].PrivateIpAddress]' --output text`
-  sed -i 's/NODELIST="
+  sed -i "s/^NODELIST.*/NODELIST=\"$NODELIST\"/"
 }
 
 #setnodelist()
