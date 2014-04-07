@@ -114,7 +114,7 @@ getnodename ()
   echo "node"`printf "%.3d" $1`
 }
 
-setnodelist()
+setupnodelist()
 {
   NODELIST=`aws ec2 describe-instances --region ap-northeast-1 --query 'Reservations[].Instances[][?contains(Tags[?Key==\`Name\`].Value, \`node\`)==\`true\`].[NetworkInterfaces[].PrivateIpAddress]' --output text`
   NODELIST=`echo $NODELIST`
@@ -122,7 +122,6 @@ setnodelist()
   sed -i "s/^NODELIST.*/NODELIST=\"$NODELIST\"/" $0
   sed -i "s/^SERVER.*/SERVER=\"$SERVER\"/" $0
   SERVER_AND_NODE="$SERVER $NODELIST"
-  echo $SERVER_AND_NODE
 }
 
 #setnodelist()
@@ -167,7 +166,7 @@ chkconfig dnsmasq on
 
 createtinc()
 {
-SERVER_AND_NODE="$SERVER `echo $NODELIST`"
+  SERVER_AND_NODE="$SERVER $NODELIST"
 PORT=655
 NODENAME=`getnodename $1`
 for (( k = 0; k < ${#NETWORKS[@]}; ++k ))
@@ -200,7 +199,7 @@ EOF
     chmod 755 /etc/tinc/$NETNAME/tinc-down
     
     NODECOUNT=0
-    for i in $NODELIST ;
+    for i in $SERVER_AND_NODE ;
     do
       $NODENAME2=`getnodename $NODECOUNT`
       cat > /etc/tinc/$NETNAME/hosts/$NODENAME2<<EOF
@@ -208,8 +207,9 @@ Address = $i $PORT
 Cipher = none
 Digest = none
 
+`cat /work/id_rsa.pub.pem` 
 EOF
-      cat /work/id_rsa.pub.pem >> /etc/tinc/$NETNAME/hosts/$NODENAME2
+
     NODECOUNT=`expr $NODECOUNT + 1`
     done
     PORT=`expr $PORT + 1`
@@ -230,14 +230,19 @@ EOF
 
 createsshkey ()
 {
+SERVER_AND_NODE="$SERVER $NODELIST"
 mkdir -p /work
 ssh-keygen -t rsa -P "" -f /work/id_rsa
 ssh-keygen -e -f id_rsa.pub >id_rsa.pub.pem
 cat /work/id_rsa.pub >> /home/root/.ssh/authorized_keys
-for i in `seq 0 $NUMBER_OF_NODES`
+
+NODECOUNT=0
+for i in $SERVER_AND_NODE ;
 do
-        echo "`getnodename $i`,`getip 0 real $i ` `cat /etc/ssh/ssh_host_rsa_key.pub`" >> /work/known_hosts
+  echo "`getnodename $i`,`getip 0 real $i ` `cat /etc/ssh/ssh_host_rsa_key.pub`" >> /work/known_hosts
+  NODECOUNT=`expr $NODECOUNT + 1`
 done
+
 for user in oracle grid
 do
         mkdir /home/$user/.ssh
@@ -372,7 +377,8 @@ chown oracle:oinstall ${ORA_ORACLE_BASE}
 chmod -R 775 ${MOUNT_PATH}
 }
 
-case "$1" in 
+case "$1" in
+  "createtmpl" ) createtmpl ;;
   "installpackage" ) installpackage ;;
   "changehostname" )  changehostname ;;
   "createsshkey" ) createsshkey ;;
@@ -382,7 +388,7 @@ case "$1" in
   "fdiskoraclehome" ) fdiskoraclehome ;;
   "createoraclehome" ) createoraclehome ;;
   "setupdns" ) setupdns ;;
-  "setupnodelist" ) setnodelist ;;
+  "setupnodelist" ) setupnodelist ;;
   "createtinc" ) createtinc ;;
   * ) echo "known option or no option" ;;
 esac
