@@ -209,6 +209,7 @@ EOF
     PORT=`expr $PORT + 1`
     
 done
+}
 
 changehostname ()
 {
