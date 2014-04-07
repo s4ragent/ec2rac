@@ -376,7 +376,7 @@ case "$1" in
   "fdiskoraclehome" ) fdiskoraclehome ;;
   "createoraclehome" ) createoraclehome ;;
   "setupdns" ) setupdns ;;
-  "setnodelist" ) setnodelist ;;
+  "setupnodelist" ) setnodelist ;;
   "createtinc" ) createtinc ;;
   * ) echo "known option or no option" ;;
 esac
