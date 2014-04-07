@@ -196,7 +196,7 @@ EOF
     NODECOUNT=0
     for i in $NODELIST ;
     do
-      $NODENAME2=NODENAME=`getnodename $NODECOUNT`
+      $NODENAME2=`getnodename $NODECOUNT`
       cat > /etc/tinc/$NETNAME/hosts/$NODENAME2<<EOF
 Address = $i $PORT
 Cipher = none
