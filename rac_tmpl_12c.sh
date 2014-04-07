@@ -120,7 +120,8 @@ setnodelist()
   SERVER=`aws ec2 describe-instances --region ap-northeast-1 --query 'Reservations[].Instances[][?contains(Tags[?Key==\`Name\`].Value, \`server\`)==\`true\`].[NetworkInterfaces[].PrivateIpAddress]' --output text`
   sed -i "s/^NODELIST.*/NODELIST=\"`echo $NODELIST`\"/" $0
   sed -i "s/^SERVER.*/SERVER=\"$SERVER\"/" $0
-  echo "$NODELIST $SERVER"
+  SERVER_AND_NODE="`echo $NODELIST` $SERVER"
+  echo SERVER_AND_NODE
 }
 
 #setnodelist()
