@@ -117,7 +117,9 @@ getnodename ()
 setnodelist()
 {
   NODELIST=`aws ec2 describe-instances --region ap-northeast-1 --query 'Reservations[].Instances[][?contains(Tags[?Key==\`Name\`].Value, \`node\`)==\`true\`].[NetworkInterfaces[].PrivateIpAddress]' --output text`
+  SERVER=`aws ec2 describe-instances --region ap-northeast-1 --query 'Reservations[].Instances[][?contains(Tags[?Key==\`Name\`].Value, \`server\`)==\`true\`].[NetworkInterfaces[].PrivateIpAddress]' --output text`
   sed -i "s/^NODELIST.*/NODELIST=\"$NODELIST\"/" $0
+  sed -i "s/^SERVER.*/SERVER=\"$NODELIST\"/" $0
 }
 
 #setnodelist()
