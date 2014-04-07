@@ -175,7 +175,7 @@ Mode = switch
 BindToAddress * $PORT
 EOF
     if [ $1 != 0 ] ; then
-        echo "ConnectTo = `getnodename 0`" >> /etc/tinc/$NETNAME/tinc.conf<<EOF
+        echo "ConnectTo = `getnodename 0`" >> /etc/tinc/$NETNAME/tinc.conf
     fi
     cp /work/id_rsa /etc/tinc/$NETNAME/rsa_key.priv
     
