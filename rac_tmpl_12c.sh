@@ -117,11 +117,11 @@ getnodename ()
 setnodelist()
 {
   NODELIST=`aws ec2 describe-instances --region ap-northeast-1 --query 'Reservations[].Instances[][?contains(Tags[?Key==\`Name\`].Value, \`node\`)==\`true\`].[NetworkInterfaces[].PrivateIpAddress]' --output text`
+  NODELIST=`echo $NODELIST`
   SERVER=`aws ec2 describe-instances --region ap-northeast-1 --query 'Reservations[].Instances[][?contains(Tags[?Key==\`Name\`].Value, \`server\`)==\`true\`].[NetworkInterfaces[].PrivateIpAddress]' --output text`
-  sed -i "s/^NODELIST.*/NODELIST=\"`echo $NODELIST`\"/" $0
+  sed -i "s/^NODELIST.*/NODELIST=\"$NODELIST\"/" $0
   sed -i "s/^SERVER.*/SERVER=\"$SERVER\"/" $0
-  SERVER_AND_NODE="$SERVER `echo $NODELIST`"
-  echo $SERVER_AND_NODE
+  SERVER_AND_NODE="$SERVER $NODELIST"
 }
 
 #setnodelist()
@@ -142,7 +142,7 @@ setnodelist()
 
 setupdns ()
 {
-  
+  SERVER_AND_NODE="$SERVER $NODELIST"
   SEGMENT=`echo ${NETWORKS[0]} | perl -ne ' if (/([\d]+\.[\d]+\.[\d]+\.)/){ print $1}'`
 
   echo "### scan entry ###" >> /etc/hosts
@@ -150,7 +150,7 @@ setupdns ()
 
 echo "### public,vip entry###" >> /etc/hosts
 NODECOUNT=0
-for i in $NODELIST ;
+for i in $SERVER_AND_NODE ;
 do
         echo "`getip 0 real $NODECOUNT` `getnodename $NODECOUNT`.${NETWORK_NAME[0]} `getnodename $NODECOUNT`" >> /etc/hosts
         echo "`getip 0 vip $NODECOUNT` `getnodename $NODECOUNT`-vip.${NETWORK_NAME[0]} `getnodename $NODECOUNT`-vip" >> /etc/hosts
@@ -166,6 +166,7 @@ chkconfig dnsmasq on
 
 createtinc()
 {
+SERVER_AND_NODE="$SERVER `echo $NODELIST`"
 PORT=655
 NODENAME=`getnodename $1`
 for (( k = 0; k < ${#NETWORKS[@]}; ++k ))
