@@ -122,6 +122,7 @@ setnodelist()
   sed -i "s/^NODELIST.*/NODELIST=\"$NODELIST\"/" $0
   sed -i "s/^SERVER.*/SERVER=\"$SERVER\"/" $0
   SERVER_AND_NODE="$SERVER $NODELIST"
+  echo $SERVER_AND_NODE
 }
 
 #setnodelist()
