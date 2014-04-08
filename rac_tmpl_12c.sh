@@ -377,6 +377,14 @@ chown oracle:oinstall ${ORA_ORACLE_BASE}
 chmod -R 775 ${MOUNT_PATH}
 }
 
+createtmpl()
+{
+  createuser
+  createsshkey
+  createtinc
+}
+
+
 case "$1" in
   "createtmpl" ) createtmpl ;;
   "installpackage" ) installpackage ;;
