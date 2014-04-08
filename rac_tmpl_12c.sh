@@ -233,8 +233,8 @@ createsshkey ()
 SERVER_AND_NODE="$SERVER $NODELIST"
 mkdir -p /work
 ssh-keygen -t rsa -P "" -f /work/id_rsa
-ssh-keygen -e -f id_rsa.pub >id_rsa.pub.pem
-cat /work/id_rsa.pub >> /home/root/.ssh/authorized_keys
+ssh-keygen -e -f id_rsa.pub >/work/id_rsa.pub.pem
+
 
 NODECOUNT=0
 for i in $SERVER_AND_NODE ;
