@@ -3,6 +3,7 @@ export LANG=C
 SERVER="192.168.0.100"
 NODELIST="192.168.0.101 192.168.0.102"
 INSTALL_LANG=ja
+TMPL_NAME="RACTMPL"
 
 RPMFORGE_URL="http://pkgs.repoforge.org/rpmforge-release/rpmforge-release-0.5.3-1.el6.rf.x86_64.rpm"
 EPEL_URL="http://dl.fedoraproject.org/pub/epel/6/x86_64/epel-release-6-8.noarch.rpm"
@@ -123,6 +124,13 @@ setupnodelist()
   sed -i "s/^NODELIST.*/NODELIST=\"$NODELIST\"/" $0
   sed -i "s/^SERVER.*/SERVER=\"$SERVER\"/" $0
   SERVER_AND_NODE="$SERVER $NODELIST"
+}
+
+clone()
+{
+  Az=`curl http://169.254.169.254/latest/meta-data/placement/availability-zone -s | perl -pe chop`
+  InstanceId=`curl -s http://169.254.169.254/latest/meta-data/instance-id`
+  aws ec2 create-image --instanceid $InstanceId --name $TMPL_NAME
 }
 
 #setnodelist()
