@@ -148,7 +148,7 @@ clone()
   sed -i "s/^AmiId.*/AmiId=\"$AmiId\"/" $0
 }
 
-startinstance(){
+startinstances(){
   InstanceId=`curl -s http://169.254.169.254/latest/meta-data/instance-id`
   Az=`curl -s http://169.254.169.254/latest/meta-data/placement/availability-zone`
   Region=`echo $Az | perl -lne 'print substr($_,0,-1)'`
@@ -427,6 +427,16 @@ createtmpl()
   createtinc
 }
 
+copyfile()
+{
+ssh -i node.pem -o "StrictHostKeyChecking no" root@$SERVER "date"
+scp -i node.pem -r $0 root@$SERVER:/root
+for i in $NODELIST ;
+do
+        ssh -i node.pem -o "StrictHostKeyChecking no" root@$i "date"
+        scp -i node.pem -r $0 root@$i:/root
+done
+}
 
 case "$1" in
   "createtmpl" ) createtmpl ;;
@@ -442,6 +452,7 @@ case "$1" in
   "setupnodelist" ) setupnodelist ;;
   "createtinc" ) createtinc $2;;
   "clone" ) clone ;;
-  "startinstance" ) startinstance $2;;
+  "startinstances" ) startinstances $2;;
+  "copyfile" ) copyfile ;;
   * ) echo "known option or no option" ;;
 esac
