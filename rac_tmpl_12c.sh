@@ -416,7 +416,7 @@ case "$1" in
   "createoraclehome" ) createoraclehome ;;
   "setupdns" ) setupdns ;;
   "setupnodelist" ) setupnodelist ;;
-  "createtinc" ) createtinc ;;
+  "createtinc" ) createtinc $2;;
   "clone" ) clone ;;
   * ) echo "known option or no option" ;;
 esac
