@@ -160,8 +160,8 @@ startinstance(){
   sleep 5
   aws ec2 create-key-pair --region $Region --key-name node --query 'KeyMaterial' --output text > node.pem
   aws ec2 create-key-pair --region $Region --key-name server --query 'KeyMaterial' --output text > server.pem
-  aws ec2 run-instances --image-id $AmiId --key-name node --subnet-id $SubnetId --instance-type $NODE_Instance_Type --count $1
-  aws ec2 run-instances --image-id $AmiId --key-name server --subnet-id $SubnetId --instance-type $SERVER_Instance_Type --count 1
+  aws ec2 run-instances --region $Region --image-id $AmiId --key-name node --subnet-id $SubnetId --instance-type $NODE_Instance_Type --count $1
+  aws ec2 run-instances --region $Region --image-id $AmiId --key-name server --subnet-id $SubnetId --instance-type $SERVER_Instance_type --count 1
   #request-spot-instances
 }
 
