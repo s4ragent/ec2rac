@@ -407,5 +407,6 @@ case "$1" in
   "setupdns" ) setupdns ;;
   "setupnodelist" ) setupnodelist ;;
   "createtinc" ) createtinc ;;
+  "clone" ) clone ;;
   * ) echo "known option or no option" ;;
 esac
