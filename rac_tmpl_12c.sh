@@ -5,7 +5,6 @@ NODELIST="192.168.0.101 192.168.0.102"
 INSTALL_LANG=ja
 TMPL_NAME="RACTMPL"
 AmiId="ami-f53940f4"
-KEYNAME="RACTMPL"
 #NODE_Instance_Type="m3.large"
 NODE_Instance_Type="t1.micro"
 #SERVER_Instance_type="m3.large"
@@ -156,14 +155,13 @@ startinstance(){
   VpcSubnet=`aws ec2 describe-instances --region $Region --instance-id $InstanceId --query 'Reservations[].Instances[].[VpcId,SubnetId]' --output text`
   VpcId=`echo $VpcSubnet | awk -F " " '{print $1}'`
   SubnetId=`echo $VpcSubnet | awk -F " " '{print $2}'`
-  
-  SgNode=`aws ec2 create-security-group --group-name node --vpc-id $VpcId --description "node" --region $Region --query 'GroupId' --output text`
-  SgServer=`aws ec2 create-security-group --group-name server --vpc-id $VpcId --description "server" --region $Region --query 'GroupId' --output text`
-  aws ec2 delete-key-pair --region $Region --key-name $KEYNAME
+  aws ec2 delete-key-pair --region $Region --key-name node
+  aws ec2 delete-key-pair --region $Region --key-name server
   sleep 5
-  aws ec2 create-key-pair --region $Region --key-name $KEYNAME --query 'KeyMaterial' --output text > .ssh/id_rsa
-  aws ec2 run-instances --image-id $AmiId --key-name $KEYNAME --subnet-id $SubnetId --security-group-ids $SgNode --instance-type $NODE_Instance_Type --count $1
-  aws ec2 run-instances --image-id $AmiId --key-name $KEYNAME --subnet-id $SubnetId --security-group-ids $SgServer --instance-type $SERVER_Instance_Type --count 1
+  aws ec2 create-key-pair --region $Region --key-name node --query 'KeyMaterial' --output text > node.pem
+  aws ec2 create-key-pair --region $Region --key-name server --query 'KeyMaterial' --output text > server.pem
+  aws ec2 run-instances --image-id $AmiId --key-name node --subnet-id $SubnetId --instance-type $NODE_Instance_Type --count $1
+  aws ec2 run-instances --image-id $AmiId --key-name server --subnet-id $SubnetId --instance-type $SERVER_Instance_Type --count 1
   #request-spot-instances
 }
 
