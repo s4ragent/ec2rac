@@ -4,7 +4,7 @@ SERVER="192.168.0.100"
 NODELIST="192.168.0.101 192.168.0.102"
 INSTALL_LANG=ja
 TMPL_NAME="RACTMPL"
-
+AmiId=""
 RPMFORGE_URL="http://pkgs.repoforge.org/rpmforge-release/rpmforge-release-0.5.3-1.el6.rf.x86_64.rpm"
 EPEL_URL="http://dl.fedoraproject.org/pub/epel/6/x86_64/epel-release-6-8.noarch.rpm"
 
@@ -140,6 +140,7 @@ clone()
     State=`aws ec2 describe-images --region $Az --image-id $AmiId --query 'Images[].State[]' --output text`
   done
   echo $State
+  sed -i "s/^AmiId.*/AmiId=\"$AmiId\"/" $0
 }
 
 #setnodelist()
