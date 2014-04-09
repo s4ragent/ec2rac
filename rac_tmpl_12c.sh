@@ -4,7 +4,11 @@ SERVER="192.168.0.100"
 NODELIST="192.168.0.101 192.168.0.102"
 INSTALL_LANG=ja
 TMPL_NAME="RACTMPL"
-AmiId=""
+AmiId="ami-f53940f4"
+#NODE_Instance_Type="m3.large"
+NODE_Instance_Type="t1.micro"
+#SERVER_Instance_type="m3.large"
+SERVER_Instance_type="t1.micro"
 RPMFORGE_URL="http://pkgs.repoforge.org/rpmforge-release/rpmforge-release-0.5.3-1.el6.rf.x86_64.rpm"
 EPEL_URL="http://dl.fedoraproject.org/pub/epel/6/x86_64/epel-release-6-8.noarch.rpm"
 
@@ -132,6 +136,7 @@ clone()
   InstanceId=`curl -s http://169.254.169.254/latest/meta-data/instance-id`
   DATE=`date "+%Y%m%d%H%M"`
   AmiId=`aws ec2 create-image --instance-id $InstanceId --name $TMPL_NAME-$DATE --no-reboot --region $Az --output text`
+  #aws ec2 describe-images --region ap-northeast-1 --owner self --query 'Images[][?contains(Name,`RACTMPL`)==`true`].[ImageId]'
   State=`aws ec2 describe-images --region $Az --image-id $AmiId --query 'Images[].State[]' --output text`
   while [ $State = "pending" ] 
   do
