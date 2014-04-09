@@ -239,7 +239,7 @@ ssh-keygen -e -f id_rsa.pub >/work/id_rsa.pub.pem
 NODECOUNT=0
 for i in $SERVER_AND_NODE ;
 do
-  echo "`getnodename $i`,`getip 0 real $i ` `cat /etc/ssh/ssh_host_rsa_key.pub`" >> /work/known_hosts
+  echo "`getnodename $NODECOUNT`,`getip 0 real $NODECOUNT ` `cat /etc/ssh/ssh_host_rsa_key.pub`" >> /work/known_hosts
   NODECOUNT=`expr $NODECOUNT + 1`
 done
 
