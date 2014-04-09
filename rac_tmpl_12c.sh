@@ -167,6 +167,7 @@ chkconfig dnsmasq on
 createtinc()
 {
   SERVER_AND_NODE="$SERVER $NODELIST"
+  rm -rf /etc/tinc
 PORT=655
 NODENAME=`getnodename $1`
 for (( k = 0; k < ${#NETWORKS[@]}; ++k ))
@@ -179,7 +180,7 @@ Interface = tap${k}
 Mode = switch
 BindToAddress * $PORT
 EOF
-    if [ $1 != 0 ] ; then
+    if [ $1 -ne 0 ] ; then
         echo "ConnectTo = `getnodename 0`" >> /etc/tinc/$NETNAME/tinc.conf
     fi
     cp /work/id_rsa /etc/tinc/$NETNAME/rsa_key.priv
