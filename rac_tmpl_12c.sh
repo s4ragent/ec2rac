@@ -136,7 +136,7 @@ clone()
   while [ $State = "pending" ] 
   do
     echo $State
-    sleep 5
+    sleep 10
     State=`aws ec2 describe-images --region $Az --image-id $AmiId --query 'Images[].State[]' --output text`
   done
   echo $State
