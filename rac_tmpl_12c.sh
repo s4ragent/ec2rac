@@ -152,9 +152,11 @@ clone()
 startinstance(){
   Region=`curl http://169.254.169.254/latest/meta-data/placement/availability-zone -s | perl -pe chop`
   Az=`curl http://169.254.169.254/latest/meta-data/placement/availability-zone -s | perl -pe chop`
-  aws ec2 create-key-pair --region $Region --key-name $KEYNAME > .ssh/id_rsa
-  aws ec2 run-instances --image-id $AmiId --key-name $KEYNAME --tag="Role=node" --instance-type $NODE_Instance_Type --instance-count $1 --availability-zone $Az
-  aws ec2 run-instances --image-id $AmiId --key-name $KEYNAME --tag="Role=server" --instance-type $SERVER_Instance_Type --instance-count 1 --availability-zone $Az
+  aws ec2 delete-key-pair --region $Region --key-name $KEYNAME
+  sleep 5
+  aws ec2 create-key-pair --region $Region --key-name $KEYNAME --query 'KeyMaterial' --output text > .ssh/id_rsa
+  aws ec2 run-instances --image-id $AmiId --key-name $KEYNAME --tag=\"Role=node\" --instance-type $NODE_Instance_Type --instance-count $1 --availability-zone $Az
+  aws ec2 run-instances --image-id $AmiId --key-name $KEYNAME --tag=\"Role=server\" --instance-type $SERVER_Instance_Type --instance-count 1 --availability-zone $Az
   #request-spot-instances
 }
 
