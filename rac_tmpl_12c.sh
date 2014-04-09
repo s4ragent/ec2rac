@@ -122,10 +122,10 @@ getnodename ()
 
 setupnodelist()
 {
-  Az=`curl http://169.254.169.254/latest/meta-data/placement/availability-zone -s | perl -pe chop`
-  NODELIST=`aws ec2 describe-instances --region $Az --query 'Reservations[].Instances[][?contains(Tags[?Key==\`Name\`].Value, \`node\`)==\`true\`].[NetworkInterfaces[].PrivateIpAddress]' --output text`
+  Region=`curl http://169.254.169.254/latest/meta-data/placement/availability-zone -s | perl -pe chop`
+  NODELIST=`aws ec2 describe-instances --region $Region --query 'Reservations[].Instances[][?contains(Tags[?Key==\`Name\`].Value, \`node\`)==\`true\`].[NetworkInterfaces[].PrivateIpAddress]' --output text`
   NODELIST=`echo $NODELIST`
-  SERVER=`aws ec2 describe-instances --region $Az --query 'Reservations[].Instances[][?contains(Tags[?Key==\`Name\`].Value, \`server\`)==\`true\`].[NetworkInterfaces[].PrivateIpAddress]' --output text`
+  SERVER=`aws ec2 describe-instances --region $Region --query 'Reservations[].Instances[][?contains(Tags[?Key==\`Name\`].Value, \`server\`)==\`true\`].[NetworkInterfaces[].PrivateIpAddress]' --output text`
   sed -i "s/^NODELIST.*/NODELIST=\"$NODELIST\"/" $0
   sed -i "s/^SERVER.*/SERVER=\"$SERVER\"/" $0
   SERVER_AND_NODE="$SERVER $NODELIST"
@@ -133,10 +133,10 @@ setupnodelist()
 
 clone()
 {
-  Az=`curl http://169.254.169.254/latest/meta-data/placement/availability-zone -s | perl -pe chop`
+  Region=`curl http://169.254.169.254/latest/meta-data/placement/availability-zone -s | perl -pe chop`
   InstanceId=`curl -s http://169.254.169.254/latest/meta-data/instance-id`
   DATE=`date "+%Y%m%d%H%M"`
-  AmiId=`aws ec2 create-image --instance-id $InstanceId --name $TMPL_NAME-$DATE --no-reboot --region $Az --output text`
+  AmiId=`aws ec2 create-image --instance-id $InstanceId --name $TMPL_NAME-$DATE --no-reboot --region $Region --output text`
   #aws ec2 describe-images --region ap-northeast-1 --owner self --query 'Images[][?contains(Name,`RACTMPL`)==`true`].[ImageId]'
   State=`aws ec2 describe-images --region $Az --image-id $AmiId --query 'Images[].State[]' --output text`
   while [ $State = "pending" ] 
@@ -150,13 +150,20 @@ clone()
 }
 
 startinstance(){
-  Region=`curl http://169.254.169.254/latest/meta-data/placement/availability-zone -s | perl -pe chop`
-  Az=`curl http://169.254.169.254/latest/meta-data/placement/availability-zone -s | perl -pe chop`
+  InstanceId=`curl -s http://169.254.169.254/latest/meta-data/instance-id`
+  Region=`curl -s http://169.254.169.254/latest/meta-data/placement/availability-zone`
+  Az=`echo $Region | perl -pe chop`
+  VpcSubnet=`aws ec2 describe-instances --region $Region --instance-id $InstanceId --query 'Reservations[].Instances[].[VpcId,SubnetId]' --output text`
+  VpcId=`echo $VpcSubnet | awk -F " " '{print $1}'`
+  SubnetId=`echo $VpcSubnet | awk -F " " '{print $2}'`
+  
+  SgNode=`aws ec2 create-security-group --group-name node --vpc-id $VpcId --description "node" --region $Region --query 'GroupId' --output text`
+  SgServer=`aws ec2 create-security-group --group-name server --vpc-id $VpcId --description "server" --region $Region --query 'GroupId' --output text`
   aws ec2 delete-key-pair --region $Region --key-name $KEYNAME
   sleep 5
   aws ec2 create-key-pair --region $Region --key-name $KEYNAME --query 'KeyMaterial' --output text > .ssh/id_rsa
-  aws ec2 run-instances --image-id $AmiId --key-name $KEYNAME --tag=\"Role=node\" --instance-type $NODE_Instance_Type --instance-count $1 --availability-zone $Az
-  aws ec2 run-instances --image-id $AmiId --key-name $KEYNAME --tag=\"Role=server\" --instance-type $SERVER_Instance_Type --instance-count 1 --availability-zone $Az
+  aws ec2 run-instances --image-id $AmiId --key-name $KEYNAME --subnet-id $SubnetId --security-group-ids $SgNode --instance-type $NODE_Instance_Type --count $1
+  aws ec2 run-instances --image-id $AmiId --key-name $KEYNAME --subnet-id $SubnetId --security-group-ids $SgServer --instance-type $SERVER_Instance_Type --count 1
   #request-spot-instances
 }
 
