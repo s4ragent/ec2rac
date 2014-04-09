@@ -133,6 +133,12 @@ clone()
   DATE=`date "+%Y%m%d%H%M"`
   AmiId=`aws ec2 create-image --instance-id $InstanceId --name $TMPL_NAME-$DATE --no-reboot --region $Az --output text`
   State=`aws ec2 describe-images --region $Az --image-id $AmiId --query 'Images[].State[]' --output text`
+  while [ "$State" = "pending"]
+  do
+    echo $State
+    sleep 5
+    State=`aws ec2 describe-images --region $Az --image-id $AmiId --query 'Images[].State[]' --output text`
+  done
   echo $State
 }
 
