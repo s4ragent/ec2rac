@@ -5,6 +5,7 @@ NODELIST="192.168.0.101 192.168.0.102"
 INSTALL_LANG=ja
 TMPL_NAME="RACTMPL"
 AmiId="ami-f53940f4"
+KEYNAME="RACTMPL"
 #NODE_Instance_Type="m3.large"
 NODE_Instance_Type="t1.micro"
 #SERVER_Instance_type="m3.large"
@@ -146,6 +147,15 @@ clone()
   done
   echo $State
   sed -i "s/^AmiId.*/AmiId=\"$AmiId\"/" $0
+}
+
+startinstance(){
+  Region=`curl http://169.254.169.254/latest/meta-data/placement/availability-zone -s | perl -pe chop`
+  Az=`curl http://169.254.169.254/latest/meta-data/placement/availability-zone -s | perl -pe chop`
+  aws ec2 create-key-pair --region $Region --key-name $KEYNAME > .ssh/id_rsa
+  aws ec2 run-instances --image-id $AmiId --key-name $KEYNAME --tag="Role=node" --instance-type $NODE_Instance_Type --instance-count $1 --availability-zone $Az
+  aws ec2 run-instances --image-id $AmiId --key-name $KEYNAME --tag="Role=server" --instance-type $SERVER_Instance_Type --instance-count 1 --availability-zone $Az
+  #request-spot-instances
 }
 
 #setnodelist()
@@ -423,5 +433,6 @@ case "$1" in
   "setupnodelist" ) setupnodelist ;;
   "createtinc" ) createtinc $2;;
   "clone" ) clone ;;
+  "startinstance" ) startinstance $2;;
   * ) echo "known option or no option" ;;
 esac
