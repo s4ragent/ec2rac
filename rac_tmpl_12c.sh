@@ -130,7 +130,7 @@ clone()
 {
   Az=`curl http://169.254.169.254/latest/meta-data/placement/availability-zone -s | perl -pe chop`
   InstanceId=`curl -s http://169.254.169.254/latest/meta-data/instance-id`
-  aws ec2 create-image --instanceid $InstanceId --name $TMPL_NAME
+  aws ec2 create-image --instance-id $InstanceId --name $TMPL_NAME --no-reboot
 }
 
 #setnodelist()
