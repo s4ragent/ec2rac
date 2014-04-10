@@ -126,12 +126,14 @@ getnodename ()
 setupnodelist()
 {
   Region=`curl http://169.254.169.254/latest/meta-data/placement/availability-zone -s | perl -pe chop`
-  NODELIST=`aws ec2 describe-instances --region $Region --query 'Reservations[].Instances[?contains(KeyName,\`node\`)==\`true\`].[NetworkInterfaces[].PrivateIpAddress]' --output text`
-  NODELIST=`echo $NODELIST`
-  SERVER=`aws ec2 describe-instances --region $Region --query 'Reservations[].Instances[?contains(KeyName,\`server\`)==\`true\`].[NetworkInterfaces[].PrivateIpAddress]' --output text`
-  sed -i "s/^NODELIST.*/NODELIST=\"$NODELIST\"/" $0
-  sed -i "s/^SERVER.*/SERVER=\"$SERVER\"/" $0
-  SERVER_AND_NODE="$SERVER $NODELIST"
+  #NODELIST=`aws ec2 describe-instances --region $Region --query 'Reservations[].Instances[?contains(KeyName,\`node\`)==\`true\`].[NetworkInterfaces[].PrivateIpAddress]' --output text`
+  NODELIST=`aws ec2 describe-instances --region $Region --query "Reservations[].Instances[].[?contains(NetworkInterfaces[].Groups[].GroupName,\\\`$SgNodeName\\\`)==\\\`true\\\`].[]" 
+  echo $NODELIST
+  #NODELIST=`echo $NODELIST`
+  #SERVER=`aws ec2 describe-instances --region $Region --query 'Reservations[].Instances[?contains(KeyName,\`server\`)==\`true\`].[NetworkInterfaces[].PrivateIpAddress]' --output text`
+  #sed -i "s/^NODELIST.*/NODELIST=\"$NODELIST\"/" $0
+  #sed -i "s/^SERVER.*/SERVER=\"$SERVER\"/" $0
+  #SERVER_AND_NODE="$SERVER $NODELIST"
 }
 
 clone()
