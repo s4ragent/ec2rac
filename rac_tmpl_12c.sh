@@ -179,7 +179,6 @@ prestartinstances(){
   
   aws ec2 delete-key-pair --region $Region --key-name $TMPL_NAME
 
-  sleep 5
   aws ec2 create-key-pair --region $Region --key-name $TMPL_NAME --query 'KeyMaterial' --output text > .ssh/id_rsa
   chmod 400 .ssh/id_rsa
 }
@@ -198,9 +197,9 @@ requestspotinstances(){
 }
 EOF
 `
-echo $NodeJson
+#echo $NodeJson
 
-#aws ec2 request-spot-instances --spot-price $NodePrice --region $Region --launch-group $SgNodeName --launch-specification $NodeJson --instance-count $1
+aws ec2 request-spot-instances --spot-price $NodePrice --region $Region --launch-group $SgNodeName --launch-specification $NodeJson --instance-count $1
   
 }
 
