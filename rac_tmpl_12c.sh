@@ -188,13 +188,13 @@ requestspotinstances(){
   prestartinstances
   
   NodeJson=`cat <<EOF
-{
+\'{
   "ImageId": "${AmiId}",
   "KeyName": "${TMPL_NAME}",
   "InstanceType": "${NODE_Instance_Type}",
   "SubnetId": "${SubnetId}",
   "SecurityGroupIds": ["$SgNodeId"]
-}  
+} \'
 EOF
 `
   NodeJson=`echo $NodeJson`
