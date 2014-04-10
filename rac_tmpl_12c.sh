@@ -197,6 +197,8 @@ requestspotinstances(){
 }  
 EOF
 `
+  NodeJson=`echo $NodeJson`
+
 
 aws ec2 request-spot-instances --spot-price $NodePrice --region $Region --launch-group $SgNodeName --launch-specification $NodeJson --instance-count $1
   
