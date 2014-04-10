@@ -193,7 +193,7 @@ stopinstances()
   NODEIds=`echo $NODEIds`
   SERVERIds=`aws ec2 describe-instances --region $Region --query "Reservations[].Instances[][?contains(NetworkInterfaces[].Groups[].GroupName,\\\`$SgServerName\\\`)==\\\`true\\\`].InstanceId" --output text`
   SERVERIds=`echo $SERVERIds`
-  aws ec2 stop-instances --instance-ids $NODEIds $SERVERIds
+  aws ec2 stop-instances --region $Region --instance-ids $NODEIds $SERVERIds 
 
   #SERVER_AND_NODE="$SERVER $NODELIST"
 }
