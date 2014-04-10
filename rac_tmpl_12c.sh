@@ -335,17 +335,13 @@ EOF
 
 createsshkey ()
 {
-SERVER_AND_NODE="$SERVER $NODELIST"
 mkdir -p /work
 ssh-keygen -t rsa -P "" -f /work/id_rsa
 ssh-keygen -e -f /work/id_rsa.pub >/work/id_rsa.pub.pem
 
-
-NODECOUNT=0
-for i in $SERVER_AND_NODE ;
+for i in `seq 0 200` ;
 do
-  echo "`getnodename $NODECOUNT`,`getip 0 real $NODECOUNT ` `cat /etc/ssh/ssh_host_rsa_key.pub`" >> /work/known_hosts
-  NODECOUNT=`expr $NODECOUNT + 1`
+  echo "`getnodename $i`,`getip 0 real $i` `cat /etc/ssh/ssh_host_rsa_key.pub`" >> /work/known_hosts
 done
 
 for user in oracle grid
@@ -490,12 +486,11 @@ createtmpl()
 
 copyfile()
 {
-ssh -i node.pem -o "StrictHostKeyChecking no" root@$SERVER "date"
-scp -i node.pem -r $0 root@$SERVER:/root
-for i in $NODELIST ;
+SERVER_AND_NODE="$SERVER $NODELIST"
+for i in $SERVER_AND_NODE ;
 do
         ssh -i node.pem -o "StrictHostKeyChecking no" root@$i "date"
-        scp -i node.pem -r $0 root@$i:/root
+        scp -i node.pem -r $1 root@$i:/root
 done
 }
 
@@ -515,7 +510,6 @@ case "$1" in
   "clone" ) clone ;;
   "startinstances" ) startinstances $2;;
   "requestspotinstances" ) requestspotinstances $2;;
-  "copyfile" ) copyfile ;;
   "stopinstances" ) stopinstances ;;
   "terminateinstances" ) terminateinstances ;;
   * ) echo "known option or no option" ;;
