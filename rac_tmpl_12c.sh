@@ -172,15 +172,13 @@ startinstances(){
   aws ec2 authorize-security-group-ingress --group-id $SgNodeId --cidr $MyNetwork/16 --protocol -1 --port -1 --region $Region 
   aws ec2 authorize-security-group-ingress --group-id $SgServerId --cidr $MyNetwork/16 --protocol -1 --port -1 --region $Region 
   
-  #aws ec2 delete-key-pair --region $Region --key-name node
-  #aws ec2 delete-key-pair --region $Region --key-name server
-  #sleep 5
-  #aws ec2 create-key-pair --region $Region --key-name node --query 'KeyMaterial' --output text > node.pem
-  #aws ec2 create-key-pair --region $Region --key-name server --query 'KeyMaterial' --output text > server.pem
-  #chmod 400 node.pem
-  #chmod 400 server.pem
-  #aws ec2 run-instances --region $Region --image-id $AmiId --key-name node --subnet-id $SubnetId --instance-type $NODE_Instance_Type --count $1
-  #aws ec2 run-instances --region $Region --image-id $AmiId --key-name server --subnet-id $SubnetId --instance-type $SERVER_Instance_type --count 1
+  aws ec2 delete-key-pair --region $Region --key-name $TMPL_NAME
+
+  sleep 5
+  aws ec2 create-key-pair --region $Region --key-name $TMPL_NAME --query 'KeyMaterial' --output text > .ssh/id_rsa
+  chmod 400 .ssh/id_rsa
+  aws ec2 run-instances --region $Region --image-id $AmiId --key-name $TMPL_NAME --subnet-id $SubnetId --security-group-ids $SgNodeId --instance-type $NODE_Instance_Type --count $1
+  aws ec2 run-instances --region $Region --image-id $AmiId --key-name $TMPL_NAME --subnet-id $SubnetId --security-group-ids $SgServerId --instance-type $SERVER_Instance_type --count 1
   #request-spot-instances
 }
 
