@@ -155,15 +155,21 @@ startinstances(){
   VpcSubnet=`aws ec2 describe-instances --region $Region --instance-id $InstanceId --query 'Reservations[].Instances[].[VpcId,SubnetId]' --output text`
   VpcId=`echo $VpcSubnet | awk -F " " '{print $1}'`
   SubnetId=`echo $VpcSubnet | awk -F " " '{print $2}'`
-  aws ec2 delete-key-pair --region $Region --key-name node
-  aws ec2 delete-key-pair --region $Region --key-name server
-  sleep 5
-  aws ec2 create-key-pair --region $Region --key-name node --query 'KeyMaterial' --output text > node.pem
-  aws ec2 create-key-pair --region $Region --key-name server --query 'KeyMaterial' --output text > server.pem
-  chmod 400 node.pem
-  chmod 400 server.pem
-  aws ec2 run-instances --region $Region --image-id $AmiId --key-name node --subnet-id $SubnetId --instance-type $NODE_Instance_Type --count $1
-  aws ec2 run-instances --region $Region --image-id $AmiId --key-name server --subnet-id $SubnetId --instance-type $SERVER_Instance_type --count 1
+  SgNodeId=`aws ec2 create-security-group --group-name node --description "node"  --vpc-id $VpcId --region $Region --query "GroupId" --output text`
+  MyIp=`ifconfig eth0 | grep 'inet addr' | awk -F '[: ]' 'print $13'`
+  MyNetwork=`echo $MyIp | perl -ne ' if (/([\d]+\.[\d]+\.)/){ print $1}'`
+  MyNetwork="${MyNetwork}0.0"
+  aws ec2 authorize-security-group-ingress --group-id $SgNodeId --cidr $MyNetwork/16 --protocol -1 --port -1 --region $Region 
+  
+  #aws ec2 delete-key-pair --region $Region --key-name node
+  #aws ec2 delete-key-pair --region $Region --key-name server
+  #sleep 5
+  #aws ec2 create-key-pair --region $Region --key-name node --query 'KeyMaterial' --output text > node.pem
+  #aws ec2 create-key-pair --region $Region --key-name server --query 'KeyMaterial' --output text > server.pem
+  #chmod 400 node.pem
+  #chmod 400 server.pem
+  #aws ec2 run-instances --region $Region --image-id $AmiId --key-name node --subnet-id $SubnetId --instance-type $NODE_Instance_Type --count $1
+  #aws ec2 run-instances --region $Region --image-id $AmiId --key-name server --subnet-id $SubnetId --instance-type $SERVER_Instance_type --count 1
   #request-spot-instances
 }
 
