@@ -154,7 +154,7 @@ clone()
   sed -i "s/^AmiId.*/AmiId=\"$AmiId\"/" $0
 }
 
-startinstances(){
+prestartinstances(){
   InstanceId=`curl -s http://169.254.169.254/latest/meta-data/instance-id`
   Az=`curl -s http://169.254.169.254/latest/meta-data/placement/availability-zone`
   Region=`echo $Az | perl -lne 'print substr($_,0,-1)'`
@@ -179,13 +179,17 @@ startinstances(){
   sleep 5
   aws ec2 create-key-pair --region $Region --key-name $TMPL_NAME --query 'KeyMaterial' --output text > .ssh/id_rsa
   chmod 400 .ssh/id_rsa
+}
+
+startinstances(){
+  prestartinstances
   aws ec2 run-instances --region $Region --image-id $AmiId --key-name $TMPL_NAME --subnet-id $SubnetId --security-group-ids $SgNodeId --instance-type $NODE_Instance_Type --count $1
   aws ec2 run-instances --region $Region --image-id $AmiId --key-name $TMPL_NAME --subnet-id $SubnetId --security-group-ids $SgServerId --instance-type $SERVER_Instance_type --count 1
   #request-spot-instances
 }
 
 
-stopinstances()
+prestopinstances()
 {
   Region=`curl http://169.254.169.254/latest/meta-data/placement/availability-zone -s | perl -pe chop`
   #NODELIST=`aws ec2 describe-instances --region $Region --query 'Reservations[].Instances[?contains(KeyName,\`node\`)==\`true\`].[NetworkInterfaces[].PrivateIpAddress]' --output text`
@@ -193,12 +197,19 @@ stopinstances()
   NODEIds=`echo $NODEIds`
   SERVERIds=`aws ec2 describe-instances --region $Region --query "Reservations[].Instances[][?contains(NetworkInterfaces[].Groups[].GroupName,\\\`$SgServerName\\\`)==\\\`true\\\`].InstanceId" --output text`
   SERVERIds=`echo $SERVERIds`
-  aws ec2 stop-instances --region $Region --instance-ids $NODEIds $SERVERIds 
-
-  #SERVER_AND_NODE="$SERVER $NODELIST"
 }
 
+stopinstances()
+{
+  prestopinstances
+  aws ec2 stop-instances --region $Region --instance-ids $NODEIds $SERVERIds 
+}
 
+terminateinstances()
+{
+  prestopinstances
+  aws ec2 terminate-instances --region $Region --instance-ids $NODEIds $SERVERIds 
+}
 
 #setnodelist()
 #{
