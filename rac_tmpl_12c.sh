@@ -186,7 +186,7 @@ prestartinstances(){
 requestspotinstances(){
   prestartinstances
   #JSON={\"IPs\":{\"S\":\"$NODELIST\"}}
-  NodeJson={\"ImageId\": \"${AmiId}\", \"KeyName\": \"${TMPL_NAME}\",\"InstanceType\": \"${NODE_Instance_Type}\",\"SubnetId\": \"${SubnetId}\",\"SecurityGroupIds\": [\"$SgNodeId\"]}
+  NodeJson={\"ImageId\":\"${AmiId}\", \"KeyName\":\"${TMPL_NAME}\",\"InstanceType\":\"${NODE_Instance_Type}\",\"SubnetId\":\"${SubnetId}\",\"SecurityGroupIds\":[\"$SgNodeId\"]}
 
 #echo $NodeJson
 
