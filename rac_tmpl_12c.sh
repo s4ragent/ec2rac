@@ -193,7 +193,7 @@ requestspotinstances(){
   ServerJson={\"ImageId\":\"${AmiId}\",\"KeyName\":\"${TMPL_NAME}\",\"InstanceType\":\"${SERVER_Instance_type}\",\"SubnetId\":\"${SubnetId}\",\"SecurityGroupIds\":[\"$SgServerId\"]}
 
   aws ec2 request-spot-instances --spot-price $NodePrice --region $Region --launch-group $SgNodeName --launch-specification $NodeJson --instance-count $1
-  aws ec2 request-spot-instances --spot-price $ServerPrice --region $Region --launch-group $SgServerName --launch-specification $ServerJson --instance-count $1
+  aws ec2 request-spot-instances --spot-price $ServerPrice --region $Region --launch-group $SgServerName --launch-specification $ServerJson --instance-count 1
 
 }
 
