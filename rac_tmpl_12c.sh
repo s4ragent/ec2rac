@@ -185,12 +185,16 @@ prestartinstances(){
 }
 
 requestspotinstances(){
-  #prestartinstances
+  prestartinstances
   #JSON={\"IPs\":{\"S\":\"$NODELIST\"}}
   #NodeJson={"ImageId": "${AmiId}", "KeyName": "${TMPL_NAME}","InstanceType": "${NODE_Instance_Type}","SubnetId": "${SubnetId}","SecurityGroupIds": ["$SgNodeId"]}
   NodeJson=`cat <<EOF
 {
-  "ImageId": "${AmiId}"
+  "ImageId": "${AmiId}", 
+  "KeyName": "${TMPL_NAME}",
+  "InstanceType": "${NODE_Instance_Type}",
+  "SubnetId": "${SubnetId}",
+  "SecurityGroupIds": ["$SgNodeId"]
 }
 EOF
 `
