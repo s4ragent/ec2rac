@@ -499,5 +499,6 @@ case "$1" in
   "startinstances" ) startinstances $2;;
   "copyfile" ) copyfile ;;
   "stopinstances" ) stopinstances ;;
+  "terminateinstances" ) terminateinstances ;;
   * ) echo "known option or no option" ;;
 esac
