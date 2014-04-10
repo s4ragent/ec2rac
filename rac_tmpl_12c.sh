@@ -9,6 +9,10 @@ AmiId="ami-f53940f4"
 NODE_Instance_Type="t1.micro"
 #SERVER_Instance_type="m3.large"
 SERVER_Instance_type="t1.micro"
+
+SgNodeName="node-${TMPL_NAME}"
+SgServerName="server-${TMPL_NAME}"
+
 RPMFORGE_URL="http://pkgs.repoforge.org/rpmforge-release/rpmforge-release-0.5.3-1.el6.rf.x86_64.rpm"
 EPEL_URL="http://dl.fedoraproject.org/pub/epel/6/x86_64/epel-release-6-8.noarch.rpm"
 
@@ -155,11 +159,18 @@ startinstances(){
   VpcSubnet=`aws ec2 describe-instances --region $Region --instance-id $InstanceId --query 'Reservations[].Instances[].[VpcId,SubnetId]' --output text`
   VpcId=`echo $VpcSubnet | awk -F " " '{print $1}'`
   SubnetId=`echo $VpcSubnet | awk -F " " '{print $2}'`
-  SgNodeId=`aws ec2 create-security-group --group-name node --description "node"  --vpc-id $VpcId --region $Region --query "GroupId" --output text`
+
+  aws ec2 create-security-group --group-name $SgNodeName --description "$SgNodeName"  --vpc-id $VpcId --region $Region
+  aws ec2 create-security-group --group-name $SgServerName --description "$SgServerName"  --vpc-id $VpcId --region $Region
+  
+  SgNodeId=`aws ec2 describe-security-groups --region $Region --query "SecurityGroups[][?contains(GroupName,\\\`$SgNodeName\\\`)==\\\`true\\\`].[GroupId]" --output text`
+  SgServerId=`aws ec2 describe-security-groups --region $Region --query "SecurityGroups[][?contains(GroupName,\\\`$SgServerName\\\`)==\\\`true\\\`].[GroupId]" --output text`
+  
   MyIp=`ifconfig eth0 | grep 'inet addr' | awk -F '[: ]' '{print $13}'`
   MyNetwork=`echo $MyIp | perl -ne ' if (/([\d]+\.[\d]+\.)/){ print $1}'`
   MyNetwork="${MyNetwork}0.0"
   aws ec2 authorize-security-group-ingress --group-id $SgNodeId --cidr $MyNetwork/16 --protocol -1 --port -1 --region $Region 
+  aws ec2 authorize-security-group-ingress --group-id $SgServerId --cidr $MyNetwork/16 --protocol -1 --port -1 --region $Region 
   
   #aws ec2 delete-key-pair --region $Region --key-name node
   #aws ec2 delete-key-pair --region $Region --key-name server
