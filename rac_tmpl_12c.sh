@@ -20,7 +20,7 @@ RPMFORGE_URL="http://pkgs.repoforge.org/rpmforge-release/rpmforge-release-0.5.3-
 EPEL_URL="http://dl.fedoraproject.org/pub/epel/6/x86_64/epel-release-6-8.noarch.rpm"
 
 NETWORKS=("172.16.0.0" "172.17.0.0")
-SUBNET_MASK="255.255.0.0"
+SUBNET_MASK="255.255.240.0"
 NETWORK_NAME=("public" "priv")
 SCAN_NAME="scan"
 
@@ -90,34 +90,18 @@ EOF
 
 ## $1 network number, $2 real/vip/priv $3 nodenumber ###
 ## Ex.   network 172,16.0.0 , 172.17.0.0 >>>##
-## getip 0 vip 2 >>> 172.16.2.200 ###
+## getip 0 vip 2 >>> 172.16.2.2 ###
 getip ()
 {
-  if [ $SUBNET_MASK == "255.255.255.0" ] ; then
-      SEGMENT=`echo ${NETWORKS[$1]} | perl -ne ' if (/([\d]+\.[\d]+\.[\d]+\.)/){ print $1}'`
-      if [ $2 == "real" ] ; then
-        IP=`expr $3 + 100`
-        echo "${SEGMENT}${IP}"
-      elif [ $2 == "vip" ] ; then
-        IP=`expr $3 + 200`
-        echo "${SEGMENT}${IP}"
-      elif [ $2 == "scan" ] ; then
-        echo "${SEGMENT}30 ${SCAN_NAME}.${NETWORK_NAME[0]} ${SCAN_NAME}"
-        echo "${SEGMENT}31 ${SCAN_NAME}.${NETWORK_NAME[0]} ${SCAN_NAME}"
-        echo "${SEGMENT}32 ${SCAN_NAME}.${NETWORK_NAME[0]} ${SCAN_NAME}"
-      fi
-  else
-      SEGMENT=`echo ${NETWORKS[$1]} | perl -ne ' if (/([\d]+\.[\d]+\.)/){ print $1}'`
-      if [ $2 == "real" ] ; then
-        echo "${SEGMENT}${3}.100"
-      elif [ $2 == "vip" ] ; then
-        echo "${SEGMENT}${3}.200"
-      elif [ $2 == "scan" ] ; then
-        SEGMENT=`echo ${NETWORKS[$1]} | perl -ne ' if (/([\d]+\.[\d]+\.[\d]+\.)/){ print $1}'`
-        echo "${SEGMENT}30 ${SCAN_NAME}.${NETWORK_NAME[0]} ${SCAN_NAME}"
-        echo "${SEGMENT}31 ${SCAN_NAME}.${NETWORK_NAME[0]} ${SCAN_NAME}"
-        echo "${SEGMENT}32 ${SCAN_NAME}.${NETWORK_NAME[0]} ${SCAN_NAME}"
-      fi
+  SEGMENT=`echo ${NETWORKS[$1]} | perl -ne ' if (/([\d]+\.[\d]+\.)/){ print $1}'`
+  if [ $2 == "real" ] ; then
+    echo "${SEGMENT}1.${3}"
+  elif [ $2 == "vip" ] ; then
+    echo "${SEGMENT}2.${3}"
+  elif [ $2 == "scan" ] ; then
+    echo "${SEGMENT}0.30 ${SCAN_NAME}.${NETWORK_NAME[0]} ${SCAN_NAME}"
+    echo "${SEGMENT}0.31 ${SCAN_NAME}.${NETWORK_NAME[0]} ${SCAN_NAME}"
+    echo "${SEGMENT}0.32 ${SCAN_NAME}.${NETWORK_NAME[0]} ${SCAN_NAME}"
   fi
 }
 
