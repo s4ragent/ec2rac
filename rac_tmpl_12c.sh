@@ -129,10 +129,10 @@ setupnodelist()
   #NODELIST=`aws ec2 describe-instances --region $Region --query 'Reservations[].Instances[?contains(KeyName,\`node\`)==\`true\`].[NetworkInterfaces[].PrivateIpAddress]' --output text`
   NODELIST=`aws ec2 describe-instances --region $Region --query "Reservations[].Instances[][?contains(NetworkInterfaces[].Groups[].GroupName,\\\`$SgNodeName\\\`)==\\\`true\\\`].[NetworkInterfaces[].PrivateIpAddress]" --output text`
   NODELIST=`echo $NODELIST`
-  echo $NODELIST
-  #SERVER=`aws ec2 describe-instances --region $Region --query 'Reservations[].Instances[?contains(KeyName,\`server\`)==\`true\`].[NetworkInterfaces[].PrivateIpAddress]' --output text`
-  #sed -i "s/^NODELIST.*/NODELIST=\"$NODELIST\"/" $0
-  #sed -i "s/^SERVER.*/SERVER=\"$SERVER\"/" $0
+  SERVER=`aws ec2 describe-instances --region $Region --query "Reservations[].Instances[][?contains(NetworkInterfaces[].Groups[].GroupName,\\\`$SgServerName\\\`)==\\\`true\\\`].[NetworkInterfaces[].PrivateIpAddress]" --output text`
+  SERVER=`echo $SERVER`
+  sed -i "s/^NODELIST.*/NODELIST=\"$NODELIST\"/" $0
+  sed -i "s/^SERVER.*/SERVER=\"$SERVER\"/" $0
   #SERVER_AND_NODE="$SERVER $NODELIST"
 }
 
