@@ -177,10 +177,13 @@ prestartinstances(){
   aws ec2 authorize-security-group-ingress --group-id $SgNodeId --cidr $MyNetwork/16 --protocol -1 --port -1 --region $Region 
   aws ec2 authorize-security-group-ingress --group-id $SgServerId --cidr $MyNetwork/16 --protocol -1 --port -1 --region $Region 
   
-  aws ec2 delete-key-pair --region $Region --key-name $TMPL_NAME
+  #aws ec2 delete-key-pair --region $Region --key-name $TMPL_NAME
 
-  aws ec2 create-key-pair --region $Region --key-name $TMPL_NAME --query 'KeyMaterial' --output text > .ssh/id_rsa
-  chmod 400 .ssh/id_rsa
+  key=`aws ec2 create-key-pair --region $Region --key-name $TMPL_NAME --query 'KeyMaterial' --output text`
+  if [ $? -eq 0 ] ; then
+   echo $key > .ssh/id_rsa
+   chmod 400 .ssh/id_rsa
+  fi
 }
 
 requestspotinstances(){
@@ -189,8 +192,8 @@ requestspotinstances(){
   NodeJson={\"ImageId\":\"${AmiId}\",\"KeyName\":\"${TMPL_NAME}\",\"InstanceType\":\"${NODE_Instance_Type}\",\"SubnetId\":\"${SubnetId}\",\"SecurityGroupIds\":[\"$SgNodeId\"]}
   ServerJson={\"ImageId\":\"${AmiId}\",\"KeyName\":\"${TMPL_NAME}\",\"InstanceType\":\"${SERVER_Instance_Type}\",\"SubnetId\":\"${SubnetId}\",\"SecurityGroupIds\":[\"$SgServerId\"]}
 
-  aws ec2 request-spot-instances --spot-price $NodePrice --region $Region --launch-group $SgNodeName --launch-specification \'\{$NodeJson\}\' --instance-count $1
-  aws ec2 request-spot-instances --spot-price $ServerPrice --region $Region --launch-group $SgServerName --launch-specification \'\{$ServerJson\}\' --instance-count $1
+  aws ec2 request-spot-instances --spot-price $NodePrice --region $Region --launch-group $SgNodeName --launch-specification $NodeJson --instance-count $1
+  aws ec2 request-spot-instances --spot-price $ServerPrice --region $Region --launch-group $SgServerName --launch-specification $ServerJson --instance-count $1
 
 }
 
