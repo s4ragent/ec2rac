@@ -10,6 +10,9 @@ NODE_Instance_Type="t1.micro"
 #SERVER_Instance_type="m3.large"
 SERVER_Instance_type="t1.micro"
 
+NodePrice="0.01"
+ServerPrice="0.01"
+
 SgNodeName="node-${TMPL_NAME}"
 SgServerName="server-${TMPL_NAME}"
 
@@ -180,6 +183,25 @@ prestartinstances(){
   aws ec2 create-key-pair --region $Region --key-name $TMPL_NAME --query 'KeyMaterial' --output text > .ssh/id_rsa
   chmod 400 .ssh/id_rsa
 }
+
+requestspotinstances(){
+  prestartinstances
+  
+  NodeJson=`cat <<EOF
+{
+  "ImageId": "${AmiId}",
+  "KeyName": "${TMPL_NAME}",
+  "InstanceType": "${NODE_Instance_Type}",
+  "SubnetId": "${SubnetId}",
+  "SecurityGroupIds": ["$SgNodeId"]
+}  
+EOF
+`
+
+aws ec2 request-spot-instances --spot-price $NodePrice --region $Region --launch-group $SgNodeName --launch-specification $NodeJson --instance-count $1
+  
+}
+
 
 startinstances(){
   prestartinstances
@@ -497,6 +519,7 @@ case "$1" in
   "createtinc" ) createtinc $2;;
   "clone" ) clone ;;
   "startinstances" ) startinstances $2;;
+  "requestspotinstances" ) requestspotinstances $2;;
   "copyfile" ) copyfile ;;
   "stopinstances" ) stopinstances ;;
   "terminateinstances" ) terminateinstances ;;
