@@ -487,5 +487,6 @@ case "$1" in
   "clone" ) clone ;;
   "startinstances" ) startinstances $2;;
   "copyfile" ) copyfile ;;
+  "stopinstances" ) stopinstances ;;
   * ) echo "known option or no option" ;;
 esac
