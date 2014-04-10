@@ -184,6 +184,22 @@ startinstances(){
   #request-spot-instances
 }
 
+
+stopinstances()
+{
+  Region=`curl http://169.254.169.254/latest/meta-data/placement/availability-zone -s | perl -pe chop`
+  #NODELIST=`aws ec2 describe-instances --region $Region --query 'Reservations[].Instances[?contains(KeyName,\`node\`)==\`true\`].[NetworkInterfaces[].PrivateIpAddress]' --output text`
+  NODEIds=`aws ec2 describe-instances --region $Region --query "Reservations[].Instances[][?contains(NetworkInterfaces[].Groups[].GroupName,\\\`$SgNodeName\\\`)==\\\`true\\\`].InstanceId" --output text`
+  NODEIds=`echo $NODEIds`
+  SERVERIds=`aws ec2 describe-instances --region $Region --query "Reservations[].Instances[][?contains(NetworkInterfaces[].Groups[].GroupName,\\\`$SgServerName\\\`)==\\\`true\\\`].InstanceId" --output text`
+  SERVERIds=`echo $SERVERIds`
+  aws ec2 stop-instances --instance-ids $NODEIds $SERVERIds
+
+  #SERVER_AND_NODE="$SERVER $NODELIST"
+}
+
+
+
 #setnodelist()
 #{
 #  NODELIST=`aws ec2 describe-instances --region ap-northeast-1 --query 'Reservations[].Instances[][?contains(Tags[?Key==\`Name\`].Value, \`node\`)==\`true\`].[NetworkInterfaces[].PrivateIpAddress]' --output text`
