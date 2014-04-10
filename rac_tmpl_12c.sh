@@ -156,7 +156,7 @@ startinstances(){
   VpcId=`echo $VpcSubnet | awk -F " " '{print $1}'`
   SubnetId=`echo $VpcSubnet | awk -F " " '{print $2}'`
   SgNodeId=`aws ec2 create-security-group --group-name node --description "node"  --vpc-id $VpcId --region $Region --query "GroupId" --output text`
-  MyIp=`ifconfig eth0 | grep 'inet addr' | awk -F '[: ]' 'print $13'`
+  MyIp=`ifconfig eth0 | grep 'inet addr' | awk -F '[: ]' '{print $13}'`
   MyNetwork=`echo $MyIp | perl -ne ' if (/([\d]+\.[\d]+\.)/){ print $1}'`
   MyNetwork="${MyNetwork}0.0"
   aws ec2 authorize-security-group-ingress --group-id $SgNodeId --cidr $MyNetwork/16 --protocol -1 --port -1 --region $Region 
