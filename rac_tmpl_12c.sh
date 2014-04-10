@@ -273,7 +273,7 @@ EOF
     fi
     cp /work/id_rsa /etc/tinc/$NETNAME/rsa_key.priv
     
-    IP=`getip $k real $NODECOUNT`
+    IP=`getip $k real $1`
     cat > /etc/tinc/$NETNAME/tinc-up<<EOF
 #!/bin/sh
 ifconfig \$INTERFACE ${IP} netmask $SUBNET_MASK
