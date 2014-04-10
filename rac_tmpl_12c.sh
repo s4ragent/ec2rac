@@ -186,11 +186,18 @@ prestartinstances(){
 requestspotinstances(){
   prestartinstances
   #JSON={\"IPs\":{\"S\":\"$NODELIST\"}}
-  NodeJson={\"ImageId\":\"${AmiId}\",\"KeyName\":\"${TMPL_NAME}\",\"InstanceType\":\"${NODE_Instance_Type}\",\"SubnetId\":\"${SubnetId}\",\"SecurityGroupIds\":[\"$SgNodeId\"]}
-
+  #NodeJson={\"ImageId\":\"${AmiId}\",\"KeyName\":\"${TMPL_NAME}\",\"InstanceType\":\"${NODE_Instance_Type}\",\"SubnetId\":\"${SubnetId}\",\"SecurityGroupIds\":[\"$SgNodeId\"]}
+  NodeJson=`cat <<EOF
+  "ImageId": "${AmiId}",
+  "KeyName": "${TMPL_NAME}",
+  "InstanceType": "${NODE_Instance_Type}",
+  "SubnetId": "${SubnetId}",
+  "SecurityGroupIds": ["$SgNodeId"]
+EOF
+`
 #echo $NodeJson
 
-aws ec2 request-spot-instances --spot-price $NodePrice --region $Region --launch-group $SgNodeName --launch-specification $NodeJson --instance-count $1
+aws ec2 request-spot-instances --spot-price $NodePrice --region $Region --launch-group $SgNodeName --launch-specification {$NodeJson} --instance-count $1
   
 }
 
