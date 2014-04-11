@@ -307,7 +307,7 @@ Address = $i $PORT
 Cipher = none
 Digest = none
 
-`cat id_rsa.pub.pem` 
+`cat ./id_rsa.pub.pem` 
 EOF
 
     NODECOUNT=`expr $NODECOUNT + 1`
@@ -319,7 +319,6 @@ done
 
 setupall(){
   #startupinnstance
-  rm -rf ./id_rsa*
   setupnodelist
   createsshkey
   copyfile ./id_rsa
@@ -351,6 +350,7 @@ EOF
 
 createsshkey ()
 {
+rm -rf ./id_rsa*
 ssh-keygen -t rsa -P "" -f ./id_rsa
 ssh-keygen -e -f ./id_rsa.pub > ./id_rsa.pub.pem
 }
