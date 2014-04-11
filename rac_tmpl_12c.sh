@@ -318,6 +318,7 @@ done
 
 setupall(){
   #startupinnstance
+  rm -rf ./id_rsa*
   setupnodelist
   createsshkey
   copyfile ./id_rsa
