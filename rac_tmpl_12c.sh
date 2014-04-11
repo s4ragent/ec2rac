@@ -173,19 +173,17 @@ prestartinstances(){
   aws ec2 authorize-security-group-ingress --group-id $SgNodeId --cidr $MyNetwork/16 --protocol -1 --port -1 --region $Region 
   aws ec2 authorize-security-group-ingress --group-id $SgServerId --cidr $MyNetwork/16 --protocol -1 --port -1 --region $Region 
   
-  if [ -f $KEY_PAIR ] ; then
+  if [! -e $KEY_PAIR ] ; then
         aws ec2 create-key-pair --region $Region --key-name $KEY_NAME --query 'KeyMaterial' --output text > $KEY_PAIR
   fi
-
-  
 
 }
 
 requestspotinstances(){
   prestartinstances
   #JSON={\"IPs\":{\"S\":\"$NODELIST\"}}
-  NodeJson={\"ImageId\":\"${AmiId}\",\"KeyName\":\"${TMPL_NAME}\",\"InstanceType\":\"${NODE_Instance_Type}\",\"SubnetId\":\"${SubnetId}\",\"SecurityGroupIds\":[\"$SgNodeId\"]}
-  ServerJson={\"ImageId\":\"${AmiId}\",\"KeyName\":\"${TMPL_NAME}\",\"InstanceType\":\"${SERVER_Instance_type}\",\"SubnetId\":\"${SubnetId}\",\"SecurityGroupIds\":[\"$SgServerId\"]}
+  NodeJson={\"ImageId\":\"${AmiId}\",\"KeyName\":\"${KEY_NAME}\",\"InstanceType\":\"${NODE_Instance_Type}\",\"SubnetId\":\"${SubnetId}\",\"SecurityGroupIds\":[\"$SgNodeId\"]}
+  ServerJson={\"ImageId\":\"${AmiId}\",\"KeyName\":\"${KEY_NAME}\",\"InstanceType\":\"${SERVER_Instance_type}\",\"SubnetId\":\"${SubnetId}\",\"SecurityGroupIds\":[\"$SgServerId\"]}
 
   aws ec2 request-spot-instances --spot-price $NodePrice --region $Region --launch-group $SgNodeName --launch-specification $NodeJson --instance-count $1
   aws ec2 request-spot-instances --spot-price $ServerPrice --region $Region --launch-group $SgServerName --launch-specification $ServerJson --instance-count 1
@@ -195,8 +193,8 @@ requestspotinstances(){
 
 startinstances(){
   prestartinstances
-  aws ec2 run-instances --region $Region --image-id $AmiId --key-name $TMPL_NAME --subnet-id $SubnetId --security-group-ids $SgNodeId --instance-type $NODE_Instance_Type --count $1
-  aws ec2 run-instances --region $Region --image-id $AmiId --key-name $TMPL_NAME --subnet-id $SubnetId --security-group-ids $SgServerId --instance-type $SERVER_Instance_type --count 1
+  aws ec2 run-instances --region $Region --image-id $AmiId --key-name $KEY_NAME --subnet-id $SubnetId --security-group-ids $SgNodeId --instance-type $NODE_Instance_Type --count $1
+  aws ec2 run-instances --region $Region --image-id $AmiId --key-name $KEY_NAME --subnet-id $SubnetId --security-group-ids $SgServerId --instance-type $SERVER_Instance_type --count 1
   #request-spot-instances
 }
 
