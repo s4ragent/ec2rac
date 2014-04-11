@@ -329,7 +329,7 @@ setupall(){
   NODECOUNT=0
   for i in $SERVER_AND_NODE ;
   do
-        ssh -i $KEY_PAIR-o "StrictHostKeyChecking no" root@$i "sh $0 createtincconf $NODECOUNT"
+        ssh -i $KEY_PAIR -o "StrictHostKeyChecking no" root@$i "sh $0 createtincconf $NODECOUNT"
         NODECOUNT=`expr $NODECOUNT + 1`
   done
   
