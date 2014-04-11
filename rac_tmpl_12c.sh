@@ -53,8 +53,8 @@ copyfile()
 SERVER_AND_NODE="$SERVER $NODELIST"
 for i in $SERVER_AND_NODE ;
 do
-        ssh -o "StrictHostKeyChecking no" root@$i "date"
-        scp -r $1 root@$i:/root
+        ssh -i ${TMPL_NAME}.pem -o "StrictHostKeyChecking no" root@$i "date"
+        scp -i ${TMPL_NAME}.pem -r $1 root@$i:/root
 done
 }
 
@@ -175,8 +175,8 @@ prestartinstances(){
 
   key=`aws ec2 create-key-pair --region $Region --key-name $TMPL_NAME --query 'KeyMaterial' --output text`
   if [ $? -eq 0 ] ; then
-   echo $key > .ssh/id_rsa
-   chmod 400 .ssh/id_rsa
+   echo $key > ${TMPL_NAME}.pem
+   chmod 400  ${TMPL_NAME}.pem
   fi
 }
 
