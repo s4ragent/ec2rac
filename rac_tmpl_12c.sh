@@ -519,5 +519,6 @@ case "$1" in
   "requestspotinstances" ) requestspotinstances $2;;
   "stopinstances" ) stopinstances ;;
   "terminateinstances" ) terminateinstances ;;
+  "setupall" ) setupall ;;
   * ) echo "known option or no option" ;;
 esac
