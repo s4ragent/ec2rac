@@ -173,7 +173,7 @@ prestartinstances(){
   aws ec2 authorize-security-group-ingress --group-id $SgNodeId --cidr $MyNetwork/16 --protocol -1 --port -1 --region $Region 
   aws ec2 authorize-security-group-ingress --group-id $SgServerId --cidr $MyNetwork/16 --protocol -1 --port -1 --region $Region 
   
-  if [! -e $KEY_PAIR ] ; then
+  if [ ! -e $KEY_PAIR ] ; then
         aws ec2 create-key-pair --region $Region --key-name $KEY_NAME --query 'KeyMaterial' --output text > $KEY_PAIR
   fi
 
