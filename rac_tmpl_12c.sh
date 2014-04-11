@@ -48,6 +48,16 @@ ORACLE_PASSWORD="P@ssw0rd"
 SCSI_TARGET_NAME="iqn.2014-05.org.jpoug:server.crs"
 
 
+copyfile()
+{
+SERVER_AND_NODE="$SERVER $NODELIST"
+for i in $SERVER_AND_NODE ;
+do
+        ssh -o "StrictHostKeyChecking no" root@$i "date"
+        scp -r $1 root@$i:/root
+done
+}
+
 installpackage ()
 {
   rpm -ivh $RPMFORGE_URL
@@ -252,7 +262,7 @@ chkconfig dnsmasq on
 }
 
 
-createtinc()
+createtincconf()
 {
   SERVER_AND_NODE="$SERVER $NODELIST"
   rm -rf /etc/tinc
@@ -271,7 +281,7 @@ EOF
     if [ "$1" != "0" ] ; then
         echo "ConnectTo = `getnodename 0`" >> /etc/tinc/$NETNAME/tinc.conf
     fi
-    cp /work/id_rsa /etc/tinc/$NETNAME/rsa_key.priv
+    cp ./id_rsa /etc/tinc/$NETNAME/rsa_key.priv
     
     IP=`getip $k real $1`
     cat > /etc/tinc/$NETNAME/tinc-up<<EOF
@@ -296,7 +306,7 @@ Address = $i $PORT
 Cipher = none
 Digest = none
 
-`cat /work/id_rsa.pub.pem` 
+`cat id_rsa.pub.pem` 
 EOF
 
     NODECOUNT=`expr $NODECOUNT + 1`
@@ -305,6 +315,26 @@ EOF
     
 done
 }
+
+setupall(){
+  #startupinnstance
+  setupnodelist
+  createsshkey
+  copyfile ./id_rsa
+  copyfile ./id_rsa.pub
+  copyfile ./id_rsa.pub.pem
+  copyfile $0
+  
+  SERVER_AND_NODE="$SERVER $NODELIST"
+  NODECOUNT=0
+  for i in $SERVER_AND_NODE ;
+  do
+        ssh -i -o "StrictHostKeyChecking no" root@$i "sh $0 createtincconf $NODECOUNT"
+        NODECOUNT=`expr $NODECOUNT + 1`
+  done
+  
+}
+
 
 changehostname ()
 {
@@ -319,25 +349,8 @@ EOF
 
 createsshkey ()
 {
-mkdir -p /work
-ssh-keygen -t rsa -P "" -f /work/id_rsa
-ssh-keygen -e -f /work/id_rsa.pub >/work/id_rsa.pub.pem
-
-for i in `seq 0 200` ;
-do
-  echo "`getnodename $i`,`getip 0 real $i` `cat /etc/ssh/ssh_host_rsa_key.pub`" >> /work/known_hosts
-done
-
-for user in oracle grid
-do
-        mkdir /home/$user/.ssh
-        cat /work/id_rsa.pub >> /home/$user/.ssh/authorized_keys
-        cp /work/id_rsa /home/$user/.ssh/
-        cp /work/known_hosts /home/$user/.ssh
-        chown -R ${user}.oinstall /home/$user/.ssh
-        chmod 700 /home/$user/.ssh
-        chmod 600 /home/$user/.ssh/*
-done
+ssh-keygen -t rsa -P "" -f ./id_rsa
+ssh-keygen -e -f ./id_rsa.pub > ./id_rsa.pub.pem
 }
 
 createuser ()
@@ -359,6 +372,23 @@ groupadd -g 1002 asmdba
 groupadd -g 1003 asmoper
 useradd -u 501 -m -g oinstall -G dba,oper,asmdba -d /home/oracle -s /bin/bash -c"Oracle Software Owner" oracle
 useradd -u 1001 -m -g oinstall -G asmadmin,asmdba,asmoper -d /home/grid -s /bin/bash -c "Grid Infrastructure Owner" grid
+
+for i in `seq 0 200` ;
+do
+  echo "`getnodename $i`,`getip 0 real $i` `cat /etc/ssh/ssh_host_rsa_key.pub`" >> ./known_hosts
+done
+
+
+for user in oracle grid
+do
+        mkdir /home/$user/.ssh
+        cat ./id_rsa.pub >> /home/$user/.ssh/authorized_keys
+        cp ./id_rsa /home/$user/.ssh/
+        cp ./known_hosts /home/$user/.ssh
+        chown -R ${user}.oinstall /home/$user/.ssh
+        chmod 700 /home/$user/.ssh
+        chmod 600 /home/$user/.ssh/*
+done
 
 ##edit password ##
 echo "grid:$GRID_PASSWORD" | chpasswd
@@ -465,18 +495,11 @@ createtmpl()
 {
   createuser
   createsshkey
-  createtinc
 }
 
-copyfile()
-{
-SERVER_AND_NODE="$SERVER $NODELIST"
-for i in $SERVER_AND_NODE ;
-do
-        ssh -i node.pem -o "StrictHostKeyChecking no" root@$i "date"
-        scp -i node.pem -r $1 root@$i:/root
-done
-}
+
+
+
 
 case "$1" in
   "createtmpl" ) createtmpl ;;
@@ -490,7 +513,7 @@ case "$1" in
   "createoraclehome" ) createoraclehome ;;
   "setupdns" ) setupdns ;;
   "setupnodelist" ) setupnodelist ;;
-  "createtinc" ) createtinc $2;;
+  "createtincconf" ) createtincconf $2;;
   "clone" ) clone ;;
   "startinstances" ) startinstances $2;;
   "requestspotinstances" ) requestspotinstances $2;;
