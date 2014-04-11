@@ -4,6 +4,8 @@ SERVER="192.168.0.100"
 NODELIST="192.168.0.101 192.168.0.102"
 INSTALL_LANG=ja
 TMPL_NAME="RACTMPL"
+KEY_NAME="RACTMPL"
+KEY_PAIR="${KEY_NAME}.pem"
 AmiId="ami-f53940f4"
 #NODE_Instance_Type="m3.large"
 NODE_Instance_Type="t1.micro"
@@ -53,8 +55,8 @@ copyfile()
 SERVER_AND_NODE="$SERVER $NODELIST"
 for i in $SERVER_AND_NODE ;
 do
-        ssh -i ${TMPL_NAME}.pem -o "StrictHostKeyChecking no" root@$i "date"
-        scp -i ${TMPL_NAME}.pem -r $1 root@$i:/root
+        ssh -i $KEY_PAIR -o "StrictHostKeyChecking no" root@$i "date"
+        scp -i $KEY_PAIR -r $1 root@$i:/root
 done
 }
 
@@ -171,13 +173,12 @@ prestartinstances(){
   aws ec2 authorize-security-group-ingress --group-id $SgNodeId --cidr $MyNetwork/16 --protocol -1 --port -1 --region $Region 
   aws ec2 authorize-security-group-ingress --group-id $SgServerId --cidr $MyNetwork/16 --protocol -1 --port -1 --region $Region 
   
-  #aws ec2 delete-key-pair --region $Region --key-name $TMPL_NAME
-
-  key=`aws ec2 create-key-pair --region $Region --key-name $TMPL_NAME --query 'KeyMaterial' --output text`
-  if [ $? -eq 0 ] ; then
-   echo $key > ${TMPL_NAME}.pem
-   chmod 400  ${TMPL_NAME}.pem
+  if [ -f $KEY_PAIR ] ; then
+        aws ec2 create-key-pair --region $Region --key-name $KEY_NAME --query 'KeyMaterial' --output text > $KEY_PAIR
   fi
+
+  
+
 }
 
 requestspotinstances(){
