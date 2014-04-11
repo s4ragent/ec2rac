@@ -311,8 +311,9 @@ EOF
     NODECOUNT=`expr $NODECOUNT + 1`
     done
     PORT=`expr $PORT + 1`
-    
 done
+chkconfig tinc on
+/etc/init.d/tinc start
 }
 
 setupall(){
