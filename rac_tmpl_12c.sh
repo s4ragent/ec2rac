@@ -128,8 +128,8 @@ setupnodelist()
   NODELIST=`echo $NODELIST`
   SERVER=`aws ec2 describe-instances --region $Region --query "Reservations[].Instances[][?contains(NetworkInterfaces[].Groups[].GroupName,\\\`$SgServerName\\\`)==\\\`true\\\`].[NetworkInterfaces[].PrivateIpAddress]" --output text`
   SERVER=`echo $SERVER`
-  sed -i "s/^NODELIST.*/NODELIST=\"$NODELIST\"/" $0
-  sed -i "s/^SERVER.*/SERVER=\"$SERVER\"/" $0
+  sed -i "s/^NODELIST=.*/NODELIST=\"$NODELIST\"/" $0
+  sed -i "s/^SERVER=.*/SERVER=\"$SERVER\"/" $0
   #SERVER_AND_NODE="$SERVER $NODELIST"
 }
 
