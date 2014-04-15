@@ -237,6 +237,61 @@ terminateinstances()
 #{
 #  NODELIST=`aws dynamodb scan --region ap-northeast-1 --table-name Nodelist --output text  | perl -ne ' if (/([\d].+)/){ print $1}'`
 #}
+setupkernel()
+{
+sed -i  's/HWADDR=/#HWADDR=/' /etc/sysconfig/network-scripts/ifcfg-eth0
+
+###selinux disable####
+sed -i  's/SELINUX=enforcing/SELINUX=disabled/' /etc/selinux/config
+setenforce 0
+
+
+##disable firewall####
+chkconfig iptables off
+/etc/init.d/iptables stop
+
+###disable NetworkManager##
+chkconfig NetworkManager off
+/etc/init.d/NetworkManager stop
+
+## PAM ###
+echo "session required pam_limits.so" >> /etc/pam.d/login
+###kernel parameter ####
+
+cat >> /etc/sysctl.conf <<EOF
+#this is for oracle install#
+net.ipv4.ip_local_port_range = 9000 65500
+net.core.rmem_default = 262144
+net.core.rmem_max = 4194304
+net.core.wmem_default = 262144
+net.core.wmem_max = 1048576
+kernel.shmmax = ${MEMSIZE}
+kernel.shmall = 4294967296
+kernel.shmmni = 4096
+kernel.sem = 250 32000 100 128
+fs.file-max = 6815744
+fs.aio-max-nr = 1048576
+EOF
+
+##### limits.conf #####
+sed -i 's/oracle/#oracle/' /etc/security/limits.conf
+cat >> /etc/security/limits.conf <<EOF
+#this is for oracle install#
+oracle - nproc 16384
+oracle - nofile 65536
+oracle soft stack 10240
+grid - nproc 16384
+grid - nofile 65536
+grid soft stack 10240
+EOF
+
+##disable ntp####
+chkconfig ntpd off
+mv /etc/ntp.conf /etc/ntp.conf.original
+rm /var/run/ntpd.pid
+}
+(END) 
+
 
 setupdns ()
 {
@@ -399,6 +454,7 @@ setupall(){
   #startupinnstance
   setupnodelist
   createsshkey
+  setupkernel
   copyfile ./id_rsa
   copyfile ./id_rsa.pub
   copyfile ./dummy
