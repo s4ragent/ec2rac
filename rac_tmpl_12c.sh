@@ -300,8 +300,8 @@ do
     NETNAME=${NETWORK_NAME[$k]}     
     mkdir -p /etc/tinc/$NETNAME/hosts
     echo $NETNAME >> /etc/tinc/nets.boot
-    echo "tinc          ${PORT}/tcp             TINC" >> /etc/services
-    echo "tinc          ${PORT}/udp             TINC" >> /etc/services
+    echo "tinc          ${PORT}/tcp             #TINC" >> /etc/services
+    echo "tinc          ${PORT}/udp             #TINC" >> /etc/services
     cp ./dummy/tinc.conf /etc/tinc/$NETNAME/tinc.conf
     sed -i "s/^Name =.*/Name = $NODENAME/" /etc/tinc/$NETNAME/tinc.conf
     sed -i "s/^Interface = .*/Interface = tap${k}/" /etc/tinc/$NETNAME/tinc.conf
