@@ -260,6 +260,33 @@ chkconfig dnsmasq on
 
 }
 
+pretincconf()
+{
+  rm -rf ./dummy
+  mkdir -p ./dummy/hosts
+  cat > ./dummy/tinc.conf <<EOF
+Name = dummy
+Interface = tap0
+Mode = switch
+BindToAddress * 655
+ConnectTo = `getnodename 0`
+EOF
+  cat > ./dummy/hosts/dummy<<EOF
+Address = 127.0.0.1 655
+Cipher = none
+Digest = none
+EOF
+  expect -c "
+spawn tincd --config ./dummy -K
+expect \"Please enter a file to save private RSA key to\"
+sleep 3
+send \"\r\n\"
+expect \"Please enter a file to save public RSA key to\"
+sleep 3
+send \"\r\n\"
+"
+}
+
 
 createtincconf()
 {
@@ -522,5 +549,6 @@ case "$1" in
   "stopinstances" ) stopinstances ;;
   "terminateinstances" ) terminateinstances ;;
   "setupall" ) setupall ;;
+  "pretincconf" pretincconf ;;
   * ) echo "known option or no option" ;;
 esac
