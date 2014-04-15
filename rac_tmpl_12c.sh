@@ -271,6 +271,7 @@ for (( k = 0; k < ${#NETWORKS[@]}; ++k ))
 do
     NETNAME=${NETWORK_NAME[$k]}     
     mkdir -p /etc/tinc/$NETNAME/hosts
+    echo $NETNAME >> /etc/tinc/nets.boot
     cat > /etc/tinc/$NETNAME/tinc.conf<<EOF
 Name = $NODENAME
 Interface = tap${k}
