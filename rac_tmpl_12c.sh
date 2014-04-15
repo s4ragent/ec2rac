@@ -264,6 +264,7 @@ chkconfig dnsmasq on
 createtincconf()
 {
   SERVER_AND_NODE="$SERVER $NODELIST"
+  /etc/init.d/tinc stop
   rm -rf /etc/tinc
 PORT=655
 NODENAME=`getnodename $1`
