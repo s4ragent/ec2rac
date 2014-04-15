@@ -352,8 +352,7 @@ EOF
 createsshkey ()
 {
 rm -rf ./id_rsa*
-ssh-keygen -t rsa1 -P "" -f ./id_rsa
-ssh-keygen -e -f ./id_rsa.pub > ./id_rsa.pub.pem
+ssh-keygen -t rsa -P "" -f ./id_rsa
 }
 
 createuser ()
