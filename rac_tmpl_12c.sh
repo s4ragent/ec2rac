@@ -400,7 +400,7 @@ setupall(){
   createsshkey
   copyfile ./id_rsa
   copyfile ./id_rsa.pub
-  copyfile ./id_rsa.pub.pem
+  copyfile ./dummy
   copyfile $0
   
   SERVER_AND_NODE="$SERVER $NODELIST"
