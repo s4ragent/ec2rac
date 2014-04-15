@@ -290,8 +290,6 @@ chkconfig ntpd off
 mv /etc/ntp.conf /etc/ntp.conf.original
 rm /var/run/ntpd.pid
 }
-(END) 
-
 
 setupdns ()
 {
