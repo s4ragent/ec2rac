@@ -328,7 +328,7 @@ EOF
     do
       NODENAME2=`getnodename $NODECOUNT`
       cp ./dummy/hosts/dummy /etc/tinc/$NETNAME/hosts/$NODENAME2
-      sed -i "s/^Address = .*/Address = $i $PORT/" /etc/tinc/$NETNAME/tinc.conf
+      sed -i "s/^Address = .*/Address = $i $PORT/" /etc/tinc/$NETNAME/hosts/$NODENAME2
       NODECOUNT=`expr $NODECOUNT + 1`
     done
     PORT=`expr $PORT + 1`
