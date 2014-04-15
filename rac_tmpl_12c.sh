@@ -287,8 +287,57 @@ send \"\r\n\"
 "
 }
 
-
 createtincconf()
+{
+  SERVER_AND_NODE="$SERVER $NODELIST"
+  /etc/init.d/tinc stop
+  sleep 5
+  rm -rf /etc/tinc
+PORT=655
+NODENAME=`getnodename $1`
+for (( k = 0; k < ${#NETWORKS[@]}; ++k ))
+do
+    NETNAME=${NETWORK_NAME[$k]}     
+    mkdir -p /etc/tinc/$NETNAME/hosts
+    echo $NETNAME >> /etc/tinc/nets.boot
+    echo "tinc          ${PORT}/tcp             TINC" >> /etc/services
+    echo "tinc          ${PORT}/udp             TINC" >> /etc/services
+    cp ./dummy/tinc.conf /etc/tinc/$NETNAME/tinc.conf
+    sed -i "s/^Name =.*/Name = $NODENAME/" /etc/tinc/$NETNAME/tinc.conf
+    sed -i "s/^Interface = .*/Interface = tap${k}/" /etc/tinc/$NETNAME/tinc.conf
+    sed -i "s/^BindToAddress.*/BindToAddress \* $PORT/" /etc/tinc/$NETNAME/tinc.conf
+    
+    cp ./dummy/rsa_key.priv /etc/tinc/$NETNAME/rsa_key.priv
+    
+    IP=`getip $k real $1`
+    cat > /etc/tinc/$NETNAME/tinc-up<<EOF
+#!/bin/sh
+ifconfig \$INTERFACE ${IP} netmask $SUBNET_MASK
+EOF
+
+    cat > /etc/tinc/$NETNAME/tinc-down<<EOF
+#!/bin/sh
+ifconfig \$INTERFACE down
+EOF
+
+    chmod 755 /etc/tinc/$NETNAME/tinc-up
+    chmod 755 /etc/tinc/$NETNAME/tinc-down
+    
+    NODECOUNT=0
+    for i in $SERVER_AND_NODE ;
+    do
+      NODENAME2=`getnodename $NODECOUNT`
+      cp ./dummy/hosts/dummy /etc/tinc/$NETNAME/hosts/$NODENAME2
+      sed -i "s/^Address = .*/Address = $i $PORT/" /etc/tinc/$NETNAME/tinc.conf
+      NODECOUNT=`expr $NODECOUNT + 1`
+    done
+    PORT=`expr $PORT + 1`
+done
+chkconfig tinc on
+/etc/init.d/tinc start
+}
+
+createtincconf1()
 {
   SERVER_AND_NODE="$SERVER $NODELIST"
   /etc/init.d/tinc stop
