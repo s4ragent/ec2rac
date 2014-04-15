@@ -598,6 +598,6 @@ case "$1" in
   "stopinstances" ) stopinstances ;;
   "terminateinstances" ) terminateinstances ;;
   "setupall" ) setupall ;;
-  "pretincconf" pretincconf ;;
+  "pretincconf" ) pretincconf ;;
   * ) echo "known option or no option" ;;
 esac
