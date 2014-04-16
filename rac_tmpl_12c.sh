@@ -31,8 +31,7 @@ SCAN_NAME="scan"
 #/dev/sdi => /dev/xvdm#
 ORACLE_HOME_DEVICE=m
 ORACLE_HOME_EBS="/dev/xvd${ORACLE_HOME_DEVICE}"
-
-
+SWAP_DEVICE="/dev/xvdb"
 
 #ORACLE_BASE and ORACLE_HOME edit it if need this path must under /u01 ##
 MOUNT_PATH=/u01
@@ -50,6 +49,11 @@ ORACLE_PASSWORD="P@ssw0rd"
 ## scsi target name ###
 SCSI_TARGET_NAME="iqn.2014-05.org.jpoug:server.crs"
 
+
+
+createswap(){
+echo "umount $SWAP_DEVICE;mkswap $SWAP_DEVICE;swapon $SWAP_DEVICE" >> /etc/rc.local
+}
 
 copyfile()
 {
