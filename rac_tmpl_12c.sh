@@ -293,24 +293,29 @@ rm /var/run/ntpd.pid
 
 setupdns ()
 {
-  SERVER_AND_NODE="$SERVER $NODELIST"
-  SEGMENT=`echo ${NETWORKS[0]} | perl -ne ' if (/([\d]+\.[\d]+\.[\d]+\.)/){ print $1}'`
-
-  echo "### scan entry ###" >> /etc/hosts
-  getip 0 scan >> /etc/hosts
-
-echo "### public,vip entry###" >> /etc/hosts
-NODECOUNT=0
-for i in $SERVER_AND_NODE ;
-do
+        
+  if [ "$1" != "0" ] ; then
+        echo "nameserver ${SERVER}" >/etc/resolv.conf
+        echo "nameserver ${SERVER}" >/etc/resolv.tmpl
+        sed -i "6i cp -f /etc/resolv.tmpl /etc/resolv.conf" /etc/rc.local
+  else
+    SERVER_AND_NODE="$SERVER $NODELIST"
+    SEGMENT=`echo ${NETWORKS[0]} | perl -ne ' if (/([\d]+\.[\d]+\.[\d]+\.)/){ print $1}'`
+    echo "### scan entry ###" >> /etc/hosts
+    getip 0 scan >> /etc/hosts
+    echo "### public,vip entry###" >> /etc/hosts
+    NODECOUNT=0
+    for i in $SERVER_AND_NODE ;
+    do
         echo "`getip 0 real $NODECOUNT` `getnodename $NODECOUNT`.${NETWORK_NAME[0]} `getnodename $NODECOUNT`" >> /etc/hosts
         echo "`getip 0 vip $NODECOUNT` `getnodename $NODECOUNT`-vip.${NETWORK_NAME[0]} `getnodename $NODECOUNT`-vip" >> /etc/hosts
         NODECOUNT=`expr $NODECOUNT + 1`
-done
+    done
+    ###enable dnsmasq####
+    chkconfig dnsmasq on
+    /etc/init.d/dnsmasq start
+  fi        
 
-###enable dnsmasq####
-chkconfig dnsmasq on
-/etc/init.d/dnsmasq start
 
 }
 
