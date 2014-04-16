@@ -183,10 +183,11 @@ setupnodelist()
 lone()
 {
   Region=`curl http://169.254.169.254/latest/meta-data/placement/availability-zone -s | perl -pe chop`
-  deviceJson=[{\"DeviceName\":\"/dev/sda1\",\"Ebs\":{\"VolumeSize\":25,\"DeleteOnTermination\":true,\"VolumeType\":\"standard\"}},{\"DeviceName\":\"/dev/sdb\",\"VirtualName\":\"ephemeral0\"}]
+  #deviceJson=[{\"DeviceName\":\"/dev/sda1\",\"Ebs\":{\"VolumeSize\":25,\"DeleteOnTermination\":true,\"VolumeType\":\"standard\"}},{\"DeviceName\":\"/dev/sdb\",\"VirtualName\":\"ephemeral0\"}]
   InstanceId=`curl -s http://169.254.169.254/latest/meta-data/instance-id`
   DATE=`date "+%Y%m%d%H%M"`
-  AmiId=`aws ec2 create-image --instance-id $InstanceId --name $TMPL_NAME-$DATE --no-reboot --region $Region --block-device-mappings $deviceJson --output text`
+  #AmiId=`aws ec2 create-image --instance-id $InstanceId --name $TMPL_NAME-$DATE --no-reboot --region $Region --block-device-mappings $deviceJson --output text`
+  AmiId=`aws ec2 create-image --instance-id $InstanceId --name $TMPL_NAME-$DATE --no-reboot --region $Region --output text`
   State=`aws ec2 describe-images --region $Region --image-id $AmiId --query 'Images[].State[]' --output text`
   while [ $State = "pending" ]
   do
@@ -228,8 +229,10 @@ prestartinstances(){
 requestspotinstances(){
   prestartinstances
   #JSON={\"IPs\":{\"S\":\"$NODELIST\"}}
-  NodeJson={\"ImageId\":\"${AmiId}\",\"KeyName\":\"${KEY_NAME}\",\"InstanceType\":\"${NODE_Instance_Type}\",\"SubnetId\":\"${SubnetId}\",\"SecurityGroupIds\":[\"$SgNodeId\"]}
-  ServerJson={\"ImageId\":\"${AmiId}\",\"KeyName\":\"${KEY_NAME}\",\"InstanceType\":\"${SERVER_Instance_type}\",\"SubnetId\":\"${SubnetId}\",\"SecurityGroupIds\":[\"$SgServerId\"]}
+  NodedeviceJson="BlockDeviceMappings":[{\"DeviceName\":\"/dev/sda1\",\"Ebs\":{\"VolumeSize\":25,\"DeleteOnTermination\":true,\"VolumeType\":\"standard\"}},{\"DeviceName\":\"/dev/sdb\",\"VirtualName\":\"ephemeral0\"}]
+  ServerdeviceJson="BlockDeviceMappings":[{\"DeviceName\":\"/dev/sda1\",\"Ebs\":{\"VolumeSize\":15,\"DeleteOnTermination\":true,\"VolumeType\":\"standard\"}},{\"DeviceName\":\"/dev/sdb\",\"VirtualName\":\"ephemeral0\"}]
+  NodeJson={\"ImageId\":\"${AmiId}\",\"KeyName\":\"${KEY_NAME}\",\"InstanceType\":\"${NODE_Instance_Type}\",$NodedeviceJson,\"SubnetId\":\"${SubnetId}\",\"SecurityGroupIds\":[\"$SgNodeId\"]}
+  ServerJson={\"ImageId\":\"${AmiId}\",\"KeyName\":\"${KEY_NAME}\",\"InstanceType\":\"${SERVER_Instance_type}\",$ServerdeviceJson,\"SubnetId\":\"${SubnetId}\",\"SecurityGroupIds\":[\"$SgServerId\"]}
 
   aws ec2 request-spot-instances --spot-price $NodePrice --region $Region --launch-group $SgNodeName --launch-specification $NodeJson --instance-count $1
   aws ec2 request-spot-instances --spot-price $ServerPrice --region $Region --launch-group $SgServerName --launch-specification $ServerJson --instance-count 1
@@ -238,9 +241,12 @@ requestspotinstances(){
 
 
 startinstances(){
+  ServerdeviceJson=[{\"DeviceName\":\"/dev/sda1\",\"Ebs\":{\"VolumeSize\":25,\"DeleteOnTermination\":true,\"VolumeType\":\"standard\"}},{\"DeviceName\":\"/dev/sdb\",\"VirtualName\":\"ephemeral0\"}]
+  NodedeviceJson=[{\"DeviceName\":\"/dev/sda1\",\"Ebs\":{\"VolumeSize\":15,\"DeleteOnTermination\":true,\"VolumeType\":\"standard\"}},{\"DeviceName\":\"/dev/sdb\",\"Ebs\":{\"VolumeSize\":25,\"DeleteOnTermination\":true,\"VolumeType\":\"standard\"}}]
+  
   prestartinstances
-  aws ec2 run-instances --region $Region --image-id $AmiId --key-name $KEY_NAME --subnet-id $SubnetId --security-group-ids $SgNodeId --instance-type $NODE_Instance_Type --count $1
-  aws ec2 run-instances --region $Region --image-id $AmiId --key-name $KEY_NAME --subnet-id $SubnetId --security-group-ids $SgServerId --instance-type $SERVER_Instance_type --count 1
+  aws ec2 run-instances --region $Region --image-id $AmiId --key-name $KEY_NAME --subnet-id $SubnetId --security-group-ids $SgNodeId --block-device-mappings $NodedeviceJson --instance-type $NODE_Instance_Type --count $1
+  aws ec2 run-instances --region $Region --image-id $AmiId --key-name $KEY_NAME --subnet-id $SubnetId --security-group-ids $SgServerId --block-device-mappings $ServerdeviceJson --instance-type $SERVER_Instance_type --count 1
   #request-spot-instances
 }
 
