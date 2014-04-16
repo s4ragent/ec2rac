@@ -603,7 +603,7 @@ createtmpl()
 setupnode()
 {
   changehostname $1
-  setupns $1
+  setupdns $1
   createtincconf $1
   createswap $1
   setupiscsi $1
