@@ -8,13 +8,13 @@ TMPL_NAME="RACTMPL"
 KEY_NAME="RACTMPL"
 KEY_PAIR="${KEY_NAME}.pem"
 AmiId="ami-f53940f4"
-#NODE_Instance_Type="m3.large"
-NODE_Instance_Type="t1.micro"
-#SERVER_Instance_type="m3.large"
-SERVER_Instance_type="t1.micro"
+NODE_Instance_Type="m3.medium"
+#NODE_Instance_Type="t1.micro"
+SERVER_Instance_type="m3.medium"
+#SERVER_Instance_type="t1.micro"
 
-NodePrice="0.01"
-ServerPrice="0.01"
+NodePrice="0.1"
+ServerPrice="0.1"
 
 SgNodeName="node-${TMPL_NAME}"
 SgServerName="server-${TMPL_NAME}"
@@ -27,7 +27,7 @@ SUBNET_MASK="255.255.240.0"
 NETWORK_NAME=("public" "priv")
 SCAN_NAME="scan"
 ORACLE_HOME_SIZE=25
-STORAGE_SIZE=25
+STORAGE_SIZE=30
 SWAP_DEVICE="/dev/xvdb"
 STORAGE_DEVICE="/dev/xvdb"
 
@@ -61,6 +61,7 @@ if [ $1 = 0 ]; then
         sfdisk -uM ${STORAGE_DEVICE} <<EOF
 ,,83
 EOF
+sleep 15
 
         cat >> /etc/tgt/targets.conf <<EOF
 <target ${SCSI_TARGET_NAME}>
@@ -241,13 +242,13 @@ requestspotinstances(){
 
 
 startinstances(){
-  NodedeviceJson=[{\"DeviceName\":\"/dev/sda1\",\"Ebs\":{\"VolumeSize\":25,\"DeleteOnTermination\":true,\"VolumeType\":\"standard\"}},{\"DeviceName\":\"/dev/sdb\",\"VirtualName\":\"ephemeral0\"}]
-  ServerdeviceJson=[{\"DeviceName\":\"/dev/sda1\",\"Ebs\":{\"VolumeSize\":15,\"DeleteOnTermination\":true,\"VolumeType\":\"standard\"}},{\"DeviceName\":\"/dev/sdb\",\"Ebs\":{\"VolumeSize\":25,\"DeleteOnTermination\":true,\"VolumeType\":\"standard\"}}]
+  NodedeviceJson=[{\"DeviceName\":\"/dev/sda1\",\"Ebs\":{\"VolumeSize\":$ORACLE_HOME_SIZE,\"DeleteOnTermination\":true,\"VolumeType\":\"standard\"}},{\"DeviceName\":\"$SWAP_DEVICE\",\"VirtualName\":\"ephemeral0\"}]
+  ServerdeviceJson=[{\"DeviceName\":\"$STORAGE_DEVICE\",\"Ebs\":{\"VolumeSize\":$STORAGE_SIZE,\"DeleteOnTermination\":true,\"VolumeType\":\"standard\"}}]
   
   prestartinstances
   aws ec2 run-instances --region $Region --image-id $AmiId --key-name $KEY_NAME --subnet-id $SubnetId --security-group-ids $SgNodeId --block-device-mappings $NodedeviceJson --instance-type $NODE_Instance_Type --count $1
   aws ec2 run-instances --region $Region --image-id $AmiId --key-name $KEY_NAME --subnet-id $SubnetId --security-group-ids $SgServerId --block-device-mappings $ServerdeviceJson --instance-type $SERVER_Instance_type --count 1
-  #request-spot-instances
+
 }
 
 
