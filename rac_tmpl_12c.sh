@@ -600,6 +600,16 @@ createtmpl()
   clone
 }
 
+setupnode()
+{
+  changehostname $1
+  setupns $1
+  createtincconf $1
+  createswap $1
+  setupiscsi $1
+  createclusterlist
+}
+
 setupall(){
   #startupinnstance
   setupnodelist
@@ -608,8 +618,7 @@ setupall(){
   NODECOUNT=0
   for i in $SERVER_AND_NODE ;
   do
-        ssh -i $KEY_PAIR -o "StrictHostKeyChecking no" root@$i "sh $0 setupkernel $NODECOUNT"
-        ssh -i $KEY_PAIR -o "StrictHostKeyChecking no" root@$i "sh $0 createtincconf $NODECOUNT"
+        ssh -i $KEY_PAIR -o "StrictHostKeyChecking no" root@$i "sh $0 setupnode $NODECOUNT"
         NODECOUNT=`expr $NODECOUNT + 1`
   done
   
@@ -620,7 +629,7 @@ setupall(){
 case "$1" in
   "createtmpl" ) createtmpl ;;
   "installpackage" ) installpackage ;;
-  "changehostname" )  changehostname ;;
+  "changehostname" )  changehostname $2;;
   "createsshkey" ) createsshkey ;;
   "createuser" ) createuser ;;
   "changelocale" ) changelocale ;;
@@ -633,6 +642,7 @@ case "$1" in
   "requestspotinstances" ) requestspotinstances $2;;
   "stopinstances" ) stopinstances ;;
   "terminateinstances" ) terminateinstances ;;
+  "setupnode" ) setupnode $2;;
   "setupall" ) setupall ;;
   "setupkernel" ) setupkernel ;;
   "pretincconf" ) pretincconf ;;
