@@ -274,21 +274,6 @@ terminateinstances()
   aws ec2 terminate-instances --region $Region --instance-ids $NODEIds $SERVERIds 
 }
 
-#setnodelist()
-#{
-#  NODELIST=`aws ec2 describe-instances --region ap-northeast-1 --query 'Reservations[].Instances[][?contains(Tags[?Key==\`Name\`].Value, \`node\`)==\`true\`].[NetworkInterfaces[].PrivateIpAddress]' --output text`
-#  JSON={\"IPs\":{\"S\":\"$NODELIST\"}}
-#  aws dynamodb delete-table --region ap-northeast-1 --table-name Nodelist
-#  sleep 5
-#  aws dynamodb create-table --region ap-northeast-1 --table-name Nodelist --attribute-definitions AttributeName=IPs,AttributeType=S --key-schema AttributeName=IPs,KeyType=HASH --provisioned-throughput ReadCapacityUnits=1,WriteCapacityUnits=1
-#  sleep 5
-#  aws dynamodb put-item --region ap-northeast-1 --table-name Nodelist --item $JSON
-#}
-
-#getnodelist()
-#{
-#  NODELIST=`aws dynamodb scan --region ap-northeast-1 --table-name Nodelist --output text  | perl -ne ' if (/([\d].+)/){ print $1}'`
-#}
 setupkernel()
 {
 sed -i  's/HWADDR=/#HWADDR=/' /etc/sysconfig/network-scripts/ifcfg-eth0
@@ -448,83 +433,6 @@ chkconfig tinc on
 /etc/init.d/tinc start
 }
 
-createtincconf1()
-{
-  SERVER_AND_NODE="$SERVER $NODELIST"
-  /etc/init.d/tinc stop
-  rm -rf /etc/tinc
-PORT=655
-NODENAME=`getnodename $1`
-for (( k = 0; k < ${#NETWORKS[@]}; ++k ))
-do
-    NETNAME=${NETWORK_NAME[$k]}     
-    mkdir -p /etc/tinc/$NETNAME/hosts
-    echo $NETNAME >> /etc/tinc/nets.boot
-    cat > /etc/tinc/$NETNAME/tinc.conf<<EOF
-Name = $NODENAME
-Interface = tap${k}
-Mode = switch
-BindToAddress * $PORT
-EOF
-    if [ "$1" != "0" ] ; then
-        echo "ConnectTo = `getnodename 0`" >> /etc/tinc/$NETNAME/tinc.conf
-    fi
-    cp ./id_rsa /etc/tinc/$NETNAME/rsa_key.priv
-    
-    IP=`getip $k real $1`
-    cat > /etc/tinc/$NETNAME/tinc-up<<EOF
-#!/bin/sh
-ifconfig \$INTERFACE ${IP} netmask $SUBNET_MASK
-EOF
-
-    cat > /etc/tinc/$NETNAME/tinc-down<<EOF
-#!/bin/sh
-ifconfig \$INTERFACE down
-EOF
-
-    chmod 755 /etc/tinc/$NETNAME/tinc-up
-    chmod 755 /etc/tinc/$NETNAME/tinc-down
-    
-    NODECOUNT=0
-    for i in $SERVER_AND_NODE ;
-    do
-      NODENAME2=`getnodename $NODECOUNT`
-      cat > /etc/tinc/$NETNAME/hosts/$NODENAME2<<EOF
-Address = $i $PORT
-Cipher = none
-Digest = none
-
-`cat ./id_rsa.pub.pem` 
-EOF
-
-    NODECOUNT=`expr $NODECOUNT + 1`
-    done
-    PORT=`expr $PORT + 1`
-done
-chkconfig tinc on
-/etc/init.d/tinc start
-}
-
-setupall(){
-  #startupinnstance
-  setupnodelist
-  createsshkey
-  copyfile ./id_rsa
-  copyfile ./id_rsa.pub
-  copyfile ./dummy
-  copyfile $0
-  
-  SERVER_AND_NODE="$SERVER $NODELIST"
-  NODECOUNT=0
-  for i in $SERVER_AND_NODE ;
-  do
-        ssh -i $KEY_PAIR -o "StrictHostKeyChecking no" root@$i "sh $0 setupkernel $NODECOUNT"
-        ssh -i $KEY_PAIR -o "StrictHostKeyChecking no" root@$i "sh $0 createtincconf $NODECOUNT"
-        NODECOUNT=`expr $NODECOUNT + 1`
-  done
-  
-}
-
 createclusterlist()
 {
 NODECOUNT=1
@@ -682,11 +590,30 @@ chmod -R 775 ${MOUNT_PATH}
 
 createtmpl()
 {
-  createuser
+  installpackage
+  changelocale
   createsshkey
+  createuser
+  createoraclehome
+  setupkernel
+  pretincconf
+  clone
 }
 
-
+setupall(){
+  #startupinnstance
+  setupnodelist
+  
+  SERVER_AND_NODE="$SERVER $NODELIST"
+  NODECOUNT=0
+  for i in $SERVER_AND_NODE ;
+  do
+        ssh -i $KEY_PAIR -o "StrictHostKeyChecking no" root@$i "sh $0 setupkernel $NODECOUNT"
+        ssh -i $KEY_PAIR -o "StrictHostKeyChecking no" root@$i "sh $0 createtincconf $NODECOUNT"
+        NODECOUNT=`expr $NODECOUNT + 1`
+  done
+  
+}
 
 
 
