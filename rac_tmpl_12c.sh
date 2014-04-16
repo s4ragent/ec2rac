@@ -230,8 +230,8 @@ prestartinstances(){
 requestspotinstances(){
   prestartinstances
   #JSON={\"IPs\":{\"S\":\"$NODELIST\"}}
-  NodedeviceJson="BlockDeviceMappings":[{\"DeviceName\":\"/dev/sda1\",\"Ebs\":{\"VolumeSize\":$ORACLE_HOME_SIZE,\"DeleteOnTermination\":true,\"VolumeType\":\"standard\"}},{\"DeviceName\":\"$SWAP_DEVICE\",\"VirtualName\":\"ephemeral0\"}]
-  ServerdeviceJson="BlockDeviceMappings":[{\"DeviceName\":\"$STORAGE_DEVICE\",\"VirtualName\":\"ephemeral0\"}]
+  NodedeviceJson=\"BlockDeviceMappings\":[{\"DeviceName\":\"/dev/sda1\",\"Ebs\":{\"VolumeSize\":$ORACLE_HOME_SIZE,\"DeleteOnTermination\":true,\"VolumeType\":\"standard\"}},{\"DeviceName\":\"$SWAP_DEVICE\",\"VirtualName\":\"ephemeral0\"}]
+  ServerdeviceJson=\"BlockDeviceMappings\":[{\"DeviceName\":\"$STORAGE_DEVICE\",\"VirtualName\":\"ephemeral0\"}]
   NodeJson={\"ImageId\":\"${AmiId}\",\"KeyName\":\"${KEY_NAME}\",\"InstanceType\":\"${NODE_Instance_Type}\",$NodedeviceJson,\"SubnetId\":\"${SubnetId}\",\"SecurityGroupIds\":[\"$SgNodeId\"]}
   ServerJson={\"ImageId\":\"${AmiId}\",\"KeyName\":\"${KEY_NAME}\",\"InstanceType\":\"${SERVER_Instance_type}\",$ServerdeviceJson,\"SubnetId\":\"${SubnetId}\",\"SecurityGroupIds\":[\"$SgServerId\"]}
 
