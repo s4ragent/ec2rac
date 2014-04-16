@@ -27,6 +27,7 @@ SUBNET_MASK="255.255.240.0"
 NETWORK_NAME=("public" "priv")
 SCAN_NAME="scan"
 SWAP_DEVICE="/dev/xvdb"
+STORAGE_DEVICE="/dev/xvdb"
 
 #ORACLE_BASE and ORACLE_HOME edit it if need this path must under /u01 ##
 MOUNT_PATH=/u01
@@ -47,8 +48,50 @@ SCSI_TARGET_NAME="iqn.2014-05.org.jpoug:server.crs"
 
 
 createswap(){
-echo "umount $SWAP_DEVICE;mkswap $SWAP_DEVICE;swapon $SWAP_DEVICE" >> /etc/rc.local
+  if [ "$1" != "0" ] ; then
+        umount $SWAP_DEVICE;mkswap $SWAP_DEVICE;swapon $SWAP_DEVICE
+        echo "umount $SWAP_DEVICE;mkswap $SWAP_DEVICE;swapon $SWAP_DEVICE" >> /etc/rc.local
+  fi
 }
+
+setupiscsi(){
+if [ $1 = 0 ]; then     
+        sfdisk -uM ${STORAGE_DEVICE} <<EOF
+,,83
+EOF
+
+        cat >> /etc/tgt/targets.conf <<EOF
+<target ${SCSI_TARGET_NAME}>
+# List of files to export as LUNs
+        <backing-store ${STORAGE_DEVICE}1>
+                lun 1
+        </backing-store>
+initiator-address ALL
+</target>
+EOF
+/etc/init.d/tgtd start
+chkconfig tgtd on
+tgt-admin --show
+
+else
+        /etc/init.d/iscsi start
+        iscsiadm --mode discovery --type sendtargets -p ${SERVER}
+        iscsiadm --mode node --targetname ${SCSI_TARGET_NAME} --login
+        chkconfig iscsi on
+        /etc/init.d/iscsi restart
+        sleep 15
+        echo 'KERNEL=="sd[a-d]*",ACTION=="add|change",OWNER="grid",GROUP="asmadmin",MODE="0660"' > /etc/udev/rules.d/99-oracle.rules
+        #initialize asmdisk if nodenumber=1 ####        
+        if [ $1 = 1 ]; then     
+                sfdisk /dev/sda << EOF
+,,83
+EOF
+                dd if=/dev/zero of=/dev/sda1 bs=1M count=100
+        fi
+fi
+}
+
+
 
 copyfile()
 {
@@ -642,12 +685,10 @@ case "$1" in
   "installpackage" ) installpackage ;;
   "changehostname" )  changehostname ;;
   "createsshkey" ) createsshkey ;;
-  "mountnfs" ) mountnfs ;;
   "createuser" ) createuser ;;
   "changelocale" ) changelocale ;;
-  "fdiskoraclehome" ) fdiskoraclehome ;;
   "createoraclehome" ) createoraclehome ;;
-  "setupdns" ) setupdns ;;
+  "setupdns" ) setupdns $2;;
   "setupnodelist" ) setupnodelist ;;
   "createtincconf" ) createtincconf $2;;
   "clone" ) clone ;;
@@ -658,6 +699,7 @@ case "$1" in
   "setupall" ) setupall ;;
   "setupkernel" ) setupkernel ;;
   "pretincconf" ) pretincconf ;;
-  "createswap" ) createswap ;;
+  "createswap" ) createswap $2;;
+  "setupiscsi" ) setupiscsi $2 ;;
   * ) echo "known option or no option" ;;
 esac
