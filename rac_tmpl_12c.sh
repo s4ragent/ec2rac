@@ -26,11 +26,6 @@ NETWORKS=("172.16.0.0" "172.17.0.0")
 SUBNET_MASK="255.255.240.0"
 NETWORK_NAME=("public" "priv")
 SCAN_NAME="scan"
-
-##device character ####
-#/dev/sdi => /dev/xvdm#
-ORACLE_HOME_DEVICE=m
-ORACLE_HOME_EBS="/dev/xvd${ORACLE_HOME_DEVICE}"
 SWAP_DEVICE="/dev/xvdb"
 
 #ORACLE_BASE and ORACLE_HOME edit it if need this path must under /u01 ##
@@ -620,20 +615,6 @@ ln -sf /usr/share/zoneinfo/Asia/Tokyo /etc/localtime
 fi
 }
 
-fdiskoraclehome ()
-{
-DISKSIZE=`fdisk -l ${ORACLE_HOME_EBS} | grep bytes | head -n 1 | perl -ne 'if(/B, ([\d]+) bytes/){print int($1/1024/1024)}'`
-
-###create ORACLE_HOME####
-sfdisk -uM ${ORACLE_HOME_EBS} <<EOF
-0,${DISKSIZE},83
-EOF
-sleep 15
-mkfs.ext3 -F ${ORACLE_HOME_EBS}1 
-echo "${ORACLE_HOME_EBS}1               ${MOUNT_PATH}                    ext3    defaults        0 0" >> /etc/fstab
-mkdir ${MOUNT_PATH}
-mount ${MOUNT_PATH}
-}
 
 createoraclehome ()
 {
