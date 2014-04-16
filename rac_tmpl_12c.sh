@@ -597,7 +597,7 @@ createtmpl()
   createoraclehome
   setupkernel
   pretincconf
-  clone
+  #clone
 }
 
 setupnode()
@@ -608,6 +608,7 @@ setupnode()
   createswap $1
   setupiscsi $1
   createclusterlist
+  reboot
 }
 
 setupall(){
