@@ -26,8 +26,10 @@ NETWORKS=("172.16.0.0" "172.17.0.0")
 SUBNET_MASK="255.255.240.0"
 NETWORK_NAME=("public" "priv")
 SCAN_NAME="scan"
-SWAP_DEVICE="/dev/xvdb"
-STORAGE_DEVICE="/dev/xvdb"
+DEVICE_SIZE=25
+DEVICE_STRING="b"
+SWAP_DEVICE="/dev/xvd${DEVICE_STRING}"
+STORAGE_DEVICE="/dev/xvd${DEVICE_STRING}"
 
 #ORACLE_BASE and ORACLE_HOME edit it if need this path must under /u01 ##
 MOUNT_PATH=/u01
