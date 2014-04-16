@@ -484,6 +484,7 @@ createsshkey ()
 {
 rm -rf ./id_rsa*
 ssh-keygen -t rsa -P "" -f ./id_rsa
+cat ./id_rsa.pub >>  .ssh/authorized_keys
 }
 
 createuser ()
