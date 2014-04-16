@@ -677,5 +677,6 @@ case "$1" in
   "setupall" ) setupall ;;
   "setupkernel" ) setupkernel ;;
   "pretincconf" ) pretincconf ;;
+  "createswap" ) createswap ;;
   * ) echo "known option or no option" ;;
 esac
