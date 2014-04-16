@@ -473,6 +473,18 @@ setupall(){
   
 }
 
+createclusterlist()
+{
+NODECOUNT=1
+for i in $NODELIST ;
+do
+    NODENAME=`getnodename $NODECOUNT`
+    echo "${NODENAME} ${NODENAME}-vip" >> /tmp/clusterlist.ccf
+    NODECOUNT=`expr $NODECOUNT + 1`
+done
+chmod 777 /tmp/clusterlist.ccf
+}
+
 
 changehostname ()
 {
