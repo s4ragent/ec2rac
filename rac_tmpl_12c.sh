@@ -8,6 +8,7 @@ TMPL_NAME="RACTMPL"
 KEY_NAME="oregon"
 KEY_PAIR="${KEY_NAME}.pem"
 AmiId="ami-5efb916e"
+IamRole="root"
 NODE_Instance_Type="m3.medium"
 #NODE_Instance_Type="t1.micro"
 SERVER_Instance_type="m3.medium"
@@ -246,7 +247,7 @@ startinstances(){
   ServerdeviceJson=[{\"DeviceName\":\"$STORAGE_DEVICE\",\"Ebs\":{\"VolumeSize\":$STORAGE_SIZE,\"DeleteOnTermination\":true,\"VolumeType\":\"standard\"}}]
   
   prestartinstances
-  aws ec2 run-instances --region $Region --image-id $AmiId --key-name $KEY_NAME --subnet-id $SubnetId --security-group-ids $SgNodeId --block-device-mappings $NodedeviceJson --instance-type $NODE_Instance_Type --count $1
+  aws ec2 run-instances --region $Region --image-id $AmiId --key-name $KEY_NAME --subnet-id $SubnetId --security-group-ids $SgNodeId --block-device-mappings $NodedeviceJson --iam-instance-profile Name=$IamRole --instance-type $NODE_Instance_Type --count $1
   aws ec2 run-instances --region $Region --image-id $AmiId --key-name $KEY_NAME --subnet-id $SubnetId --security-group-ids $SgServerId --block-device-mappings $ServerdeviceJson --instance-type $SERVER_Instance_type --count 1
 
 }
