@@ -333,9 +333,10 @@ setupdns ()
 {
         
   if [ "$1" != "0" ] ; then
-        echo "nameserver ${SERVER}" >/etc/resolv.conf
-        echo "nameserver ${SERVER}" >/etc/resolv.tmpl
-        sed -i "6i cp -f /etc/resolv.tmpl /etc/resolv.conf" /etc/rc.local
+        #echo "nameserver ${SERVER}" >/etc/resolv.conf
+        #echo "nameserver ${SERVER}" >/etc/resolv.tmpl
+        #sed -i "6i cp -f /etc/resolv.tmpl /etc/resolv.conf" /etc/rc.local
+        echo "supersede domain-name-servers ${SERVER};" >> /etc/dhcp/dhclient-eth0.conf
   else
     SERVER_AND_NODE="$SERVER $NODELIST"
     SEGMENT=`echo ${NETWORKS[0]} | perl -ne ' if (/([\d]+\.[\d]+\.[\d]+\.)/){ print $1}'`
