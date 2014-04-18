@@ -189,7 +189,7 @@ clone()
   InstanceId=`curl -s http://169.254.169.254/latest/meta-data/instance-id`
   DATE=`date "+%Y%m%d%H%M"`
   #AmiId=`aws ec2 create-image --instance-id $InstanceId --name $TMPL_NAME-$DATE --no-reboot --region $Region --block-device-mappings $deviceJson --output text`
-  AmiId=`aws ec2 create-image --instance-id $InstanceId --name $TMPL_NAME-$DATE --no-reboot --region $Region --output text`
+  AmiId=`aws ec2 create-image --instance-id $InstanceId --name "$1-$DATE" --no-reboot --region $Region --output text`
   State=`aws ec2 describe-images --region $Region --image-id $AmiId --query 'Images[].State[]' --output text`
   while [ $State = "pending" ]
   do
@@ -243,7 +243,7 @@ requestspotinstances(){
 
 
 startinstances(){
-  NodedeviceJson=[{\"DeviceName\":\"/dev/sda1\",\"Ebs\":{\"VolumeSize\":$ORACLE_HOME_SIZE,\"DeleteOnTermination\":true,\"VolumeType\":\"standard\"}},{\"DeviceName\":\"$SWAP_DEVICE\",\"VirtualName\":\"ephemeral0\"}]
+  NodedeviceJson=[{\"DeviceName\":\"/dev/sda1\",\"Ebs\":{\"VolumeSize\":$ORACLE_HOME_SIZE,\"DeleteOnTermination\":true,\"VolumeType\":\"standard\"}},{\"DeviceName\":\"$SWAP_DEVICE\",\"Ebs\":{\"VolumeSize\":$SWAP_SIZE,\"DeleteOnTermination\":true,\"VolumeType\":\"standard\"}}]
   ServerdeviceJson=[{\"DeviceName\":\"$STORAGE_DEVICE\",\"Ebs\":{\"VolumeSize\":$STORAGE_SIZE,\"DeleteOnTermination\":true,\"VolumeType\":\"standard\"}}]
   
   prestartinstances
@@ -610,7 +610,6 @@ setupnode()
   createswap $1
   setupiscsi $1
   createclusterlist
-  reboot
 }
 
 setupall(){
@@ -622,6 +621,12 @@ setupall(){
   for i in $SERVER_AND_NODE ;
   do
         ssh -i $KEY_PAIR -o "StrictHostKeyChecking no" root@$i "sh $0 setupnode $NODECOUNT"
+        NODECOUNT=`expr $NODECOUNT + 1`
+  done
+  NODECOUNT=0
+  for i in $SERVER_AND_NODE ;
+  do
+        ssh -i $KEY_PAIR -o "StrictHostKeyChecking no" root@$i "reboot"
         NODECOUNT=`expr $NODECOUNT + 1`
   done
   
