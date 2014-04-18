@@ -250,7 +250,11 @@ clone()
   echo $State
   sed -i "s/^AmiId.*/AmiId=\"$AmiId\"/" $0
 }
-
+listami()
+{
+  Region=`curl http://169.254.169.254/latest/meta-data/placement/availability-zone -s | perl -pe chop`
+  aws ec2 describe-images --region $Region --owner self --query 'Images[].[Name,ImageId]' --output text
+}
 
 prestartinstances(){
   InstanceId=`curl -s http://169.254.169.254/latest/meta-data/instance-id`
@@ -279,26 +283,34 @@ prestartinstances(){
 }
 
 requestspotinstances(){
+  ServerAmiId=$1
+  Server_Count=$2
+  NodeAmiId=$3
+  Node_Count=$4
   prestartinstances
   #JSON={\"IPs\":{\"S\":\"$NODELIST\"}}
   NodedeviceJson=\"BlockDeviceMappings\":[{\"DeviceName\":\"/dev/sda1\",\"Ebs\":{\"VolumeSize\":$ORACLE_HOME_SIZE,\"DeleteOnTermination\":true,\"VolumeType\":\"standard\"}},{\"DeviceName\":\"$SWAP_DEVICE\",\"VirtualName\":\"ephemeral0\"}]
   ServerdeviceJson=\"BlockDeviceMappings\":[{\"DeviceName\":\"$STORAGE_DEVICE\",\"VirtualName\":\"ephemeral0\"}]
-  NodeJson={\"ImageId\":\"${AmiId}\",\"KeyName\":\"${KEY_NAME}\",\"InstanceType\":\"${NODE_Instance_Type}\",$NodedeviceJson,\"SubnetId\":\"${SubnetId}\",\"SecurityGroupIds\":[\"$SgNodeId\"]}
-  ServerJson={\"ImageId\":\"${AmiId}\",\"KeyName\":\"${KEY_NAME}\",\"InstanceType\":\"${SERVER_Instance_type}\",$ServerdeviceJson,\"SubnetId\":\"${SubnetId}\",\"SecurityGroupIds\":[\"$SgServerId\"]}
+  NodeJson={\"ImageId\":\"${NodeAmiId}\",\"KeyName\":\"${KEY_NAME}\",\"InstanceType\":\"${NODE_Instance_Type}\",$NodedeviceJson,\"SubnetId\":\"${SubnetId}\",\"SecurityGroupIds\":[\"$SgNodeId\"]}
+  ServerJson={\"ImageId\":\"${ServerAmiId}\",\"KeyName\":\"${KEY_NAME}\",\"InstanceType\":\"${SERVER_Instance_type}\",$ServerdeviceJson,\"SubnetId\":\"${SubnetId}\",\"SecurityGroupIds\":[\"$SgServerId\"]}
 
-  aws ec2 request-spot-instances --spot-price $NodePrice --region $Region --launch-group $SgNodeName --launch-specification $NodeJson --instance-count $1
-  aws ec2 request-spot-instances --spot-price $ServerPrice --region $Region --launch-group $SgServerName --launch-specification $ServerJson --instance-count 1
+  aws ec2 request-spot-instances --spot-price $NodePrice --region $Region --launch-group $SgNodeName --launch-specification $NodeJson --instance-count $Node_Count
+  aws ec2 request-spot-instances --spot-price $ServerPrice --region $Region --launch-group $SgServerName --launch-specification $ServerJson --instance-count $Server_Count
 
 }
 
 
 startinstances(){
+  ServerAmiId=$1
+  Server_Count=$2
+  NodeAmiId=$3
+  Node_Count=$4
   NodedeviceJson=\"BlockDeviceMappings\":[{\"DeviceName\":\"/dev/sda1\",\"Ebs\":{\"VolumeSize\":$ORACLE_HOME_SIZE,\"DeleteOnTermination\":true,\"VolumeType\":\"standard\"}},{\"DeviceName\":\"$SWAP_DEVICE\",\"VirtualName\":\"ephemeral0\"}]
   ServerdeviceJson=[{\"DeviceName\":\"$STORAGE_DEVICE\",\"Ebs\":{\"VolumeSize\":$STORAGE_SIZE,\"DeleteOnTermination\":true,\"VolumeType\":\"standard\"}}]
   
   prestartinstances
-  aws ec2 run-instances --region $Region --image-id $AmiId --key-name $KEY_NAME --subnet-id $SubnetId --security-group-ids $SgNodeId --block-device-mappings $NodedeviceJson --iam-instance-profile Name=$IamRole --instance-type $NODE_Instance_Type --count $1
-  aws ec2 run-instances --region $Region --image-id $AmiId --key-name $KEY_NAME --subnet-id $SubnetId --security-group-ids $SgServerId --block-device-mappings $ServerdeviceJson --instance-type $SERVER_Instance_type --count 1
+  aws ec2 run-instances --region $Region --image-id $NodeAmiId --key-name $KEY_NAME --subnet-id $SubnetId --security-group-ids $SgNodeId --block-device-mappings $NodedeviceJson --iam-instance-profile Name=$IamRole --instance-type $NODE_Instance_Type --count $Node_Count
+  aws ec2 run-instances --region $Region --image-id $ServerAmiId --key-name $KEY_NAME --subnet-id $SubnetId --security-group-ids $SgServerId --block-device-mappings $ServerdeviceJson --instance-type $SERVER_Instance_type --count $Server_Count
 
 }
 
@@ -685,6 +697,7 @@ setupall(){
 
 
 case "$1" in
+  "listami" ) listami;;
   "createclonepl" ) createclonepl;;
   "createtmpl" ) createtmpl ;;
   "installpackage" ) installpackage ;;
@@ -697,8 +710,8 @@ case "$1" in
   "setupnodelist" ) setupnodelist ;;
   "createtincconf" ) createtincconf $2;;
   "clone" ) clone $2;;
-  "startinstances" ) startinstances $2;;
-  "requestspotinstances" ) requestspotinstances $2;;
+  "startinstances" ) startinstances $2 $3 $4 $5;;
+  "requestspotinstances" ) requestspotinstances $2 $3 $4 $5;;
   "stopinstances" ) stopinstances ;;
   "terminateinstances" ) terminateinstances ;;
   "setupnode" ) setupnode $2;;
