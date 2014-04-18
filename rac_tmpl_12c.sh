@@ -49,7 +49,9 @@ ORACLE_PASSWORD="P@ssw0rd"
 ## scsi target name ###
 SCSI_TARGET_NAME="iqn.2014-05.org.jpoug:server.crs"
 
-
+createclonepl()
+{
+}
 
 createswap(){
   if [ "$1" != "0" ] ; then
@@ -636,6 +638,7 @@ setupall(){
 
 
 case "$1" in
+  "createclonepl" createclonepl;;
   "createtmpl" ) createtmpl ;;
   "installpackage" ) installpackage ;;
   "changehostname" )  changehostname $2;;
