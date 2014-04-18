@@ -102,6 +102,7 @@ chown oracle.oinstall /home/oracle/start.sh
 createswap(){
   if [ "$1" != "0" ] ; then
         umount $SWAP_DEVICE;mkswap $SWAP_DEVICE;swapon $SWAP_DEVICE
+        echo "umount $SWAP_DEVICE;mkswap $SWAP_DEVICE;swapon $SWAP_DEVICE" >> /etc/rc.local
         echo "$SWAP_DEVICE swap swap defaults 0 0 " >> /etc/fstab
   fi
 }
@@ -292,7 +293,7 @@ requestspotinstances(){
 
 
 startinstances(){
-  NodedeviceJson=[{\"DeviceName\":\"/dev/sda1\",\"Ebs\":{\"VolumeSize\":$ORACLE_HOME_SIZE,\"DeleteOnTermination\":true,\"VolumeType\":\"standard\"}},{\"DeviceName\":\"$SWAP_DEVICE\",\"Ebs\":{\"VolumeSize\":$SWAP_SIZE,\"DeleteOnTermination\":true,\"VolumeType\":\"standard\"}}]
+  NodedeviceJson=\"BlockDeviceMappings\":[{\"DeviceName\":\"/dev/sda1\",\"Ebs\":{\"VolumeSize\":$ORACLE_HOME_SIZE,\"DeleteOnTermination\":true,\"VolumeType\":\"standard\"}},{\"DeviceName\":\"$SWAP_DEVICE\",\"VirtualName\":\"ephemeral0\"}]
   ServerdeviceJson=[{\"DeviceName\":\"$STORAGE_DEVICE\",\"Ebs\":{\"VolumeSize\":$STORAGE_SIZE,\"DeleteOnTermination\":true,\"VolumeType\":\"standard\"}}]
   
   prestartinstances
