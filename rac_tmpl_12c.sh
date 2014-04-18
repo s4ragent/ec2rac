@@ -9,10 +9,10 @@ KEY_NAME="oregon"
 KEY_PAIR="${KEY_NAME}.pem"
 AmiId="ami-5efb916e"
 IamRole="root"
-NODE_Instance_Type="m3.medium"
-#NODE_Instance_Type="t1.micro"
-SERVER_Instance_type="m3.medium"
-#SERVER_Instance_type="t1.micro"
+#NODE_Instance_Type="m3.medium"
+NODE_Instance_Type="t1.micro"
+#SERVER_Instance_type="m3.medium"
+SERVER_Instance_type="t1.micro"
 
 NodePrice="0.1"
 ServerPrice="0.1"
@@ -305,7 +305,7 @@ startinstances(){
   Server_Count=$2
   NodeAmiId=$3
   Node_Count=$4
-  NodedeviceJson=\"BlockDeviceMappings\":[{\"DeviceName\":\"/dev/sda1\",\"Ebs\":{\"VolumeSize\":$ORACLE_HOME_SIZE,\"DeleteOnTermination\":true,\"VolumeType\":\"standard\"}},{\"DeviceName\":\"$SWAP_DEVICE\",\"VirtualName\":\"ephemeral0\"}]
+  NodedeviceJson=[{\"DeviceName\":\"/dev/sda1\",\"Ebs\":{\"VolumeSize\":$ORACLE_HOME_SIZE,\"DeleteOnTermination\":true,\"VolumeType\":\"standard\"}},{\"DeviceName\":\"$SWAP_DEVICE\",\"VirtualName\":\"ephemeral0\"}]
   ServerdeviceJson=[{\"DeviceName\":\"$STORAGE_DEVICE\",\"Ebs\":{\"VolumeSize\":$STORAGE_SIZE,\"DeleteOnTermination\":true,\"VolumeType\":\"standard\"}}]
   
   prestartinstances
