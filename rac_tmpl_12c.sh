@@ -615,7 +615,7 @@ setupnode()
 setupall(){
   #startupinnstance
   setupnodelist
-  
+  copyfile $0
   SERVER_AND_NODE="$SERVER $NODELIST"
   NODECOUNT=0
   for i in $SERVER_AND_NODE ;
