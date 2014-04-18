@@ -696,7 +696,7 @@ case "$1" in
   "setupdns" ) setupdns $2;;
   "setupnodelist" ) setupnodelist ;;
   "createtincconf" ) createtincconf $2;;
-  "clone" ) clone ;;
+  "clone" ) clone $2;;
   "startinstances" ) startinstances $2;;
   "requestspotinstances" ) requestspotinstances $2;;
   "stopinstances" ) stopinstances ;;
