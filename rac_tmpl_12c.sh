@@ -53,7 +53,7 @@ SCSI_TARGET_NAME="iqn.2014-05.org.jpoug:server.crs"
 createswap(){
   if [ "$1" != "0" ] ; then
         umount $SWAP_DEVICE;mkswap $SWAP_DEVICE;swapon $SWAP_DEVICE
-        echo "umount $SWAP_DEVICE;mkswap $SWAP_DEVICE;swapon $SWAP_DEVICE" >> /etc/rc.local
+        echo "$SWAP_DEVICE swap swap defaults 0 0 " >> /etc/fstab
   fi
 }
 
