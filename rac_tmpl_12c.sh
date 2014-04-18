@@ -51,6 +51,54 @@ SCSI_TARGET_NAME="iqn.2014-05.org.jpoug:server.crs"
 
 createclonepl()
 {
+  #THISNODE=`hostname -s`
+  THISNODE=`getnodename $1`
+  CLUSTER_NODES="{"
+  NODECOUNT=1
+  for i in ${NODELIST} ;
+  do
+        HOSTNAME=`getnodename $NODECOUNT`
+        if [ $NODECOUNT != 1 ] ; then
+                CLUSTER_NODES=${CLUSTER_NODES},
+        fi
+        CLUSTER_NODES=${CLUSTER_NODES}${HOSTNAME}
+        NODECOUNT=`expr $NODECOUNT + 1`
+  done
+  CLUSTER_NODES=${CLUSTER_NODES}\}
+cat >/home/grid/start.sh <<EOF
+#!/bin/bash
+ORACLE_BASE=$GRID_ORACLE_BASE
+GRID_HOME=$GRID_ORACLE_HOME
+THIS_NODE=\'hostname -s\'
+E01=ORACLE_BASE=\${ORACLE_BASE}
+E02=ORACLE_HOME=\${GRID_HOME}
+E03=ORACLE_HOME_NAME=OraGridHome1
+E04=INVENTORY_LOCATION=$ORAINVENTORY
+C01="\"CLUSTER_NODES=$CLUSTER_NODES\""
+C02="\"LOCAL_NODE=\$THISNODE\""
+perl \${GRID_HOME}/clone/bin/clone.pl -silent \$E01 \$E02 \$E03 \$E04 \$C01 \$C02
+EOF
+
+chmod 755 /home/grid/start.sh
+chown grid.oinstall /home/grid/start.sh
+
+cat >/home/oracle/start.sh <<EOF
+#!/bin/bash
+ORACLE_BASE=$ORA_ORACLE_BASE
+ORACLE_HOME=$ORA_ORACLE_HOME
+cd \$ORACLE_HOME/clone
+THISNODE=\'hostname -s\'
+
+E01=ORACLE_HOME=$ORA_ORACLE_HOME
+E02=ORACLE_HOME_NAME=OraDBRAC
+E03=ORACLE_BASE=$ORA_ORACLE_BASE
+C01="-O \"CLUSTER_NODES=$CLUSTER_NODES\""
+C02="-O \"LOCAL_NODE=$THISNODE\""
+perl \$ORACLE_HOME/clone/bin/clone.pl \$E01 \$E02 \$E03 \$C01 \$C02
+EOF
+
+chmod 755 /home/oracle/start.sh
+chown oracle.oinstall /home/oracle/start.sh
 }
 
 createswap(){
