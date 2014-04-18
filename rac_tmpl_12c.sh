@@ -686,7 +686,7 @@ setupall(){
 
 
 case "$1" in
-  "createclonepl" createclonepl;;
+  "createclonepl" ) createclonepl;;
   "createtmpl" ) createtmpl ;;
   "installpackage" ) installpackage ;;
   "changehostname" )  changehostname $2;;
