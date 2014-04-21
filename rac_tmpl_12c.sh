@@ -101,8 +101,8 @@ chown oracle.oinstall /home/oracle/start.sh
 
 createswap(){
   if [ "$1" != "0" ] ; then
-        umount $SWAP_DEVICE;mkswap $SWAP_DEVICE;swapon $SWAP_DEVICE
-        echo "umount $SWAP_DEVICE;mkswap $SWAP_DEVICE;swapon $SWAP_DEVICE" >> /etc/rc.local
+        umount -f $SWAP_DEVICE;mkswap -f $SWAP_DEVICE;swapon $SWAP_DEVICE
+        echo "umount -f $SWAP_DEVICE;mkswap -f $SWAP_DEVICE;swapon $SWAP_DEVICE" >> /etc/rc.local
         echo "$SWAP_DEVICE swap swap defaults 0 0 " >> /etc/fstab
   fi
 }
