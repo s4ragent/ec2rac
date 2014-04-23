@@ -32,6 +32,7 @@ SWAP_SIZE=8
 STORAGE_SIZE=30
 SWAP_DEVICE="/dev/xvdb"
 STORAGE_DEVICE="/dev/xvdb"
+ORACLE_HOME_DEVICE="/dev/xvdc"
 
 #ORACLE_BASE and ORACLE_HOME edit it if need this path must under /u01 ##
 MOUNT_PATH=/u01
