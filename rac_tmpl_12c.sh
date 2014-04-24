@@ -253,7 +253,7 @@ clone()
   sed -i "s/^AmiId.*/AmiId=\"$AmiId\"/" $0
 }
 
-backupvolume()
+createsnapshot()
 {
   InstanceId=$1
   DeviceName=$2
@@ -738,7 +738,7 @@ setupall(){
 
 
 case "$1" in
-  "backupvolume" ) backupvolume;;
+  "createsnapshot" ) createsnapshot $2 $3;;
   "listinstances" ) listinstances;;
   "listami" ) listami;;
   "createclonepl" ) createclonepl;;
