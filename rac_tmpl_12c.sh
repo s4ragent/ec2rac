@@ -251,6 +251,14 @@ clone()
   echo $State
   sed -i "s/^AmiId.*/AmiId=\"$AmiId\"/" $0
 }
+
+backupvolume()
+{
+  Region=`curl http://169.254.169.254/latest/meta-data/placement/availability-zone -s | perl -pe chop`
+  aws ec2 describe-volumes --region us-west-2 --query 'Volumes[].Attachments[][?Device==`/dev/sdf`][?InstanceId==`i-69a4fc60`].VolumeId'
+}  
+
+
 listami()
 {
   Region=`curl http://169.254.169.254/latest/meta-data/placement/availability-zone -s | perl -pe chop`
@@ -641,6 +649,21 @@ ln -sf /usr/share/zoneinfo/Asia/Tokyo /etc/localtime
 fi
 }
 
+fdiskoraclehome()
+{
+  sfdisk -uM ${ORACLE_HOME_DEVICE} <<EOF
+,,83
+EOF
+  sleep 15
+  mkfs.ext3 -F ${ORACLE_HOME_DEVICE}1 
+}
+
+mountoraclehome()
+{
+  echo "${ORACLE_HOME_DEVICE}1               ${MOUNT_PATH}                    ext3    defaults        0 0" >> /etc/fstab
+  mkdir ${MOUNT_PATH}
+  mount ${MOUNT_PATH}
+}
 
 createoraclehome ()
 {
