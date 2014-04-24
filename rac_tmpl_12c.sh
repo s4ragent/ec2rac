@@ -237,7 +237,8 @@ clone()
 {
   Region=`curl http://169.254.169.254/latest/meta-data/placement/availability-zone -s | perl -pe chop`
   #deviceJson=[{\"DeviceName\":\"/dev/sda1\",\"Ebs\":{\"VolumeSize\":25,\"DeleteOnTermination\":true,\"VolumeType\":\"standard\"}},{\"DeviceName\":\"/dev/sdb\",\"VirtualName\":\"ephemeral0\"}]
-  InstanceId=`curl -s http://169.254.169.254/latest/meta-data/instance-id`
+  #InstanceId=`curl -s http://169.254.169.254/latest/meta-data/instance-id`
+  InstanceId=$1
   DATE=`date "+%Y%m%d%H%M"`
   #AmiId=`aws ec2 create-image --instance-id $InstanceId --name $TMPL_NAME-$DATE --no-reboot --region $Region --block-device-mappings $deviceJson --output text`
   AmiId=`aws ec2 create-image --instance-id $InstanceId --name "$1-$DATE" --no-reboot --region $Region --output text`
@@ -254,10 +255,26 @@ clone()
 
 backupvolume()
 {
+  InstanceId=$1
+  DeviceName=$2
   Region=`curl http://169.254.169.254/latest/meta-data/placement/availability-zone -s | perl -pe chop`
-  aws ec2 describe-volumes --region us-west-2 --query 'Volumes[].Attachments[][?Device==`/dev/sdf`][?InstanceId==`i-69a4fc60`].VolumeId'
+  VolumeId=`aws ec2 describe-volumes --region $Region --query "Volumes[].Attachments[][?Device==\\\`$Devicename\\\`][?InstanceId==\\\`$InstanceId\\\`].VolumeId" --output text`
+  SnapshotId=`aws ec2 create-snapshot --region $Region --volume-id $VolumeId
+  State=`aws ec2 describe-snapshots --region $Region --snapshot-ids $SnapshotId --query 'Snapshots[].State[]' --output text`
+  while [ $State = "pending" ]
+  do
+    echo $State
+    sleep 10
+    State=`aws ec2 describe-snapshots --region $Region --snapshot-ids $SnapshotId --query 'Snapshots[].State[]' --output text`
+  done
+  echo $State
 }  
 
+listinstances()
+{
+  Region=`curl http://169.254.169.254/latest/meta-data/placement/availability-zone -s | perl -pe chop`
+  aws ec2 describe-instances --region $Region --query 'Reservations[].Instances[].[InstanceId,NetworkInterfaces[]."PrivateIpAddress"]' --output text
+}
 
 listami()
 {
@@ -721,6 +738,8 @@ setupall(){
 
 
 case "$1" in
+  "backupvolume" ) backupvolume;;
+  "listinstances" ) listinstances;;
   "listami" ) listami;;
   "createclonepl" ) createclonepl;;
   "createtmpl" ) createtmpl ;;
