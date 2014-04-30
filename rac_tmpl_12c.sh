@@ -7,7 +7,8 @@ INSTALL_LANG=ja
 TMPL_NAME="RACTMPL"
 KEY_NAME="oregon"
 KEY_PAIR="${KEY_NAME}.pem"
-AmiId="ami-5efb916e"
+PackageAmiId="ami-5efb916e"
+RACSnapshotId=""
 IamRole="root"
 #NODE_Instance_Type="m3.medium"
 NODE_Instance_Type="t1.micro"
@@ -245,12 +246,11 @@ clone()
   State=`aws ec2 describe-images --region $Region --image-id $AmiId --query 'Images[].State[]' --output text`
   while [ $State = "pending" ]
   do
-    echo $State
     sleep 10
     State=`aws ec2 describe-images --region $Region --image-id $AmiId --query 'Images[].State[]' --output text`
   done
-  echo $State
-  sed -i "s/^AmiId.*/AmiId=\"$AmiId\"/" $0
+  echo $AmiId
+  #sed -i "s/^AmiId.*/AmiId=\"$AmiId\"/" $0
 }
 
 createsnapshot()
@@ -263,11 +263,10 @@ createsnapshot()
   State=`aws ec2 describe-snapshots --region $Region --snapshot-ids $SnapshotId --query 'Snapshots[].State[]' --output text`
   while [ $State = "pending" ]
   do
-    echo $State
     sleep 10
     State=`aws ec2 describe-snapshots --region $Region --snapshot-ids $SnapshotId --query 'Snapshots[].State[]' --output text`
   done
-  echo $State
+  echo $SnapshotId
 }  
 
 listinstances()
@@ -315,7 +314,7 @@ requestspotinstances(){
   Node_Count=$4
   prestartinstances
   #JSON={\"IPs\":{\"S\":\"$NODELIST\"}}
-  NodedeviceJson=\"BlockDeviceMappings\":[{\"DeviceName\":\"/dev/sda1\",\"Ebs\":{\"VolumeSize\":$ORACLE_HOME_SIZE,\"DeleteOnTermination\":true,\"VolumeType\":\"standard\"}},{\"DeviceName\":\"$SWAP_DEVICE\",\"VirtualName\":\"ephemeral0\"}]
+  NodedeviceJson=\"BlockDeviceMappings\":[{\"DeviceName\":\"$ORACLE_HOME_DEVICE\",\"Ebs\":{\"VolumeSize\":$ORACLE_HOME_SIZE,\"DeleteOnTermination\":true,\"VolumeType\":\"standard\"}},{\"DeviceName\":\"$SWAP_DEVICE\",\"VirtualName\":\"ephemeral0\"}]
   ServerdeviceJson=\"BlockDeviceMappings\":[{\"DeviceName\":\"$STORAGE_DEVICE\",\"VirtualName\":\"ephemeral0\"}]
   NodeJson={\"ImageId\":\"${NodeAmiId}\",\"KeyName\":\"${KEY_NAME}\",\"InstanceType\":\"${NODE_Instance_Type}\",$NodedeviceJson,\"SubnetId\":\"${SubnetId}\",\"SecurityGroupIds\":[\"$SgNodeId\"]}
   ServerJson={\"ImageId\":\"${ServerAmiId}\",\"KeyName\":\"${KEY_NAME}\",\"InstanceType\":\"${SERVER_Instance_type}\",$ServerdeviceJson,\"SubnetId\":\"${SubnetId}\",\"SecurityGroupIds\":[\"$SgServerId\"]}
@@ -331,13 +330,12 @@ startinstances(){
   Server_Count=$2
   NodeAmiId=$3
   Node_Count=$4
-  NodedeviceJson=[{\"DeviceName\":\"/dev/sda1\",\"Ebs\":{\"VolumeSize\":$ORACLE_HOME_SIZE,\"DeleteOnTermination\":true,\"VolumeType\":\"standard\"}},{\"DeviceName\":\"$SWAP_DEVICE\",\"VirtualName\":\"ephemeral0\"}]
+  NodedeviceJson=[{\"DeviceName\":\"$ORACLE_HOME_DEVICE\",\"Ebs\":{\"VolumeSize\":$ORACLE_HOME_SIZE,\"SnapshotId\":\"$RACSnapshotId\",\"DeleteOnTermination\":true,\"VolumeType\":\"standard\"}},{\"DeviceName\":\"$SWAP_DEVICE\",\"VirtualName\":\"ephemeral0\"}]
   ServerdeviceJson=[{\"DeviceName\":\"$STORAGE_DEVICE\",\"Ebs\":{\"VolumeSize\":$STORAGE_SIZE,\"DeleteOnTermination\":true,\"VolumeType\":\"standard\"}}]
   
   prestartinstances
   aws ec2 run-instances --region $Region --image-id $NodeAmiId --key-name $KEY_NAME --subnet-id $SubnetId --security-group-ids $SgNodeId --block-device-mappings $NodedeviceJson --iam-instance-profile Name=$IamRole --instance-type $NODE_Instance_Type --count $Node_Count
   aws ec2 run-instances --region $Region --image-id $ServerAmiId --key-name $KEY_NAME --subnet-id $SubnetId --security-group-ids $SgServerId --block-device-mappings $ServerdeviceJson --instance-type $SERVER_Instance_type --count $Server_Count
-
 }
 
 
@@ -702,7 +700,17 @@ createtmpl()
   createoraclehome
   setupkernel
   pretincconf
-  #clone
+  InstanceId=`curl -s http://169.254.169.254/latest/meta-data/instance-id`
+  AmiId=`clone $InstanceId`
+  sed -i "s/^PackageAmiId=.*/PackageAmiId=\"$AmiId\"/" $0
+}
+
+createclonebase()
+{
+  rm -rf $ORAINVENTORY
+  InstanceId=`curl -s http://169.254.169.254/latest/meta-data/instance-id`
+  SnapShotId=`createsnapshot $InstanceId $ORACLE_HOME_DEVICE`
+  sed -i "s/^RACSnapshotId=.*/RACSnapshotId=\"$SnapShotId\"/" $0
 }
 
 setupnode()
@@ -712,7 +720,6 @@ setupnode()
   createtincconf $1
   createswap $1
   setupiscsi $1
-  createclusterlist
 }
 
 setupall(){
