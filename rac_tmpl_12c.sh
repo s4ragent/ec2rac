@@ -666,18 +666,23 @@ fi
 
 fdiskoraclehome()
 {
-  sfdisk -uM ${ORACLE_HOME_DEVICE} <<EOF
+  if [ "$1" != "0" ] ; then
+    sfdisk -uM ${ORACLE_HOME_DEVICE} <<EOF
 ,,83
 EOF
-  sleep 15
-  mkfs.ext3 -F ${ORACLE_HOME_DEVICE}1 
+    sleep 15
+    mkfs.ext3 -F ${ORACLE_HOME_DEVICE}1
+  fi
 }
 
 mountoraclehome()
 {
-  echo "${ORACLE_HOME_DEVICE}1               ${MOUNT_PATH}                    ext3    defaults        0 0" >> /etc/fstab
-  mkdir ${MOUNT_PATH}
-  mount ${MOUNT_PATH}
+  
+  if [ "$1" != "0" ] ; then
+    echo "${ORACLE_HOME_DEVICE}1               ${MOUNT_PATH}                    ext3    defaults        0 0" >> /etc/fstab
+    mkdir ${MOUNT_PATH}
+    mount ${MOUNT_PATH}
+  fi
 }
 
 createoraclehome ()
@@ -697,7 +702,6 @@ createtmpl()
   changelocale
   createsshkey
   createuser
-  createoraclehome
   setupkernel
   pretincconf
   InstanceId=`curl -s http://169.254.169.254/latest/meta-data/instance-id`
@@ -720,6 +724,8 @@ setupnode()
   createtincconf $1
   createswap $1
   setupiscsi $1
+  fdiskoraclehome $1
+  mountoraclehome $1
 }
 
 setupall(){
