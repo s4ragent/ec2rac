@@ -225,7 +225,9 @@ setupnodelist()
 {
   Region=`curl http://169.254.169.254/latest/meta-data/placement/availability-zone -s | perl -pe chop`
   #NODELIST=`aws ec2 describe-instances --region $Region --query 'Reservations[].Instances[?contains(KeyName,\`node\`)==\`true\`].[NetworkInterfaces[].PrivateIpAddress]' --output text`
-  NODELIST=`aws ec2 describe-instances --region $Region --query "Reservations[].Instances[][?contains(NetworkInterfaces[].Groups[].GroupName,\\\`$SgNodeName\\\`)==\\\`true\\\`].[NetworkInterfaces[].PrivateIpAddress]" --output text`
+  #NODELIST=`aws ec2 describe-instances --region $Region --query "Reservations[].Instances[][?contains(NetworkInterfaces[].Groups[].GroupName,\\\`$SgNodeName\\\`)==\\\`true\\\`].[NetworkInterfaces[].PrivateIpAddress]" --output text`
+  NODELIST=`aws ec2 describe-instances --region $Region filter "Name=group-name,Values=$SgNodeName" --query "Reservations[].Instances[].[NetworkInterfaces[].PrivateIpAddress]" --output text`
+  
   NODELIST=`echo $NODELIST`
   SERVER=`aws ec2 describe-instances --region $Region --query "Reservations[].Instances[][?contains(NetworkInterfaces[].Groups[].GroupName,\\\`$SgServerName\\\`)==\\\`true\\\`].[NetworkInterfaces[].PrivateIpAddress]" --output text`
   SERVER=`echo $SERVER`
@@ -242,7 +244,7 @@ clone()
   InstanceId=$1
   DATE=`date "+%Y%m%d%H%M"`
   #AmiId=`aws ec2 create-image --instance-id $InstanceId --name $TMPL_NAME-$DATE --no-reboot --region $Region --block-device-mappings $deviceJson --output text`
-  AmiId=`aws ec2 create-image --instance-id $InstanceId --name "$1-$DATE" --no-reboot --region $Region --output text`
+  AmiId=`aws ec2 create-image --instance-id $InstanceId --name "$1-$DATE" --no-reboot --region $Region --query 'ImageId' --output text`
   State=`aws ec2 describe-images --region $Region --image-id $AmiId --query 'Images[].State[]' --output text`
   while [ $State = "pending" ]
   do
