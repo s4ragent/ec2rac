@@ -724,6 +724,7 @@ setupnode()
   setupiscsi $1
   fdiskoraclehome $1
   mountoraclehome $1
+  createoraclehome
 }
 
 setupall(){
