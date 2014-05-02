@@ -358,7 +358,7 @@ stopinstances()
 
 terminateinstances()
 {
-  prestopinstances
+  setupnodelist
   aws ec2 terminate-instances --region $Region --instance-ids $NODEIds $SERVERIds 
 }
 
