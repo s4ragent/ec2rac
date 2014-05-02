@@ -350,19 +350,9 @@ startinstances(){
 }
 
 
-prestopinstances()
-{
-  Region=`curl http://169.254.169.254/latest/meta-data/placement/availability-zone -s | perl -pe chop`
-  #NODELIST=`aws ec2 describe-instances --region $Region --query 'Reservations[].Instances[?contains(KeyName,\`node\`)==\`true\`].[NetworkInterfaces[].PrivateIpAddress]' --output text`
-  NODEIds=`aws ec2 describe-instances --region $Region --query "Reservations[].Instances[][?contains(NetworkInterfaces[].Groups[].GroupName,\\\`$SgNodeName\\\`)==\\\`true\\\`].InstanceId" --output text`
-  NODEIds=`echo $NODEIds`
-  SERVERIds=`aws ec2 describe-instances --region $Region --query "Reservations[].Instances[][?contains(NetworkInterfaces[].Groups[].GroupName,\\\`$SgServerName\\\`)==\\\`true\\\`].InstanceId" --output text`
-  SERVERIds=`echo $SERVERIds`
-}
-
 stopinstances()
 {
-  prestopinstances
+  setupnodelist
   aws ec2 stop-instances --region $Region --instance-ids $NODEIds $SERVERIds 
 }
 
