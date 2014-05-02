@@ -308,10 +308,10 @@ prestartinstances(){
 }
 
 requestspotinstances(){
-  ServerAmiId=$1
-  Server_Count=$2
-  NodeAmiId=$3
-  Node_Count=$4
+  ServerAmiId=$PackageAmiId
+  Server_Count=$1
+  NodeAmiId=$PackageAmiId
+  Node_Count=$2
   prestartinstances
   #JSON={\"IPs\":{\"S\":\"$NODELIST\"}}
   NodedeviceJson=\"BlockDeviceMappings\":[{\"DeviceName\":\"$ORACLE_HOME_DEVICE\",\"Ebs\":{\"VolumeSize\":$ORACLE_HOME_SIZE,\"DeleteOnTermination\":true,\"VolumeType\":\"standard\"}},{\"DeviceName\":\"$SWAP_DEVICE\",\"VirtualName\":\"ephemeral0\"}]
@@ -327,9 +327,10 @@ requestspotinstances(){
 
 startinstances(){
   ServerAmiId=$1
-  Server_Count=$2
-  NodeAmiId=$3
-  Node_Count=$4
+  ServerAmiId=$PackageAmiId
+  Server_Count=$1
+  NodeAmiId=$PackageAmiId
+  Node_Count=$2
   NodedeviceJson=[{\"DeviceName\":\"$ORACLE_HOME_DEVICE\",\"Ebs\":{\"VolumeSize\":$ORACLE_HOME_SIZE,\"SnapshotId\":\"$RACSnapshotId\",\"DeleteOnTermination\":true,\"VolumeType\":\"standard\"}},{\"DeviceName\":\"$SWAP_DEVICE\",\"VirtualName\":\"ephemeral0\"}]
   ServerdeviceJson=[{\"DeviceName\":\"$STORAGE_DEVICE\",\"Ebs\":{\"VolumeSize\":$STORAGE_SIZE,\"DeleteOnTermination\":true,\"VolumeType\":\"standard\"}}]
   
