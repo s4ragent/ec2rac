@@ -550,6 +550,10 @@ createsshkey ()
 rm -rf ./id_rsa*
 ssh-keygen -t rsa -P "" -f ./id_rsa
 cat ./id_rsa.pub >>  .ssh/authorized_keys
+for i in `seq 0 200` ;
+do
+  echo "`getnodename $i`,`getip 0 real $i` `cat /etc/ssh/ssh_host_rsa_key.pub`" >> ./known_hosts
+done
 }
 
 createuser ()
@@ -571,12 +575,6 @@ groupadd -g 1002 asmdba
 groupadd -g 1003 asmoper
 useradd -u 501 -m -g oinstall -G dba,oper,asmdba -d /home/oracle -s /bin/bash -c"Oracle Software Owner" oracle
 useradd -u 1001 -m -g oinstall -G asmadmin,asmdba,asmoper -d /home/grid -s /bin/bash -c "Grid Infrastructure Owner" grid
-
-for i in `seq 0 200` ;
-do
-  echo "`getnodename $i`,`getip 0 real $i` `cat /etc/ssh/ssh_host_rsa_key.pub`" >> ./known_hosts
-done
-
 
 for user in oracle grid
 do
