@@ -4,7 +4,7 @@ SERVER="192.168.0.100"
 NODELIST="192.168.0.101 192.168.0.102"
 SERVERids=""
 NODEids=""
-NODE=($NODELIST)
+
 INSTALL_LANG=ja
 TMPL_NAME="RACTMPL"
 KEY_NAME="oregon"
@@ -239,6 +239,12 @@ setupnodelist()
   SERVERids=`echo $SERVERids`
   NODEids=`aws ec2 describe-instances --region $Region --filter "Name=instance.group-id,Values=$SgNodeId" --query "Reservations[].Instances[].[InstanceId]" --output text`
   NODEids=`echo $NODEids`
+  NODE=($NODELIST)
+  export SERVER=$SERVER
+  export SERVERids=$SERVERids
+  export NODELIST=$NODELIST
+  export NODEids=$NODEids
+  export NODE=$NODE
 }
 
 clone()
