@@ -353,13 +353,13 @@ startinstances(){
 stopinstances()
 {
   setupnodelist
-  aws ec2 stop-instances --region $Region --instance-ids $NODEIds $SERVERIds 
+  aws ec2 stop-instances --region $Region --instance-ids $NODEids $SERVERids 
 }
 
 terminateinstances()
 {
   setupnodelist
-  aws ec2 terminate-instances --region $Region --instance-ids $NODEIds $SERVERIds 
+  aws ec2 terminate-instances --region $Region --instance-ids $NODEids $SERVERids 
 }
 
 setupkernel()
