@@ -2,6 +2,8 @@
 export LANG=C
 SERVER="192.168.0.100"
 NODELIST="192.168.0.101 192.168.0.102"
+SERVERids=""
+NODEids=""
 NODE=($NODELIST)
 INSTALL_LANG=ja
 TMPL_NAME="RACTMPL"
@@ -235,7 +237,10 @@ setupnodelist()
   SERVER=`echo $SERVER`
   sed -i "s/^NODELIST=.*/NODELIST=\"$NODELIST\"/" $0
   sed -i "s/^SERVER=.*/SERVER=\"$SERVER\"/" $0
-  #SERVER_AND_NODE="$SERVER $NODELIST"
+  SERVERids=`aws ec2 describe-instances --region $Region --filter "Name=instance.group-id,Values=$SgServerId" --query "Reservations[].Instances[].[InstanceId]" --output text`
+  SERVERids=`echo $SERVERids`
+  NODEids=`aws ec2 describe-instances --region $Region --filter "Name=instance.group-id,Values=$SgNodeId" --query "Reservations[].Instances[].[InstanceId]" --output text`
+  NODEids=`echo $NODEids`
 }
 
 clone()
