@@ -227,11 +227,11 @@ setupnodelist()
   #NODELIST=`aws ec2 describe-instances --region $Region --query 'Reservations[].Instances[?contains(KeyName,\`node\`)==\`true\`].[NetworkInterfaces[].PrivateIpAddress]' --output text`
   #NODELIST=`aws ec2 describe-instances --region $Region --query "Reservations[].Instances[][?contains(NetworkInterfaces[].Groups[].GroupName,\\\`$SgNodeName\\\`)==\\\`true\\\`].[NetworkInterfaces[].PrivateIpAddress]" --output text`
   SgNodeId=`aws ec2 describe-security-groups --region $Region --filter "Name=group-name,Values=$SgNodeName" --query 'SecurityGroups[].GroupId' --output text`
-  NODELIST=`aws ec2 describe-instances --region $Region --filter "Name=group-id,Values=$SgNodeId" --query "Reservations[].Instances[].[NetworkInterfaces[].PrivateIpAddress]" --output text`
+  NODELIST=`aws ec2 describe-instances --region $Region --filter "Name=instance.group-id,Values=$SgNodeId" --query "Reservations[].Instances[].[NetworkInterfaces[].PrivateIpAddress]" --output text`
   NODELIST=`echo $NODELIST`
   #SERVER=`aws ec2 describe-instances --region $Region --query "Reservations[].Instances[][?contains(NetworkInterfaces[].Groups[].GroupName,\\\`$SgServerName\\\`)==\\\`true\\\`].[NetworkInterfaces[].PrivateIpAddress]" --output text`
   SgServerId=`aws ec2 describe-security-groups --region $Region --filter "Name=group-name,Values=$SgServerName" --query 'SecurityGroups[].GroupId' --output text`
-  SERVER=`aws ec2 describe-instances --region $Region --filter "Name=group-id,Values=$SgServerId" --query "Reservations[].Instances[].[NetworkInterfaces[].PrivateIpAddress]" --output text`
+  SERVER=`aws ec2 describe-instances --region $Region --filter "Name=instance.group-id,Values=$SgServerId" --query "Reservations[].Instances[].[NetworkInterfaces[].PrivateIpAddress]" --output text`
   SERVER=`echo $SERVER`
   sed -i "s/^NODELIST=.*/NODELIST=\"$NODELIST\"/" $0
   sed -i "s/^SERVER=.*/SERVER=\"$SERVER\"/" $0
