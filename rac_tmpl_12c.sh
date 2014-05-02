@@ -235,8 +235,6 @@ setupnodelist()
   SgServerId=`aws ec2 describe-security-groups --region $Region --filter "Name=group-name,Values=$SgServerName" --query 'SecurityGroups[].GroupId' --output text`
   SERVER=`aws ec2 describe-instances --region $Region --filter "Name=instance.group-id,Values=$SgServerId" --query "Reservations[].Instances[].[NetworkInterfaces[].PrivateIpAddress]" --output text`
   SERVER=`echo $SERVER`
-  sed -i "s/^NODELIST=.*/NODELIST=\"$NODELIST\"/" $0
-  sed -i "s/^SERVER=.*/SERVER=\"$SERVER\"/" $0
   SERVERids=`aws ec2 describe-instances --region $Region --filter "Name=instance.group-id,Values=$SgServerId" --query "Reservations[].Instances[].[InstanceId]" --output text`
   SERVERids=`echo $SERVERids`
   NODEids=`aws ec2 describe-instances --region $Region --filter "Name=instance.group-id,Values=$SgNodeId" --query "Reservations[].Instances[].[InstanceId]" --output text`
@@ -731,6 +729,8 @@ setupnode()
 setupall(){
   #startupinnstance
   setupnodelist
+  sed -i "s/^NODELIST=.*/NODELIST=\"$NODELIST\"/" $0
+  sed -i "s/^SERVER=.*/SERVER=\"$SERVER\"/" $0
   copyfile $0
   SERVER_AND_NODE="$SERVER $NODELIST"
   NODECOUNT=0
