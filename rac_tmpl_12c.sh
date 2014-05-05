@@ -474,6 +474,16 @@ setupdns ()
 
 }
 
+ping()
+{
+  SERVER_AND_NODE="$SERVER $NODELIST"
+  for i in $SERVER_AND_NODE ;
+  do
+        ping -c 1 $i
+  done
+}
+
+
 pretincconf()
 {
   rm -rf ./dummy
@@ -854,6 +864,7 @@ setupall(){
 
 
 case "$1" in
+  "ping" ) ping;;
   "createclonebase" ) createclonebase;;
   "createsnapshot" ) createsnapshot $2 $3;;
   "listinstances" ) listinstances;;
