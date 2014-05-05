@@ -739,17 +739,16 @@ createtmpl()
 
 precreateclonebase()
 {
-  $GRID_ORACLE_HOME/bin/crsctl stop crs
-  rm -rf $ORAINVENTORY
-  InstanceId=`curl -s http://169.254.169.254/latest/meta-data/instance-id`
-  SnapShotId=`createsnapshot $InstanceId $ORACLE_HOME_DEVICE`
-  echo SnapShotId
-  sed -i "s/^RACSnapshotId=.*/RACSnapshotId=\"$SnapShotId\"/" $0
+  
+  
 }
 
 createclonebase()
 {
-  ssh -i $KEY_PAIR -o "StrictHostKeyChecking no" root@${NODE[0]} "sh $0 precreateclonebase"
+  ssh -i $KEY_PAIR -o "StrictHostKeyChecking no" root@${NODE[0]} "$GRID_ORACLE_HOME/bin/crsctl stop crs;rm -rf $ORAINVENTORY"
+  InstanceId=${NODEid[0]}
+  SnapShotId=`createsnapshot $InstanceId $ORACLE_HOME_DEVICE`
+  sed -i "s/^RACSnapshotId=.*/RACSnapshotId=\"$SnapShotId\"/" $0
 }
 
 setupnode()
