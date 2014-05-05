@@ -720,6 +720,28 @@ mountoraclehome()
     echo "${ORACLE_HOME_DEVICE}1               ${MOUNT_PATH}                    ext3    defaults        0 0" >> /etc/fstab
     mkdir ${MOUNT_PATH}
     mount ${MOUNT_PATH}
+    IFS='/'
+    set -- $GRID_ORACLE_HOME
+    IFS=','
+    for i in "$@"
+    do
+    if [ "$i" != "" ] ; then
+        CHMODPATH=${CHMODPATH}"/"${i}
+        chown grid:oinstall $CHMODPATH
+    fi
+    done
+
+    mkdir -p $ORAINVENTORY
+    chown grid:oinstall $ORAINVENTORY
+    mkdir -p $GRID_ORACLE_BASE
+    chown grid:oinstall $GRID_ORACLE_BASE
+    chown -R grid:oinstall $GRID_ORACLE_HOME
+    chmod u+s $GRID_ORACLE_HOME/bin/oracle
+    chmod g+s $GRID_ORACLE_HOME/bin/oracle
+    chmod u+s $GRID_ORACLE_HOME/bin/extjob
+    chmod u+s $GRID_ORACLE_HOME/bin/jssu
+    chmod u+s $GRID_ORACLE_HOME/bin/oradism
+
   fi
 }
 
