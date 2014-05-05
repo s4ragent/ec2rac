@@ -474,7 +474,7 @@ setupdns ()
 
 }
 
-ping()
+pingeth0()
 {
   SERVER_AND_NODE="$SERVER $NODELIST"
   for i in $SERVER_AND_NODE ;
@@ -864,7 +864,7 @@ setupall(){
 
 
 case "$1" in
-  "ping" ) ping;;
+  "pingeth0" ) pingeth0;;
   "createclonebase" ) createclonebase;;
   "createsnapshot" ) createsnapshot $2 $3;;
   "listinstances" ) listinstances;;
