@@ -388,20 +388,20 @@ chkconfig NetworkManager off
 echo "session required pam_limits.so" >> /etc/pam.d/login
 ###kernel parameter ####
 
-cat >> /etc/sysctl.conf <<EOF
+#cat >> /etc/sysctl.conf <<EOF
 #this is for oracle install#
-net.ipv4.ip_local_port_range = 9000 65500
-net.core.rmem_default = 262144
-net.core.rmem_max = 4194304
-net.core.wmem_default = 262144
-net.core.wmem_max = 1048576
-kernel.shmmax = ${MEMSIZE}
-kernel.shmall = 4294967296
-kernel.shmmni = 4096
-kernel.sem = 250 32000 100 128
-fs.file-max = 6815744
-fs.aio-max-nr = 1048576
-EOF
+#net.ipv4.ip_local_port_range = 9000 65500
+#net.core.rmem_default = 262144
+#net.core.rmem_max = 4194304
+#net.core.wmem_default = 262144
+#net.core.wmem_max = 1048576
+#kernel.shmmax = ${MEMSIZE}
+#kernel.shmall = 4294967296
+#kernel.shmmni = 4096
+#kernel.sem = 250 32000 100 128
+#fs.file-max = 6815744
+#fs.aio-max-nr = 1048576
+#EOF
 
 ##### limits.conf #####
 sed -i 's/oracle/#oracle/' /etc/security/limits.conf
@@ -715,9 +715,11 @@ createtmpl()
 
 createclonebase()
 {
+  $GRID_ORACLE_HOME/bin/crsctl stop crs
   rm -rf $ORAINVENTORY
   InstanceId=`curl -s http://169.254.169.254/latest/meta-data/instance-id`
   SnapShotId=`createsnapshot $InstanceId $ORACLE_HOME_DEVICE`
+  echo SnapShotId
   sed -i "s/^RACSnapshotId=.*/RACSnapshotId=\"$SnapShotId\"/" $0
 }
 
