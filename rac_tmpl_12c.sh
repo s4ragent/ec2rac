@@ -235,37 +235,7 @@ setupnodelist()
   NODELIST=""
   NODEids=""
   CNT=0
-  for i in $NODEOBJ ;
-  do
-      if [ $CNT == 0 ]; then
-        NODEids="$i"      
-      elif [ $CNT == 1 ]; then
-        NODELIST="$i"
-      elif [ `expr $CNT % 2` == 0 ]; then
-        NODEids="$NODEids $i"
-      else
-        NODELIST="$NODELIST $i"
-      fi
-      CNT=`expr $CNT + 1`
-  done
-  
-  
-  #SERVER=`aws ec2 describe-instances --region $Region --query "Reservations[].Instances[][?contains(NetworkInterfaces[].Groups[].GroupName,\\\`$SgServerName\\\`)==\\\`true\\\`].[NetworkInterfaces[].PrivateIpAddress]" --output text`
-  SgServerId=`aws ec2 describe-security-groups --region $Region --filter "Name=group-name,Values=$SgServerName" --query 'SecurityGroups[].GroupId' --output text`
-  SERVEROBJ=`aws ec2 describe-instances --region $Region --filter "Name=instance.group-id,Values=$SgServerId" --query 'Reservations[].Instances[].[InstanceId,[NetworkInterfaces[].PrivateIpAddress]]' --output text`
-  SERVEROBJ=`echo $SERVEROBJ`
-  SERVER=""
-  SERVERids=""
-  CNT=0
-  for i in $SERVEROBJ ;
-  do
-      if [ `expr $CNT % 2` == 0 ]; then
-        SERVERids="$i"
-      else
-        SERVER="$i"
-      fi
-      CNT=`expr $CNT + 1`
-  done
+
   
   NODE=($NODELIST)
   export SERVER=$SERVER
