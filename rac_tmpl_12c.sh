@@ -746,6 +746,19 @@ createclonebase()
   sed -i "s/^RACSnapshotId=.*/RACSnapshotId=\"$SnapShotId\"/" $0
 }
 
+setupnodeforclone()
+{
+  changehostname $1
+  setupdns $1
+  createtincconf $1
+  createswap $1
+  setupiscsi $1
+  mountoraclehome $1
+  createclusterlist
+  createclonepl
+  
+}
+
 setupnode()
 {
   changehostname $1
@@ -756,6 +769,63 @@ setupnode()
   fdiskoraclehome $1
   mountoraclehome $1
   createoraclehome
+}
+
+setupallforclone(){
+  #startupinnstance
+  setupnodelist
+  sed -i "s/^NODELIST=.*/NODELIST=\"$NODELIST\"/" $0
+  sed -i "s/^NODEids=.*/NODEids=\"$NODEids\"/" $0
+  sed -i "s/^SERVER=.*/SERVER=\"$SERVER\"/" $0
+  copyfile $0
+  SERVER_AND_NODE="$SERVER $NODELIST"
+  NODECOUNT=0
+  for i in $SERVER_AND_NODE ;
+  do
+        ssh -i $KEY_PAIR -o "StrictHostKeyChecking no" root@$i "sh $0 setupnodeforclone $NODECOUNT"
+        NODECOUNT=`expr $NODECOUNT + 1`
+  done
+  NODECOUNT=0
+  for i in $SERVER_AND_NODE ;
+  do
+        ssh -i $KEY_PAIR -o "StrictHostKeyChecking no" root@$i "reboot"
+        NODECOUNT=`expr $NODECOUNT + 1`
+  done
+  sleep 240
+  NODECOUNT=0
+  for i in $NODELIST ;
+  do
+        ssh -i id_rsa -f grid@$i "./start.sh"
+        ssh -i id_rsa -f oracle@$i "./start.sh"
+        NODECOUNT=`expr $NODECOUNT + 1`
+  done
+  sleep 240
+  NODECOUNT=0
+  for i in $NODELIST ;
+  do
+        ssh -i id_rsa -f grid@$i "$ORAINVENTORY/orainstRoot.sh;$GRID_ORACLE_HOME/root.sh"
+        ssh -i id_rsa -f oracle@$i "$ORA_ORACLE_HOME/root.sh"
+        NODECOUNT=`expr $NODECOUNT + 1`
+  done
+}
+
+rootshforclone()
+{
+  NODECOUNT=0
+  for i in $NODELIST ;
+do
+        echo $NODECOUNT
+        if [ $NODECOUNT = 1 ] ; then
+                ssh root@$i "$GRID_ORACLE_HOME/root.sh;ls $GRID_ORACLE_HOME/install/root* | sort -r | head -n 1 | xargs cat" > ${NODECOUNT}.log
+        elif [ $NODECOUNT != $# ] ; then
+                ssh -f root@$i "$GRID_ORACLE_HOME/root.sh;ls $GRID_ORACLE_HOME/install/root* | sort -r | head -n 1 | xargs cat" > ${NODECOUNT}.log
+                sleep 30
+        else
+                sleep 90
+                ssh root@$i "$GRID_ORACLE_HOME/root.sh;ls $GRID_ORACLE_HOME/install/root* | sort -r | head -n 1 | xargs cat" > ${NODECOUNT}.log
+        fi
+        NODECOUNT=`expr $NODECOUNT + 1`
+done
 }
 
 setupall(){
