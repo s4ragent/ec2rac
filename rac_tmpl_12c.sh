@@ -839,6 +839,7 @@ setupallforclone(){
         ssh -i $KEY_PAIR "$ORA_ORACLE_HOME/root.sh"
         NODECOUNT=`expr $NODECOUNT + 1`
   done
+  echo "plese execute grid_home/crs/config/config.sh and later rootshforclone"
 }
 
 rootshforclone()
