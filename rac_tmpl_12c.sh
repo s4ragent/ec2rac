@@ -2,6 +2,7 @@
 export LANG=C
 SERVER="192.168.0.100"
 NODELIST="192.168.0.101 192.168.0.102"
+NODE=($NODELIST)
 SERVERids=""
 NODEids=""
 
@@ -10,7 +11,7 @@ TMPL_NAME="RACTMPL"
 KEY_NAME="oregon"
 KEY_PAIR="${KEY_NAME}.pem"
 PackageAmiId="ami-91a8dfa1"
-RACSnapshotId=""
+RACSnapshotId="snap-7fada28c"
 IamRole="root"
 NODE_Instance_Type="m3.medium"
 #NODE_Instance_Type="t1.micro"
@@ -229,16 +230,39 @@ setupnodelist()
   #NODELIST=`aws ec2 describe-instances --region $Region --query 'Reservations[].Instances[?contains(KeyName,\`node\`)==\`true\`].[NetworkInterfaces[].PrivateIpAddress]' --output text`
   #NODELIST=`aws ec2 describe-instances --region $Region --query "Reservations[].Instances[][?contains(NetworkInterfaces[].Groups[].GroupName,\\\`$SgNodeName\\\`)==\\\`true\\\`].[NetworkInterfaces[].PrivateIpAddress]" --output text`
   SgNodeId=`aws ec2 describe-security-groups --region $Region --filter "Name=group-name,Values=$SgNodeName" --query 'SecurityGroups[].GroupId' --output text`
-  NODELIST=`aws ec2 describe-instances --region $Region --filter "Name=instance.group-id,Values=$SgNodeId" --query "Reservations[].Instances[].[NetworkInterfaces[].PrivateIpAddress]" --output text`
-  NODELIST=`echo $NODELIST`
+  NODEOBJ=`aws ec2 describe-instances --region $Region --filter "Name=instance.group-id,Values=$SgNodeId" 'Reservations[].Instances[].[InstanceId,[NetworkInterfaces[].PrivateIpAddress]]' --output text`
+  NODEOBJ=`echo $NODEOBJ`
+  NODELIST=""
+  NODEids=""
+  CNT=0
+  for i in $NODEOBJ ;
+  do
+      if [ `expr $CNT % 2` == 0 ]; then
+        NODEids="$NODEids $i"
+      else
+        NODELIST="$NODELIST $i"
+      fi
+      CNT=`expr $CNT + 1`
+  done
+  
+  
   #SERVER=`aws ec2 describe-instances --region $Region --query "Reservations[].Instances[][?contains(NetworkInterfaces[].Groups[].GroupName,\\\`$SgServerName\\\`)==\\\`true\\\`].[NetworkInterfaces[].PrivateIpAddress]" --output text`
   SgServerId=`aws ec2 describe-security-groups --region $Region --filter "Name=group-name,Values=$SgServerName" --query 'SecurityGroups[].GroupId' --output text`
-  SERVER=`aws ec2 describe-instances --region $Region --filter "Name=instance.group-id,Values=$SgServerId" --query "Reservations[].Instances[].[NetworkInterfaces[].PrivateIpAddress]" --output text`
-  SERVER=`echo $SERVER`
-  SERVERids=`aws ec2 describe-instances --region $Region --filter "Name=instance.group-id,Values=$SgServerId" --query "Reservations[].Instances[].[InstanceId]" --output text`
-  SERVERids=`echo $SERVERids`
-  NODEids=`aws ec2 describe-instances --region $Region --filter "Name=instance.group-id,Values=$SgNodeId" --query "Reservations[].Instances[].[InstanceId]" --output text`
-  NODEids=`echo $NODEids`
+  SERVEROBJ=`aws ec2 describe-instances --region $Region --filter "Name=instance.group-id,Values=$SgServerId" 'Reservations[].Instances[].[InstanceId,[NetworkInterfaces[].PrivateIpAddress]]' --output text`
+  SERVEROBJ=`echo $SERVEROBJ`
+  SERVER=""
+  SERVERids=""
+  CNT=0
+  for i in $SERVEROBJ ;
+  do
+      if [ `expr $CNT % 2` == 0 ]; then
+        SERVERids="$SERVERids $i"
+      else
+        SERVER="$SERVER $i"
+      fi
+      CNT=`expr $CNT + 1`
+  done
+  
   NODE=($NODELIST)
   export SERVER=$SERVER
   export SERVERids=$SERVERids
@@ -713,7 +737,7 @@ createtmpl()
   sed -i "s/^PackageAmiId=.*/PackageAmiId=\"$AmiId\"/" $0
 }
 
-createclonebase()
+precreateclonebase()
 {
   $GRID_ORACLE_HOME/bin/crsctl stop crs
   rm -rf $ORAINVENTORY
@@ -721,6 +745,11 @@ createclonebase()
   SnapShotId=`createsnapshot $InstanceId $ORACLE_HOME_DEVICE`
   echo SnapShotId
   sed -i "s/^RACSnapshotId=.*/RACSnapshotId=\"$SnapShotId\"/" $0
+}
+
+createclonebase()
+{
+  ssh -i $KEY_PAIR -o "StrictHostKeyChecking no" root@${NODE[0]} "sh $0 precreateclonebase"
 }
 
 setupnode()
