@@ -870,6 +870,7 @@ case "$1" in
   "setupnodelist" ) setupnodelist ;;
   "createtincconf" ) createtincconf $2;;
   "clone" ) clone $2;;
+  "rootshforclone" rootshforclone;;
   "startinstances" ) startinstances $2 $3 $4 $5;;
   "requestspotinstances" ) requestspotinstances $2 $3 $4 $5;;
   "stopinstances" ) stopinstances ;;
