@@ -737,11 +737,6 @@ createtmpl()
   sed -i "s/^PackageAmiId=.*/PackageAmiId=\"$AmiId\"/" $0
 }
 
-precreateclonebase()
-{
-  
-  
-}
 
 createclonebase()
 {
