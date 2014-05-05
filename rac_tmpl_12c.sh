@@ -732,7 +732,7 @@ mountoraclehome()
     done
 
     mkdir -p $ORAINVENTORY
-    chown grid:oinstall $ORAINVENTORY
+    chown oracle:oinstall $ORAINVENTORY
     mkdir -p $GRID_ORACLE_BASE
     chown grid:oinstall $GRID_ORACLE_BASE
     chown -R grid:oinstall $GRID_ORACLE_HOME
