@@ -760,6 +760,7 @@ setupall(){
 
 
 case "$1" in
+  "createclonebase" ) createclonebase;;
   "createsnapshot" ) createsnapshot $2 $3;;
   "listinstances" ) listinstances;;
   "listami" ) listami;;
