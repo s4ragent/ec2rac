@@ -5,6 +5,7 @@ NODELIST="192.168.0.101 192.168.0.102"
 NODE=($NODELIST)
 SERVERids=""
 NODEids=""
+NODEid=($NODEid)
 
 INSTALL_LANG=ja
 TMPL_NAME="RACTMPL"
@@ -231,18 +232,43 @@ setupnodelist()
   #NODELIST=`aws ec2 describe-instances --region $Region --query "Reservations[].Instances[][?contains(NetworkInterfaces[].Groups[].GroupName,\\\`$SgNodeName\\\`)==\\\`true\\\`].[NetworkInterfaces[].PrivateIpAddress]" --output text`
   SgNodeId=`aws ec2 describe-security-groups --region $Region --filter "Name=group-name,Values=$SgNodeName" --query 'SecurityGroups[].GroupId' --output text`
   NODEOBJ=`aws ec2 describe-instances --region $Region --filter "Name=instance.group-id,Values=$SgNodeId" --query 'Reservations[].Instances[].[InstanceId,[NetworkInterfaces[].PrivateIpAddress]]' --output text`
-  NODEOBJ=`echo $NODEOBJ
+  NODEOBJ=`echo $NODEOBJ`
   NODELIST=""
   NODEids=""
   CNT=0
-
+  for i in $NODEOBJ ;
+  do
+      if [ $CNT == 0 ]; then
+        NODEids="$i"      
+      elif [ $CNT == 1 ]; then
+        NODELIST="$i"
+      elif [ `expr $CNT % 2` == 0 ]; then
+        NODEids="$NODEids $i"
+      else
+        NODELIST="$NODELIST $i"
+      fi
+      CNT=`expr $CNT + 1`
+  done
   
+  
+  #SERVER=`aws ec2 describe-instances --region $Region --query "Reservations[].Instances[][?contains(NetworkInterfaces[].Groups[].GroupName,\\\`$SgServerName\\\`)==\\\`true\\\`].[NetworkInterfaces[].PrivateIpAddress]" --output text`
+  SgServerId=`aws ec2 describe-security-groups --region $Region --filter "Name=group-name,Values=$SgServerName" --query 'SecurityGroups[].GroupId' --output text`
+  SERVEROBJ=`aws ec2 describe-instances --region $Region --filter "Name=instance.group-id,Values=$SgServerId" --query 'Reservations[].Instances[].[InstanceId,[NetworkInterfaces[].PrivateIpAddress]]' --output text`
+  SERVEROBJ=`echo $SERVEROBJ`
+  SERVER=""
+  SERVERids=""
+  CNT=0
+  for i in $SERVEROBJ ;
+  do
+      if [ `expr $CNT % 2` == 0 ]; then
+        SERVERids="$i"
+      else
+        SERVER="$i"
+      fi
+      CNT=`expr $CNT + 1`
+  done
   NODE=($NODELIST)
-  export SERVER=$SERVER
-  export SERVERids=$SERVERids
-  export NODELIST=$NODELIST
-  export NODEids=$NODEids
-  export NODE=$NODE
+  NODEid=($NODEids)
 }
 
 clone()
@@ -742,6 +768,7 @@ setupall(){
   #startupinnstance
   setupnodelist
   sed -i "s/^NODELIST=.*/NODELIST=\"$NODELIST\"/" $0
+  sed -i "s/^NODEids=.*/NODEids=\"$NODEids\"/" $0
   sed -i "s/^SERVER=.*/SERVER=\"$SERVER\"/" $0
   copyfile $0
   SERVER_AND_NODE="$SERVER $NODELIST"
