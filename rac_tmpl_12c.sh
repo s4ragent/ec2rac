@@ -230,14 +230,18 @@ setupnodelist()
   #NODELIST=`aws ec2 describe-instances --region $Region --query 'Reservations[].Instances[?contains(KeyName,\`node\`)==\`true\`].[NetworkInterfaces[].PrivateIpAddress]' --output text`
   #NODELIST=`aws ec2 describe-instances --region $Region --query "Reservations[].Instances[][?contains(NetworkInterfaces[].Groups[].GroupName,\\\`$SgNodeName\\\`)==\\\`true\\\`].[NetworkInterfaces[].PrivateIpAddress]" --output text`
   SgNodeId=`aws ec2 describe-security-groups --region $Region --filter "Name=group-name,Values=$SgNodeName" --query 'SecurityGroups[].GroupId' --output text`
-  NODEOBJ=`aws ec2 describe-instances --region $Region --filter "Name=instance.group-id,Values=$SgNodeId" --guery 'Reservations[].Instances[].[InstanceId,[NetworkInterfaces[].PrivateIpAddress]]' --output text`
-  NODEOBJ=`echo $NODEOBJ`
+  NODEOBJ=`aws ec2 describe-instances --region $Region --filter "Name=instance.group-id,Values=$SgNodeId" --query 'Reservations[].Instances[].[InstanceId,[NetworkInterfaces[].PrivateIpAddress]]' --output text`
+  NODEOBJ=`echo $NODEOBJ
   NODELIST=""
   NODEids=""
   CNT=0
   for i in $NODEOBJ ;
   do
-      if [ `expr $CNT % 2` == 0 ]; then
+      if [ $CNT == 0 ]; then
+        NODEids="$i"      
+      elif [ $CNT == 1 ]; then
+        NODELIST="$i"
+      elif [ `expr $CNT % 2` == 0 ]; then
         NODEids="$NODEids $i"
       else
         NODELIST="$NODELIST $i"
@@ -256,9 +260,9 @@ setupnodelist()
   for i in $SERVEROBJ ;
   do
       if [ `expr $CNT % 2` == 0 ]; then
-        SERVERids="$SERVERids $i"
+        SERVERids="$i"
       else
-        SERVER="$SERVER $i"
+        SERVER="$i"
       fi
       CNT=`expr $CNT + 1`
   done
