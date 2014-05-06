@@ -114,7 +114,8 @@ createswap(){
 }
 
 setupiscsi(){
-if [ $1 = 0 ]; then     
+if [ $1 = 0 ]; then
+        umount -f ${STORAGE_DEVICE}
         sfdisk -uM ${STORAGE_DEVICE} <<EOF
 ,,83
 EOF
