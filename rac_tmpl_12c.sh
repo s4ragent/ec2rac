@@ -131,7 +131,7 @@ initiator-address ALL
 </target>
 EOF
 
-sed -i 's/(.*cloudconfig)/#\1/' /etc/fstab
+sed -i 's/\(.*cloudconfig\)/#\1/' /etc/fstab
 /etc/init.d/tgtd start
 chkconfig tgtd on
 tgt-admin --show
