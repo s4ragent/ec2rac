@@ -123,8 +123,6 @@ if [ $1 = 0 ]; then
     mount $STORAGE_DEVICE
     fallocate -l $STRAGE_SIZE $STORAGE_FILE
   
-  
-    dd if=/dev/zero of=/mnt/iscsi.img bs=1024
     sleep 15
     cat > /etc/tgt/targets.conf <<EOF
 <target ${SCSI_TARGET_NAME}>
@@ -137,6 +135,7 @@ initiator-address ALL
 EOF
 
   else
+    umount -f $STORAGE_DEVICE
     sfdisk -uM ${STORAGE_DEVICE} <<EOF
 ,,83
 EOF
