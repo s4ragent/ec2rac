@@ -831,7 +831,7 @@ setupallforclone(){
         ssh -i id_rsa -f oracle@$i "./start.sh"
         NODECOUNT=`expr $NODECOUNT + 1`
   done
-  sleep 240
+  sleep 400
   NODECOUNT=0
   for i in $NODELIST ;
   do
