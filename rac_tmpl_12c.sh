@@ -115,7 +115,7 @@ createswap(){
 
 setupiscsi(){
 if [ $1 = 0 ]; then
-  if [ $# != 1 ]; then
+  if [ $2 = 1 ]; then
     dd if=/dev/zero of=/mnt/iscsi.img bs=1024
     sleep 15
     cat >> /etc/tgt/targets.conf <<EOF
