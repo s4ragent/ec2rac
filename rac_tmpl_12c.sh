@@ -7,7 +7,7 @@ SERVERids=""
 NODEids=""
 NODEid=($NODEids)
 
-INSTALL_LANG=jaT
+INSTALL_LANG=ja
 TMPL_NAME="RACTMPL"
 KEY_NAME="oregon"
 KEY_PAIR="${KEY_NAME}.pem"
@@ -131,7 +131,7 @@ initiator-address ALL
 </target>
 EOF
 
-sed -i "s/cloudconfig.*//" /etc/fstab
+sed -i 's/\(^.*'$STORAGE_DEVICE'.*$\)/#\1/' /etc/fstab
 /etc/init.d/tgtd start
 chkconfig tgtd on
 tgt-admin --show
