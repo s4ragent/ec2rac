@@ -836,8 +836,8 @@ setupallforclone(){
   NODECOUNT=0
   for i in $NODELIST ;
   do
-        ssh -i $KEY_PAIR "$ORAINVENTORY/orainstRoot.sh;$GRID_ORACLE_HOME/root.sh"
-        ssh -i $KEY_PAIR "$ORA_ORACLE_HOME/root.sh"
+        ssh -i $KEY_PAIR root@$i "$ORAINVENTORY/orainstRoot.sh;$GRID_ORACLE_HOME/root.sh"
+        ssh -i $KEY_PAIR root@$i "$ORA_ORACLE_HOME/root.sh"
         NODECOUNT=`expr $NODECOUNT + 1`
   done
   echo "plese execute grid_home/crs/config/config.sh and later rootshforclone"
