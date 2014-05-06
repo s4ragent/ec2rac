@@ -789,7 +789,6 @@ setupnodeforclone()
   mountoraclehome $1
   createclusterlist
   createclonepl
-  
 }
 
 setupnode()
@@ -894,6 +893,7 @@ case "$1" in
   "listinstances" ) listinstances;;
   "listami" ) listami;;
   "createclonepl" ) createclonepl;;
+  "createclusterlist" ) createclusterlist;;
   "createtmpl" ) createtmpl ;;
   "installpackage" ) installpackage ;;
   "changehostname" )  changehostname $2;;
