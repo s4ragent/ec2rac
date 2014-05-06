@@ -60,7 +60,7 @@ createclonepl()
 {
   CLUSTER_NODES="{"
   NODECOUNT=1
-  for i in ${NODELIST} ;
+  for i in $NODELIST ;
   do
         HOSTNAME=`getnodename $NODECOUNT`
         if [ $NODECOUNT != 1 ] ; then
