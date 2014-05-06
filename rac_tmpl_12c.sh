@@ -60,7 +60,7 @@ createclonepl()
 {
   CLUSTER_NODES="{"
   NODECOUNT=1
-  for i in $NODELIST ;
+  for i in "$NODELIST" ;
   do
         HOSTNAME=`getnodename $NODECOUNT`
         if [ $NODECOUNT != 1 ] ; then
@@ -567,7 +567,7 @@ chkconfig tinc on
 createclusterlist()
 {
 NODECOUNT=1
-for i in $NODELIST ;
+for i in "$NODELIST" ;
 do
     NODENAME=`getnodename $NODECOUNT`
     echo "${NODENAME} ${NODENAME}-vip" >> /tmp/clusterlist.ccf
