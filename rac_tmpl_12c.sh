@@ -116,25 +116,6 @@ createswap(){
 
 setupiscsi(){
 if [ $1 = 0 ]; then
-  if [ "$#" != "1" ]; then
-  
-    umount -f $STORAGE_DEVICE
-    mkfs  -t ext4 $STORAGE_DEVICE
-    mount $STORAGE_DEVICE
-    fallocate -l $STRAGE_SIZE $STORAGE_FILE
-  
-    sleep 15
-    cat > /etc/tgt/targets.conf <<EOF
-<target ${SCSI_TARGET_NAME}>
-# List of files to export as LUNs
-        <backing-store /mnt/iscsi.img>
-                lun 1
-        </backing-store>
-initiator-address ALL
-</target>
-EOF
-
-  else
     umount -f $STORAGE_DEVICE
     sfdisk -uM ${STORAGE_DEVICE} <<EOF
 ,,83
@@ -150,7 +131,7 @@ initiator-address ALL
 </target>
 EOF
 
-  fi
+sed -i "s/^$STORAGE_DEVICE.*/#$STORAGE_DEVICE/" /etc/fstab
 /etc/init.d/tgtd start
 chkconfig tgtd on
 tgt-admin --show
