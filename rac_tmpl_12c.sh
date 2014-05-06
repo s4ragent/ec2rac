@@ -117,9 +117,8 @@ setupiscsi(){
 if [ $1 = 0 ]; then
   if [ $# != 1 ]; then
     dd if=/dev/zero of=/mnt/iscsi.img bs=1024
-sleep 15
-
-        cat >> /etc/tgt/targets.conf <<EOF
+    sleep 15
+    cat >> /etc/tgt/targets.conf <<EOF
 <target ${SCSI_TARGET_NAME}>
 # List of files to export as LUNs
         <backing-store /mnt/iscsi.img>
@@ -129,12 +128,11 @@ initiator-address ALL
 </target>
 EOF 
   else
-        sfdisk -uM ${STORAGE_DEVICE} <<EOF
+    sfdisk -uM ${STORAGE_DEVICE} <<EOF
 ,,83
 EOF
-sleep 15
-
-        cat >> /etc/tgt/targets.conf <<EOF
+    sleep 15
+    cat >> /etc/tgt/targets.conf <<EOF
 <target ${SCSI_TARGET_NAME}>
 # List of files to export as LUNs
         <backing-store ${STORAGE_DEVICE}1>
@@ -143,10 +141,11 @@ sleep 15
 initiator-address ALL
 </target>
 EOF
+  fi
 /etc/init.d/tgtd start
 chkconfig tgtd on
 tgt-admin --show
-fi
+
 else
         /etc/init.d/iscsi start
         iscsiadm --mode discovery --type sendtargets -p ${SERVER}
