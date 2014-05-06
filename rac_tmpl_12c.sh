@@ -35,6 +35,7 @@ SCAN_NAME="scan"
 ORACLE_HOME_SIZE=13
 SWAP_SIZE=8
 STORAGE_SIZE=30
+STORAGE_FILE=/mnt/iscsi.img
 SWAP_DEVICE="/dev/xvdb"
 STORAGE_DEVICE="/dev/xvdb"
 ORACLE_HOME_DEVICE="/dev/xvdc"
@@ -116,6 +117,13 @@ createswap(){
 setupiscsi(){
 if [ $1 = 0 ]; then
   if [ "$#" != "1" ]; then
+  
+    umount -f $STORAGE_DEVICE
+    mkfs  -t ext4 $STORAGE_DEVICE
+    mount $STORAGE_DEVICE
+    fallocate -l $STRAGE_SIZE $STORAGE_FILE
+  
+  
     dd if=/dev/zero of=/mnt/iscsi.img bs=1024
     sleep 15
     cat > /etc/tgt/targets.conf <<EOF
