@@ -115,7 +115,7 @@ createswap(){
 
 setupiscsi(){
 if [ $1 = 0 ]; then
-  if [ $2 = 1 ]; then
+  if [ "$#" != "1" ]; then
     dd if=/dev/zero of=/mnt/iscsi.img bs=1024
     sleep 15
     cat >> /etc/tgt/targets.conf <<EOF
@@ -929,6 +929,6 @@ case "$1" in
   "setupkernel" ) setupkernel ;;
   "pretincconf" ) pretincconf ;;
   "createswap" ) createswap $2;;
-  "setupiscsi" ) setupiscsi $2 ;;
+  "setupiscsi" ) setupiscsi $2 $3;;
   * ) echo "known option or no option" ;;
 esac
