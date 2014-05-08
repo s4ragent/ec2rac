@@ -477,13 +477,13 @@ setupdns ()
 
 }
 
-pingeth0()
+sshkeyscan()
 {
   setupnodelist
   SERVER_AND_NODE="$SERVER $NODELIST"
   for i in $SERVER_AND_NODE ;
   do
-        ping -c 1 $i
+        sshkeyscan $i
   done
 }
 
@@ -891,7 +891,7 @@ setupall(){
 
 
 case "$1" in
-  "pingeth0" ) pingeth0;;
+  "sshkeyscan" ) sshkeyscan;;
   "createclonebase" ) createclonebase;;
   "createsnapshot" ) createsnapshot $2 $3;;
   "listinstances" ) listinstances;;
