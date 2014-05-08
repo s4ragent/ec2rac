@@ -851,13 +851,13 @@ setupallforclonep2()
 do
         echo $NODECOUNT
         if [ $NODECOUNT = 1 ] ; then
-                ssh root@$i "$GRID_ORACLE_HOME/root.sh;ls $GRID_ORACLE_HOME/install/root* | sort -r | head -n 1 | xargs cat" > ${NODECOUNT}.log
+                ssh -i $KEY_PAIR root@$i "$GRID_ORACLE_HOME/root.sh;ls $GRID_ORACLE_HOME/install/root* | sort -r | head -n 1 | xargs cat" > ${NODECOUNT}.log
         elif [ $NODECOUNT != $# ] ; then
-                ssh -f root@$i "$GRID_ORACLE_HOME/root.sh;ls $GRID_ORACLE_HOME/install/root* | sort -r | head -n 1 | xargs cat" > ${NODECOUNT}.log
+                ssh -i $KEY_PAIR -f root@$i "$GRID_ORACLE_HOME/root.sh;ls $GRID_ORACLE_HOME/install/root* | sort -r | head -n 1 | xargs cat" > ${NODECOUNT}.log
                 sleep 30
         else
                 sleep 90
-                ssh root@$i "$GRID_ORACLE_HOME/root.sh;ls $GRID_ORACLE_HOME/install/root* | sort -r | head -n 1 | xargs cat" > ${NODECOUNT}.log
+                ssh -i $KEY_PAIR root@$i "$GRID_ORACLE_HOME/root.sh;ls $GRID_ORACLE_HOME/install/root* | sort -r | head -n 1 | xargs cat" > ${NODECOUNT}.log
         fi
         NODECOUNT=`expr $NODECOUNT + 1`
 done
