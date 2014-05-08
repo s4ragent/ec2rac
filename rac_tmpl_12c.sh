@@ -479,6 +479,7 @@ setupdns ()
 
 pingeth0()
 {
+  setupnodelist
   SERVER_AND_NODE="$SERVER $NODELIST"
   for i in $SERVER_AND_NODE ;
   do
@@ -919,7 +920,9 @@ case "$1" in
   "stopinstances" ) stopinstances ;;
   "terminateinstances" ) terminateinstances ;;
   "setupnodeforclone" ) setupnodeforclone $2;;
-  "setupallforclone" ) setupallforclone ;;
+  "setupallforclonep1" ) setupallforclonep1 ;;
+  "setupallforclonep2" ) setupallforclonep2 ;;
+  "setupallforclonep3" ) setupallforclonep3 ;;
   "setupnode" ) setupnode $2;;
   "setupall" ) setupall ;;
   "setupkernel" ) setupkernel ;;
