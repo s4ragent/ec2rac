@@ -859,7 +859,7 @@ setupallforclonep4()
   for i in $NODELIST ;
 do
         if [ $NODECOUNT = 1 ] ; then
-                ssh -i $KEY_PAIR root@$i "$GRID_ORACLE_HOME/root.sh;ls $GRID_ORACLE_HOME/install/root* | sort -r | head -n 1 | xargs cat" > ${NODECOUNT}.log
+                echo "first node is finished"
         elif [ $NODECOUNT != $# ] ; then
                 ssh -i $KEY_PAIR -f root@$i "$GRID_ORACLE_HOME/root.sh;ls $GRID_ORACLE_HOME/install/root* | sort -r | head -n 1 | xargs cat" > ${NODECOUNT}.log
                 sleep 30
