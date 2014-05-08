@@ -819,18 +819,13 @@ setupallforclonep1(){
   SERVER_AND_NODE="$SERVER $NODELIST"
   
   
-  ssh -i $KEY_PAIR -o "StrictHostKeyChecking no" root@$SERVER "sh -x $0 setupnodeforclone 0"
+  ssh -i $KEY_PAIR -o "StrictHostKeyChecking no" root@$SERVER "sh -x $0 setupnodeforclone 0;reboot"
+  sleep 120
   NODECOUNT=1
   for i in $NODELIST ;
   do
-        ssh -f -t -t -i $KEY_PAIR -o "StrictHostKeyChecking no" root@$i "sh -x $0 setupnodeforclone $NODECOUNT"
+        ssh -f -t -t -i $KEY_PAIR -o "StrictHostKeyChecking no" root@$i "sh -x $0 setupnodeforclone $NODECOUNT;reboot"
         NODECOUNT=`expr $NODECOUNT + 1`
-  done
-  ssh -i $KEY_PAIR -o "StrictHostKeyChecking no" root@$SERVER "reboot"
-  sleep 30
-  for i in $NODELIST ;
-  do
-        ssh -i $KEY_PAIR -o "StrictHostKeyChecking no" root@$i "reboot"
   done
   sleep 120
   for i in $NODELIST ;
