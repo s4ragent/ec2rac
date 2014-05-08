@@ -845,7 +845,8 @@ setupallforclonep3(){
 
 setupallforclonep2()
 {
-  NODECOUNT=0
+  set -- $NODELIST
+  NODECOUNT=1
   for i in $NODELIST ;
 do
         echo $NODECOUNT
