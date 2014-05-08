@@ -483,7 +483,7 @@ sshkeyscan()
   SERVER_AND_NODE="$SERVER $NODELIST"
   for i in $SERVER_AND_NODE ;
   do
-        sshkeyscan -T 120 $i
+        ssh-keyscan -T 120 $i
   done
 }
 
