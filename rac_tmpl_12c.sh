@@ -723,6 +723,7 @@ mountoraclehome()
     echo "${ORACLE_HOME_DEVICE}1               ${MOUNT_PATH}                    ext3    defaults        0 0" >> /etc/fstab
     mkdir ${MOUNT_PATH}
     mount ${MOUNT_PATH}
+    OLD_IFS=$IFS
     IFS='/'
     set -- $GRID_ORACLE_HOME
     IFS=','
@@ -733,6 +734,7 @@ mountoraclehome()
         chown grid:oinstall $CHMODPATH
     fi
     done
+    IFS=$OLD_IFS
 
     mkdir -p $ORAINVENTORY
     chown oracle:oinstall $ORAINVENTORY
