@@ -833,21 +833,17 @@ setupallforclonep1(){
         NODECOUNT=`expr $NODECOUNT + 1`
   done
   sleep 240
-  NODECOUNT=0
   for i in $NODELIST ;
   do
-        ssh -i $KEY_PAIR -t -f root@$i "sudo -u grid /home/grid/start.sh;$ORAINVENTORY/orainstRoot.sh"
-        NODECOUNT=`expr $NODECOUNT + 1`
+        ssh -i $KEY_PAIR -t -t -f root@$i "sudo -u grid /home/grid/start.sh;$ORAINVENTORY/OrainstRoot.sh"
   done
   echo "execute ps -elf | grep ssh  and no proccess remain plese execute grid_home/crs/config/config.sh and later setupallforclonep2"
 }
 
 setupallforclonep3(){
-  NODECOUNT=0
   for i in $NODELIST ;
   do
         ssh -i $KEY_PAIR -t -f root@$i "sudo -u oracle /home/oracle/start.sh;$ORA_ORACLE_HOME/root.sh"
-        NODECOUNT=`expr $NODECOUNT + 1`
   done
 }
 
