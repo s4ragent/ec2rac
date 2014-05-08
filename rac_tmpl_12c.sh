@@ -924,8 +924,8 @@ case "$1" in
   "setupallforclonep1" ) setupallforclonep1 ;;
   "setupallforclonep2" ) setupallforclonep2 ;;
   "setupallforclonep3" ) setupallforclonep3 ;;
-  "setupallforclonep4" ) setupallforclonep3 ;;
-  "setupallforclonep5" ) setupallforclonep3 ;;
+  "setupallforclonep4" ) setupallforclonep4 ;;
+  "setupallforclonep5" ) setupallforclonep5 ;;
   "setupnode" ) setupnode $2;;
   "setupall" ) setupall ;;
   "setupkernel" ) setupkernel ;;
