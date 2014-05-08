@@ -737,7 +737,7 @@ mountoraclehome()
     IFS=$OLD_IFS
 
     mkdir -p $ORAINVENTORY
-    chown oracle:oinstall $ORAINVENTORY
+    chown grid:oinstall $ORAINVENTORY
     mkdir -p $GRID_ORACLE_BASE
     chown grid:oinstall $GRID_ORACLE_BASE
     chown -R grid:oinstall $GRID_ORACLE_HOME
@@ -807,7 +807,7 @@ setupnode()
   createoraclehome
 }
 
-setupallforclone(){
+setupallforclonep1(){
   #startupinnstance
   setupnodelist
   sed -i "s/^NODELIST=.*/NODELIST=\"$NODELIST\"/" $0
@@ -815,8 +815,11 @@ setupallforclone(){
   sed -i "s/^SERVER=.*/SERVER=\"$SERVER\"/" $0
   copyfile $0
   SERVER_AND_NODE="$SERVER $NODELIST"
-  NODECOUNT=0
-  for i in $SERVER_AND_NODE ;
+  
+  
+  ssh -i $KEY_PAIR -o "StrictHostKeyChecking no" root@$SERVER "sh -x $0 setupnodeforclone 0"
+  NODECOUNT=1
+  for i in $NODELIST ;
   do
         ssh -i $KEY_PAIR -o "StrictHostKeyChecking no" root@$i "sh -x $0 setupnodeforclone $NODECOUNT"
         NODECOUNT=`expr $NODECOUNT + 1`
@@ -831,22 +834,23 @@ setupallforclone(){
   NODECOUNT=0
   for i in $NODELIST ;
   do
-        ssh -i id_rsa -f grid@$i "./start.sh"
-        ssh -i id_rsa -f oracle@$i "./start.sh"
+        ssh -i $KEY_PAIR -t -f root@$i "sudo -u grid /home/grid/start.sh;$ORAINVENTORY/orainstRoot.sh"
         NODECOUNT=`expr $NODECOUNT + 1`
   done
-  sleep 400
+  echo "execute ps -elf | grep ssh  and no proccess remain plese execute grid_home/crs/config/config.sh and later setupallforclonep2"
+}
+
+setupallforclonep3(){
   NODECOUNT=0
   for i in $NODELIST ;
   do
-        ssh -i $KEY_PAIR root@$i "$ORAINVENTORY/orainstRoot.sh"
-        ssh -i $KEY_PAIR root@$i "$ORA_ORACLE_HOME/root.sh"
+        ssh -i $KEY_PAIR -t -f root@$i "sudo -u oracle /home/oracle/start.sh;$ORA_ORACLE_HOME/root.sh"
         NODECOUNT=`expr $NODECOUNT + 1`
   done
-  echo "plese execute grid_home/crs/config/config.sh and later rootshforclone"
 }
 
-rootshforclone()
+
+setupallforclonep2()
 {
   NODECOUNT=0
   for i in $NODELIST ;
