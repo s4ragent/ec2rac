@@ -32,7 +32,7 @@ NETWORKS=("172.16.0.0" "172.17.0.0")
 SUBNET_MASK="255.255.240.0"
 NETWORK_NAME=("public" "priv")
 SCAN_NAME="scan"
-ORACLE_HOME_SIZE=13
+ORACLE_HOME_SIZE=14
 SWAP_SIZE=8
 STORAGE_SIZE=30
 STORAGE_FILE=/mnt/iscsi.img
@@ -835,7 +835,7 @@ setupallforclonep1(){
   echo "execute ps -elf | grep ssh  and no proccess remain plese execute grid_home/crs/config/config.sh and later setupallforclonep2"
 }
 
-setupallforclonep3(){
+setupallforclonep5(){
   for i in $NODELIST ;
   do
         ssh -i $KEY_PAIR -t -t -f root@$i "sudo -u oracle /home/oracle/start.sh;$ORA_ORACLE_HOME/root.sh"
@@ -845,11 +845,19 @@ setupallforclonep3(){
 
 setupallforclonep2()
 {
+  ssh -i $KEY_PAIR root@${NODE[0]} "$GRID_ORACLE_HOME/root.sh;ls $GRID_ORACLE_HOME/install/root* | sort -r | head -n 1 | xargs cat" > 1.log
+}
+setupallforclonep3()
+{
+  ssh -i $KEY_PAIR root@${NODE[0]} "$GRID_ORACLE_HOME/crs/install/rootcrs.pl -deconfig -force -verbose;$GRID_ORACLE_HOME/root.sh;ls $GRID_ORACLE_HOME/install/root* | sort -r | head -n 1 | xargs cat" > 1.log
+}
+
+setupallforclonep4()
+{
   set -- $NODELIST
   NODECOUNT=1
   for i in $NODELIST ;
 do
-        echo $NODECOUNT
         if [ $NODECOUNT = 1 ] ; then
                 ssh -i $KEY_PAIR root@$i "$GRID_ORACLE_HOME/root.sh;ls $GRID_ORACLE_HOME/install/root* | sort -r | head -n 1 | xargs cat" > ${NODECOUNT}.log
         elif [ $NODECOUNT != $# ] ; then
@@ -916,6 +924,8 @@ case "$1" in
   "setupallforclonep1" ) setupallforclonep1 ;;
   "setupallforclonep2" ) setupallforclonep2 ;;
   "setupallforclonep3" ) setupallforclonep3 ;;
+  "setupallforclonep4" ) setupallforclonep3 ;;
+  "setupallforclonep5" ) setupallforclonep3 ;;
   "setupnode" ) setupnode $2;;
   "setupall" ) setupall ;;
   "setupkernel" ) setupkernel ;;
