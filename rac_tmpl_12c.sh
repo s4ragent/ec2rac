@@ -483,7 +483,7 @@ sshkeyscan()
   SERVER_AND_NODE="$SERVER $NODELIST"
   for i in $SERVER_AND_NODE ;
   do
-        sshkeyscan $i
+        sshkeyscan -T 120 $i
   done
 }
 
@@ -823,14 +823,15 @@ setupallforclonep1(){
   NODECOUNT=1
   for i in $NODELIST ;
   do
-        ssh -i $KEY_PAIR -o "StrictHostKeyChecking no" root@$i "sh -x $0 setupnodeforclone $NODECOUNT" &
+        ssh -f -t -t -i $KEY_PAIR -o "StrictHostKeyChecking no" root@$i "sh -x $0 setupnodeforclone $NODECOUNT"
         NODECOUNT=`expr $NODECOUNT + 1`
   done
+  sleep 30
   for i in $SERVER_AND_NODE ;
   do
         ssh -i $KEY_PAIR -o "StrictHostKeyChecking no" root@$i "reboot"
   done
-  sleep 240
+  sshkeyscan
   for i in $NODELIST ;
   do
         ssh -i $KEY_PAIR -t -t -f root@$i "sudo -u grid /home/grid/start.sh;$ORAINVENTORY/orainstRoot.sh"
