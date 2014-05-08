@@ -826,12 +826,13 @@ setupallforclonep1(){
         ssh -f -t -t -i $KEY_PAIR -o "StrictHostKeyChecking no" root@$i "sh -x $0 setupnodeforclone $NODECOUNT"
         NODECOUNT=`expr $NODECOUNT + 1`
   done
+  ssh -i $KEY_PAIR -o "StrictHostKeyChecking no" root@$SERVER "reboot"
   sleep 30
-  for i in $SERVER_AND_NODE ;
+  for i in $NODELIST ;
   do
         ssh -i $KEY_PAIR -o "StrictHostKeyChecking no" root@$i "reboot"
   done
-  sshkeyscan
+  sleep 120
   for i in $NODELIST ;
   do
         ssh -i $KEY_PAIR -t -t -f root@$i "sudo -u grid /home/grid/start.sh;$ORAINVENTORY/orainstRoot.sh"
