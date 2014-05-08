@@ -838,7 +838,7 @@ setupallforclonep1(){
 setupallforclonep3(){
   for i in $NODELIST ;
   do
-        ssh -i $KEY_PAIR -t -f root@$i "sudo -u oracle /home/oracle/start.sh;$ORA_ORACLE_HOME/root.sh"
+        ssh -i $KEY_PAIR -t -t -f root@$i "sudo -u oracle /home/oracle/start.sh;$ORA_ORACLE_HOME/root.sh"
   done
 }
 
