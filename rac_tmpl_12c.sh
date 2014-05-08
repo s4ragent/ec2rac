@@ -823,7 +823,7 @@ setupallforclonep1(){
   NODECOUNT=1
   for i in $NODELIST ;
   do
-        ssh -i $KEY_PAIR -o "StrictHostKeyChecking no" -f root@$i "sh -x $0 setupnodeforclone $NODECOUNT"
+        ssh -i $KEY_PAIR -o "StrictHostKeyChecking no" root@$i "sh -x $0 setupnodeforclone $NODECOUNT"
         NODECOUNT=`expr $NODECOUNT + 1`
   done
   NODECOUNT=0
