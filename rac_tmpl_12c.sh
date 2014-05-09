@@ -921,7 +921,7 @@ setupall(){
 
 
 case "$1" in
-  "cleangridhome" cleangridhome;;
+  "cleangridhome" ) cleangridhome;;
   "sshkeyscan" ) sshkeyscan;;
   "createclonebase" ) createclonebase;;
   "createsnapshot" ) createsnapshot $2 $3;;
