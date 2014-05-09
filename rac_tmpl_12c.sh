@@ -852,7 +852,7 @@ setupallforclonep1(){
   sleep 120
   for i in $NODELIST ;
   do
-        ssh -i $KEY_PAIR -t -f root@$i "sudo -u grid /home/grid/start.sh;$ORAINVENTORY/orainstRoot.sh"
+        ssh -i $KEY_PAIR -t -t -f root@$i "sudo -u grid /home/grid/start.sh;$ORAINVENTORY/orainstRoot.sh"
   done
   echo "execute ps -elf | grep ssh  and no proccess remain plese execute grid_home/crs/config/config.sh and later setupallforclonep2"
 }
