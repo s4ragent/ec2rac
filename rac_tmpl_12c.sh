@@ -764,6 +764,7 @@ createclonebase()
 
 setupnodeforclone()
 {
+  changelocale
   chkconfig xrdp on
   changehostname $1
   setupdns $1
@@ -778,18 +779,17 @@ setupnodeforclone()
 
 cleangridhome()
 {
-  OLD_IFS=$IFS
-  IFS='/'
-  set -- $GRID_ORACLE_HOME
-  #IFS=','
-  for i in "$@"
-  do
-    if [ "$i" != "" ] ; then
-        CHMODPATH=${CHMODPATH}"/"${i}
-        chown grid:oinstall $CHMODPATH
-    fi
-  done
-  IFS=$OLD_IFS
+  #OLD_IFS=$IFS
+  #IFS='/'
+  #set -- $GRID_ORACLE_HOME
+  #IFS=$OLD_IFS
+  #for i in "$@"
+  #do
+  #  if [ "$i" != "" ] ; then
+  #      CHMODPATH=${CHMODPATH}"/"${i}
+  #      chown grid:oinstall $CHMODPATH
+  #  fi
+  #done
 
   mkdir -p $ORAINVENTORY
   chown grid:oinstall $ORAINVENTORY
@@ -940,7 +940,6 @@ case "$1" in
   "setupnodelist" ) setupnodelist ;;
   "createtincconf" ) createtincconf $2;;
   "clone" ) clone $2;;
-  "rootshforclone" ) rootshforclone;;
   "startinstances" ) startinstances $2 $3 $4 $5;;
   "requestspotinstances" ) requestspotinstances $2 $3 $4 $5;;
   "stopinstances" ) stopinstances ;;
