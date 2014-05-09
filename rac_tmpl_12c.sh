@@ -902,18 +902,18 @@ setupallforclonep1(){
 setupallforclonep5(){
   for i in $NODELIST ;
   do
-        ssh -i $KEY_PAIR -t -t -f root@$i "sudo -u oracle /home/oracle/start.sh;$ORA_ORACLE_HOME/root.sh"
+        ssh -i $KEY_PAIR -t -t -f root@$i "sudo -u oracle /home/oracle/start.sh;$ORA_ORACLE_HOME/root.sh -silent"
   done
 }
 
 
 setupallforclonep2()
 {
-  ssh -i $KEY_PAIR root@${NODE[0]} "$GRID_ORACLE_HOME/root.sh;ls $GRID_ORACLE_HOME/install/root* | sort -r | head -n 1 | xargs cat" > 1.log
+  ssh -i $KEY_PAIR root@${NODE[0]} "$GRID_ORACLE_HOME/root.sh -silent;ls $GRID_ORACLE_HOME/install/root* | sort -r | head -n 1 | xargs cat" > 1.log
 }
 setupallforclonep3()
 {
-  ssh -i $KEY_PAIR root@${NODE[0]} "$GRID_ORACLE_HOME/crs/install/rootcrs.pl -deconfig -force -verbose;$GRID_ORACLE_HOME/root.sh;ls $GRID_ORACLE_HOME/install/root* | sort -r | head -n 1 | xargs cat" > 1.log
+  ssh -i $KEY_PAIR root@${NODE[0]} "$GRID_ORACLE_HOME/crs/install/rootcrs.pl -deconfig -force -verbose;$GRID_ORACLE_HOME/root.sh -silent;ls $GRID_ORACLE_HOME/install/root* | sort -r | head -n 1 | xargs cat" > 1.log
 }
 
 setupallforclonep4()
@@ -925,11 +925,11 @@ do
         if [ $NODECOUNT = 1 ] ; then
                 echo "first node is finished"
         elif [ $NODECOUNT != $# ] ; then
-                ssh -i $KEY_PAIR -f root@$i "$GRID_ORACLE_HOME/root.sh;ls $GRID_ORACLE_HOME/install/root* | sort -r | head -n 1 | xargs cat" >> ${NODECOUNT}.log
+                ssh -i $KEY_PAIR -f root@$i "$GRID_ORACLE_HOME/root.sh -silent;ls $GRID_ORACLE_HOME/install/root* | sort -r | head -n 1 | xargs cat" >> ${NODECOUNT}.log
                 sleep 30
         else
                 sleep 90
-                ssh -i $KEY_PAIR root@$i "$GRID_ORACLE_HOME/root.sh;ls $GRID_ORACLE_HOME/install/root* | sort -r | head -n 1 | xargs cat" >> ${NODECOUNT}.log
+                ssh -i $KEY_PAIR root@$i "$GRID_ORACLE_HOME/root.sh -silent;ls $GRID_ORACLE_HOME/install/root* | sort -r | head -n 1 | xargs cat" >> ${NODECOUNT}.log
         fi
         NODECOUNT=`expr $NODECOUNT + 1`
 done
