@@ -777,6 +777,48 @@ setupnodeforclone()
 
 cleangridhome()
 {
+
+
+  mkdir -p $ORAINVENTORY
+  chown grid:oinstall $ORAINVENTORY
+  
+  HOSTNAME=`getnodename 1`
+  cd $GRID_ORACLE_HOME
+  rm -rf log/$HOSTNAME
+  rm -rf gpnp/$HOSTNAME
+  find gpnp -type f -exec rm -f {} \;
+  rm -rf cfgtoollogs/*
+  rm -rf crs/init/*
+  rm -rf cdata/*
+  rm -rf crf/*
+  rm -rf network/admin/*.ora
+  rm -rf crs/install/crsconfig_params
+  find . -name '*.ouibak' -exec rm {} \;
+  find . -name '*.ouibak.1' -exec rm {} \;
+  rm -rf root.sh*
+  rm -rf rdbms/audit/*
+  rm -rf rdbms/log/*
+  rm -rf inventory/backup/*
+}
+
+
+setupnodeforclone2()
+{
+  changelocale
+  chkconfig xrdp on
+  changehostname $1
+  setupdns $1
+  createtincconf $1
+  createswap $1
+  setupiscsi $1
+  mountoraclehome $1
+  cleangridhome
+  createclusterlist
+  createclonepl
+}
+
+cleangridhome()
+{
   OLD_IFS=$IFS
   IFS='/'
   set -- $GRID_ORACLE_HOME
