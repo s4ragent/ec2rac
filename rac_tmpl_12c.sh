@@ -724,8 +724,6 @@ mountoraclehome()
     echo "${ORACLE_HOME_DEVICE}1               ${MOUNT_PATH}                    ext3    defaults        0 0" >> /etc/fstab
     mkdir ${MOUNT_PATH}
     mount ${MOUNT_PATH}
-
-
   fi
 }
 
@@ -812,7 +810,7 @@ cleangridhome()
   rm -rf cdata/*
   rm -rf crf/*
   rm -rf network/admin/*.ora
-  rm -rf crs/install/crsconfig_params
+  #rm -rf crs/install/crsconfig_params
   find . -name '*.ouibak' -exec rm {} \;
   find . -name '*.ouibak.1' -exec rm {} \;
   rm -rf root.sh*
@@ -848,13 +846,13 @@ setupallforclonep1(){
   NODECOUNT=1
   for i in $NODELIST ;
   do
-        ssh -f -t -t -i $KEY_PAIR -o "StrictHostKeyChecking no" root@$i "sh -x $0 setupnodeforclone $NODECOUNT;reboot"
+        ssh -f -t -t -i $KEY_PAIR -o "StrictHostKeyChecking no" root@$i "sh -x $0 setupnodeforclone $NODECOUNT;reboot" > ${NODECOUNT}.log
         NODECOUNT=`expr $NODECOUNT + 1`
   done
   sleep 120
   for i in $NODELIST ;
   do
-        ssh -i $KEY_PAIR -t -t -f root@$i "sudo -u grid /home/grid/start.sh;$ORAINVENTORY/orainstRoot.sh"
+        ssh -i $KEY_PAIR -t -t -f root@$i "sudo -u grid /home/grid/start.sh;$ORAINVENTORY/orainstRoot.sh" >> ${NODECOUNT}.log
   done
   echo "execute ps -elf | grep ssh  and no proccess remain plese execute grid_home/crs/config/config.sh and later setupallforclonep2"
 }
@@ -885,11 +883,11 @@ do
         if [ $NODECOUNT = 1 ] ; then
                 echo "first node is finished"
         elif [ $NODECOUNT != $# ] ; then
-                ssh -i $KEY_PAIR -f root@$i "$GRID_ORACLE_HOME/root.sh;ls $GRID_ORACLE_HOME/install/root* | sort -r | head -n 1 | xargs cat" > ${NODECOUNT}.log
+                ssh -i $KEY_PAIR -f root@$i "$GRID_ORACLE_HOME/root.sh;ls $GRID_ORACLE_HOME/install/root* | sort -r | head -n 1 | xargs cat" >> ${NODECOUNT}.log
                 sleep 30
         else
                 sleep 90
-                ssh -i $KEY_PAIR root@$i "$GRID_ORACLE_HOME/root.sh;ls $GRID_ORACLE_HOME/install/root* | sort -r | head -n 1 | xargs cat" > ${NODECOUNT}.log
+                ssh -i $KEY_PAIR root@$i "$GRID_ORACLE_HOME/root.sh;ls $GRID_ORACLE_HOME/install/root* | sort -r | head -n 1 | xargs cat" >> ${NODECOUNT}.log
         fi
         NODECOUNT=`expr $NODECOUNT + 1`
 done
