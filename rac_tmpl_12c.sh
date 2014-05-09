@@ -802,7 +802,7 @@ cleangridhome()
 }
 
 
-setupnodeforclone2()
+setupnodeforclone()
 {
   changelocale
   chkconfig xrdp on
@@ -817,7 +817,7 @@ setupnodeforclone2()
   createclonepl
 }
 
-cleangridhome()
+cleangridhome2()
 {
   OLD_IFS=$IFS
   IFS='/'
