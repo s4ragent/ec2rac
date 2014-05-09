@@ -846,13 +846,13 @@ setupallforclonep1(){
   NODECOUNT=1
   for i in $NODELIST ;
   do
-        ssh -f -t -t -i $KEY_PAIR -o "StrictHostKeyChecking no" root@$i "sh -x $0 setupnodeforclone $NODECOUNT;reboot" > ${NODECOUNT}.log
+        ssh -f -t -i $KEY_PAIR -o "StrictHostKeyChecking no" root@$i "sh -x $0 setupnodeforclone $NODECOUNT;reboot"
         NODECOUNT=`expr $NODECOUNT + 1`
   done
   sleep 120
   for i in $NODELIST ;
   do
-        ssh -i $KEY_PAIR -t -t -f root@$i "sudo -u grid /home/grid/start.sh;$ORAINVENTORY/orainstRoot.sh" >> ${NODECOUNT}.log
+        ssh -i $KEY_PAIR -t -f root@$i "sudo -u grid /home/grid/start.sh;$ORAINVENTORY/orainstRoot.sh"
   done
   echo "execute ps -elf | grep ssh  and no proccess remain plese execute grid_home/crs/config/config.sh and later setupallforclonep2"
 }
