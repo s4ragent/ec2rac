@@ -724,29 +724,7 @@ mountoraclehome()
     echo "${ORACLE_HOME_DEVICE}1               ${MOUNT_PATH}                    ext3    defaults        0 0" >> /etc/fstab
     mkdir ${MOUNT_PATH}
     mount ${MOUNT_PATH}
-    OLD_IFS=$IFS
-    IFS='/'
-    set -- $GRID_ORACLE_HOME
-    IFS=','
-    for i in "$@"
-    do
-    if [ "$i" != "" ] ; then
-        CHMODPATH=${CHMODPATH}"/"${i}
-        chown grid:oinstall $CHMODPATH
-    fi
-    done
-    IFS=$OLD_IFS
 
-    mkdir -p $ORAINVENTORY
-    chown grid:oinstall $ORAINVENTORY
-    mkdir -p $GRID_ORACLE_BASE
-    chown grid:oinstall $GRID_ORACLE_BASE
-    chown -R grid:oinstall $GRID_ORACLE_HOME
-    chmod u+s $GRID_ORACLE_HOME/bin/oracle
-    chmod g+s $GRID_ORACLE_HOME/bin/oracle
-    chmod u+s $GRID_ORACLE_HOME/bin/extjob
-    chmod u+s $GRID_ORACLE_HOME/bin/jssu
-    chmod u+s $GRID_ORACLE_HOME/bin/oradism
 
   fi
 }
@@ -793,8 +771,54 @@ setupnodeforclone()
   createswap $1
   setupiscsi $1
   mountoraclehome $1
+  cleangridhome
   createclusterlist
   createclonepl
+}
+
+cleangridhome()
+{
+  OLD_IFS=$IFS
+  IFS='/'
+  set -- $GRID_ORACLE_HOME
+  #IFS=','
+  for i in "$@"
+  do
+    if [ "$i" != "" ] ; then
+        CHMODPATH=${CHMODPATH}"/"${i}
+        chown grid:oinstall $CHMODPATH
+    fi
+  done
+  IFS=$OLD_IFS
+
+  mkdir -p $ORAINVENTORY
+  chown grid:oinstall $ORAINVENTORY
+  #mkdir -p $GRID_ORACLE_BASE
+  #chown grid:oinstall $GRID_ORACLE_BASE
+  #chown -R grid:oinstall $GRID_ORACLE_HOME
+  #chmod u+s $GRID_ORACLE_HOME/bin/oracle
+  #chmod g+s $GRID_ORACLE_HOME/bin/oracle
+  #chmod u+s $GRID_ORACLE_HOME/bin/extjob
+  #chmod u+s $GRID_ORACLE_HOME/bin/jssu
+  #chmod u+s $GRID_ORACLE_HOME/bin/oradism
+  
+  HOSTNAME=`getnodename 1`
+  cd $GRID_ORACLE_HOME
+  rm -rf log/$HOSTNAME
+  rm -rf gpnp/$HOSTNAME
+  find gpnp -type f -exec rm -f {} \;
+  rm -rf cfgtoollogs/*
+  rm -rf crs/init/*
+  rm -rf cdata/*
+  rm -rf crf/*
+  rm -rf network/admin/*.ora
+  rm -rf crs/install/crsconfig_params
+  find . -name '*.ouibak' -exec rm {} \;
+  find . -name '*.ouibak.1' -exec rm {} \;
+  rm -rf root.sh*
+  rm -rf rdbms/audit/*
+  rm -rf rdbms/log/*
+  rm -rf inventory/backup/*
 }
 
 setupnode()
@@ -897,6 +921,7 @@ setupall(){
 
 
 case "$1" in
+  "cleangridhome" cleangridhome;;
   "sshkeyscan" ) sshkeyscan;;
   "createclonebase" ) createclonebase;;
   "createsnapshot" ) createsnapshot $2 $3;;
