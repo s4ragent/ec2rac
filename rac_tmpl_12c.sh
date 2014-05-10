@@ -586,6 +586,10 @@ do
     
     NODECOUNT=`expr $NODECOUNT + 1`
 done
+  cat > /home/grid/asm.rsp <<EOF
+oracle.assistants.asm|S_ASMPASSWORD=$ASMPASSWORD
+oracle.assistants.asm|S_ASMMONITORPASSWORD=$ASMPASSWORD
+EOF
   cat > /home/grid/grid.rsp  <<EOF
 oracle.install.responseFileVersion=/oracle/install/rspfmt_crsinstall_response_schema_v12.1.0
 ORACLE_HOSTNAME=`hostname`
@@ -640,10 +644,9 @@ PROXY_REALM=
 oracle.install.asm.useExistingDiskGroup=false
 [ConfigWizard]
 EOF
-  
-  
 
 chmod 777 /home/grid/grid.rsp
+chmod 777 /home/grid/asm.rsp
 }
 
 createclusterlist2()
