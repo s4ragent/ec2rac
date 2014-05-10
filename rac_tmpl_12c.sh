@@ -864,7 +864,7 @@ setupallforclonep1(){
         ssh -f -t -i $KEY_PAIR -o "StrictHostKeyChecking no" root@$i "sh -x $0 setupnodeforclone $NODECOUNT;reboot"
         NODECOUNT=`expr $NODECOUNT + 1`
   done
-  sleep 120
+  sleep 150
   for i in $NODELIST ;
   do
         ssh -i $KEY_PAIR -t -t -f root@$i "sudo -u grid /home/grid/start.sh;$ORAINVENTORY/orainstRoot.sh"
@@ -872,7 +872,7 @@ setupallforclonep1(){
   echo "execute ps -elf | grep ssh  and no proccess remain plese execute grid_home/crs/config/config.sh and later setupallforclonep2"
 }
 
-setupallforclonep5(){
+setupallforclonep4(){
   for i in $NODELIST ;
   do
         ssh -i $KEY_PAIR -t -t -f root@$i "sudo -u oracle /home/oracle/start.sh;$ORA_ORACLE_HOME/root.sh -silent"
@@ -884,12 +884,8 @@ setupallforclonep2()
 {
   ssh -i $KEY_PAIR root@${NODE[0]} "$GRID_ORACLE_HOME/crs/install/rootcrs.pl -deconfig -force -verbose;$GRID_ORACLE_HOME/root.sh -silent;ls $GRID_ORACLE_HOME/install/root* | sort -r | head -n 1 | xargs cat" > 1.log
 }
-setupallforclonep3()
-{
-  ssh -i $KEY_PAIR root@${NODE[0]} "$GRID_ORACLE_HOME/crs/install/rootcrs.pl -deconfig -force -verbose;$GRID_ORACLE_HOME/root.sh -silent;ls $GRID_ORACLE_HOME/install/root* | sort -r | head -n 1 | xargs cat" > 1.log
-}
 
-setupallforclonep4()
+setupallforclonep3()
 {
   set -- $NODELIST
   NODECOUNT=1
