@@ -571,8 +571,8 @@ chkconfig tinc on
 createclusterlist()
 {
   MyIp=`ifconfig eth0 | grep 'inet addr' | awk -F '[: ]' '{print $13}'`
-  MyNetwork=`echo $MyIp | perl -ne ' if (/([\d]+\.[\d]+\.[\d]+\.)/){ print $1}'`
-  MyNetwork="${MyNetwork}.0"
+  MyNetwork=`echo $MyIp | perl -ne ' if (/([\d]+\.[\d]+\.)/){ print $1}'`
+  MyNetwork="${MyNetwork}0.0"
   CLUSTERNODES=""
   NODECOUNT=1
 for i in $NODELIST ;
