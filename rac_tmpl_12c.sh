@@ -32,6 +32,8 @@ NETWORKS=("172.16.0.0" "172.17.0.0")
 SUBNET_MASK="255.255.240.0"
 NETWORK_NAME=("public" "priv")
 SCAN_NAME="scan"
+CLUSTER_NAME="node-cluster"
+ORACLESOFTPASSWORD="oracle123"
 ORACLE_HOME_SIZE=14
 SWAP_SIZE=8
 STORAGE_SIZE=30
@@ -565,7 +567,81 @@ chkconfig tinc on
 /etc/init.d/tinc start
 }
 
+
 createclusterlist()
+{
+  MyIp=`ifconfig eth0 | grep 'inet addr' | awk -F '[: ]' '{print $13}'`
+  MyNetwork=`echo $MyIp | perl -ne ' if (/([\d]+\.[\d]+\.[\d]+\.)/){ print $1}'`
+  MyNetwork="${MyNetwork}.0"
+  CLUSTERNODES=""
+  NODECOUNT=1
+for i in $NODELIST ;
+do
+    NODENAME=`getnodename $NODECOUNT`
+    CLUSTERNODES="$CLUSTERNODES${NODENAME}:${NODENAME}-vip"
+    NODECOUNT=`expr $NODECOUNT + 1`
+done
+  cat > /home/grid/grid.rsp  <<EOF
+oracle.install.responseFileVersion=/oracle/install/rspfmt_crsinstall_response_schema_v12.1.0
+ORACLE_HOSTNAME=`hostname`
+INVENTORY_LOCATION=$ORAINVENTORY
+SELECTED_LANGUAGES=en,ja
+oracle.install.option=CRS_CONFIG
+ORACLE_BASE=$GRID_ORACLE_BASE
+ORACLE_HOME=$GRID_ORACLE_HOME
+oracle.install.asm.OSDBA=asmdba
+oracle.install.asm.OSOPER=asmoper
+oracle.install.asm.OSASM=asmadmin
+oracle.install.crs.config.gpnp.scanName=${SCAN_NAME}.${NETWORK_NAME[0]}
+oracle.install.crs.config.gpnp.scanPort=1521
+oracle.install.crs.config.ClusterType=STANDARD
+oracle.install.crs.config.clusterName=$CLUSTER_NAME
+oracle.install.crs.config.gpnp.configureGNS=false
+oracle.install.crs.config.autoConfigureClusterNodeVIP=false
+oracle.install.crs.config.gpnp.gnsOption=CREATE_NEW_GNS
+oracle.install.crs.config.gpnp.gnsClientDataFile=
+oracle.install.crs.config.gpnp.gnsSubDomain=
+oracle.install.crs.config.gpnp.gnsVIPAddress=
+oracle.install.crs.config.clusterNodes=$CLUSTERNODES
+oracle.install.crs.config.networkInterfaceList=eth0:$MyNetwork:3,tap0:${NETWORKS[0]}:1,tap1:${NETWORKS[1]}:2
+oracle.install.crs.managementdb.configure=false
+oracle.install.crs.config.storageOption=LOCAL_ASM_STORAGE
+oracle.install.crs.config.sharedFileSystemStorage.votingDiskLocations=
+oracle.install.crs.config.sharedFileSystemStorage.votingDiskRedundancy=NORMAL
+oracle.install.crs.config.sharedFileSystemStorage.ocrLocations=
+oracle.install.crs.config.sharedFileSystemStorage.ocrRedundancy=NORMAL
+               	
+oracle.install.crs.config.useIPMI=false
+oracle.install.crs.config.ipmi.bmcUsername=
+oracle.install.crs.config.ipmi.bmcPassword=
+oracle.install.asm.SYSASMPassword=$ORACLESOFTPASSWORD
+oracle.install.asm.diskGroup.name=DATA
+oracle.install.asm.diskGroup.redundancy=EXTERNAL
+oracle.install.asm.diskGroup.AUSize=1
+oracle.install.asm.diskGroup.disks=/dev/sda1
+oracle.install.asm.diskGroup.diskDiscoveryString=
+oracle.install.asm.monitorPassword=$ORACLESOFTPASSWORD
+oracle.install.crs.config.ignoreDownNodes=false
+oracle.installer.autoupdates.option=
+oracle.installer.autoupdates.downloadUpdatesLoc=
+AUTOUPDATES_MYORACLESUPPORT_USERNAME=
+AUTOUPDATES_MYORACLESUPPORT_PASSWORD=
+PROXY_HOST=
+PROXY_PORT=0
+PROXY_USER=
+PROXY_PWD=
+PROXY_REALM=
+[ConfigWizard]
+oracle.install.asm.useExistingDiskGroup=false
+[ConfigWizard]
+EOF
+  
+  
+
+chmod 777 /tmp/clusterlist.ccf
+}
+
+createclusterlist2()
 {
 NODECOUNT=1
 for i in $NODELIST ;
