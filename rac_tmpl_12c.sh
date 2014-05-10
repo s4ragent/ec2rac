@@ -852,7 +852,7 @@ setupnodeforclone()
   setupiscsi $1
   mountoraclehome $1
   cleangridhome
-  createclusterlist
+  #createclusterlist
   createclonepl
 }
 
@@ -963,7 +963,7 @@ setupallforclonep4(){
 
 setupallforclonep2()
 {
-  ssh -i $KEY_PAIR root@${NODE[0]} "$GRID_ORACLE_HOME/crs/install/rootcrs.pl -deconfig -force -verbose;$GRID_ORACLE_HOME/root.sh -silent;ls $GRID_ORACLE_HOME/install/root* | sort -r | head -n 1 | xargs cat" > 1.log
+  ssh -i $KEY_PAIR -t root@${NODE[0]} "sh -x $0 createclusterlist;sudo -u $GRID_ORACLE_HOME/crs/config/config.sh -silent -responseFile /home/grid/grid.rsp;$GRID_ORACLE_HOME/crs/install/rootcrs.pl -deconfig -force -verbose;$GRID_ORACLE_HOME/root.sh -silent;ls $GRID_ORACLE_HOME/install/root* | sort -r | head -n 1 | xargs cat" > 1.log
 }
 
 setupallforclonep3()
