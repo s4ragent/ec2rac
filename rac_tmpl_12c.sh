@@ -573,12 +573,17 @@ createclusterlist()
   MyIp=`ifconfig eth0 | grep 'inet addr' | awk -F '[: ]' '{print $13}'`
   MyNetwork=`echo $MyIp | perl -ne ' if (/([\d]+\.[\d]+\.)/){ print $1}'`
   MyNetwork="${MyNetwork}0.0"
-  CLUSTERNODES=""
+
   NODECOUNT=1
 for i in $NODELIST ;
 do
     NODENAME=`getnodename $NODECOUNT`
-    CLUSTERNODES="$CLUSTERNODES${NODENAME}:${NODENAME}-vip"
+    if [ $NODECOUNT = 1 ] ; then
+      CLUSTERNODES="${NODENAME}:${NODENAME}-vip"
+    else
+      CLUSTERNODES="$CLUSTERNODES,${NODENAME}:${NODENAME}-vip"
+    fi
+    
     NODECOUNT=`expr $NODECOUNT + 1`
 done
   cat > /home/grid/grid.rsp  <<EOF
