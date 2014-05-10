@@ -953,7 +953,14 @@ setupallforclonep1(){
   do
         ssh -i $KEY_PAIR -t -t -f root@$i "sudo -u grid /home/grid/start.sh;$ORAINVENTORY/orainstRoot.sh"
   done
-  echo "execute ps -elf | grep ssh  and no proccess remain plese execute grid_home/crs/config/config.sh and later setupallforclonep2"
+  runssh=`ps -elf | grep "orainstRoot.sh" | grep -v "grep" | wc -l`
+  while [ $runssh != 0 ]
+  do
+    sleep 10
+    runssh=`ps -elf | grep "orainstRoot.sh" | grep -v "grep" | wc -l`
+  done
+  
+  
 }
 
 setupallforclonep4(){
@@ -966,7 +973,7 @@ setupallforclonep4(){
 
 setupallforclonep2()
 {
-  ssh -i $KEY_PAIR -t root@${NODE[0]} "sh -x $0 createclusterlist;sudo -u $GRID_ORACLE_HOME/crs/config/config.sh -silent -responseFile /home/grid/grid.rsp;$GRID_ORACLE_HOME/crs/install/rootcrs.pl -deconfig -force -verbose;$GRID_ORACLE_HOME/root.sh -silent;ls $GRID_ORACLE_HOME/install/root* | sort -r | head -n 1 | xargs cat" > 1.log
+  
 }
 
 setupallforclonep3()
@@ -976,7 +983,7 @@ setupallforclonep3()
   for i in $NODELIST ;
 do
         if [ $NODECOUNT = 1 ] ; then
-                echo "first node is finished"
+                ssh -i $KEY_PAIR -t root@${NODE[0]} "sh -x $0 createclusterlist;sudo -u $GRID_ORACLE_HOME/crs/config/config.sh -silent -responseFile /home/grid/grid.rsp;$GRID_ORACLE_HOME/crs/install/rootcrs.pl -deconfig -force -verbose;$GRID_ORACLE_HOME/root.sh -silent;ls $GRID_ORACLE_HOME/install/root* | sort -r | head -n 1 | xargs cat" > ${NODECOUNT}.log
         elif [ $NODECOUNT != $# ] ; then
                 ssh -i $KEY_PAIR -f root@$i "$GRID_ORACLE_HOME/root.sh -silent;ls $GRID_ORACLE_HOME/install/root* | sort -r | head -n 1 | xargs cat" >> ${NODECOUNT}.log
                 sleep 30
@@ -986,6 +993,8 @@ do
         fi
         NODECOUNT=`expr $NODECOUNT + 1`
 done
+
+cfgtoollogs/configToolAllCommands RESPONSE_FILE=<response_file>
 }
 
 setupall(){
