@@ -775,12 +775,45 @@ setupnodeforclone()
   createclonepl
 }
 
+
+setupnodeforclone()
+{
+  changelocale
+  chkconfig xrdp on
+  changehostname $1
+  setupdns $1
+  createtincconf $1
+  createswap $1
+  setupiscsi $1
+  mountoraclehome $1
+  cleangridhome
+  createclusterlist
+  createclonepl
+}
+
 cleangridhome()
 {
-
+  OLD_IFS=$IFS
+  IFS='/'
+  set -- $GRID_ORACLE_HOME
+  IFS=$OLD_IFS
+  for i in "$@"
+  do
+    if [ "$i" != "" ] ; then
+        CHMODPATH=${CHMODPATH}"/"${i}
+        chown grid:oinstall $CHMODPATH
+    fi
+  done
 
   mkdir -p $ORAINVENTORY
   chown grid:oinstall $ORAINVENTORY
+  chown grid:oinstall $GRID_ORACLE_BASE
+  chown -R grid:oinstall $GRID_ORACLE_HOME
+  #chmod u+s $GRID_ORACLE_HOME/bin/oracle
+  #chmod g+s $GRID_ORACLE_HOME/bin/oracle
+  #chmod u+s $GRID_ORACLE_HOME/bin/extjob
+  #chmod u+s $GRID_ORACLE_HOME/bin/jssu
+  #chmod u+s $GRID_ORACLE_HOME/bin/oradism
   
   HOSTNAME=`getnodename 1`
   cd $GRID_ORACLE_HOME
@@ -799,66 +832,6 @@ cleangridhome()
   rm -rf rdbms/audit/*
   rm -rf rdbms/log/*
   rm -rf inventory/backup/*
-}
-
-
-setupnodeforclone()
-{
-  changelocale
-  chkconfig xrdp on
-  changehostname $1
-  setupdns $1
-  createtincconf $1
-  createswap $1
-  setupiscsi $1
-  mountoraclehome $1
-  cleangridhome
-  createclusterlist
-  createclonepl
-}
-
-cleangridhome2()
-{
-  OLD_IFS=$IFS
-  IFS='/'
-  set -- $GRID_ORACLE_HOME
-  IFS=$OLD_IFS
-  for i in "$@"
-  do
-    if [ "$i" != "" ] ; then
-        CHMODPATH=${CHMODPATH}"/"${i}
-        chown grid:oinstall $CHMODPATH
-    fi
-  done
-
-  mkdir -p $ORAINVENTORY
-  chown grid:oinstall $ORAINVENTORY
-  mkdir -p $GRID_ORACLE_BASE
-  chown grid:oinstall $GRID_ORACLE_BASE
-  chown -R grid:oinstall $GRID_ORACLE_HOME
-  chmod u+s $GRID_ORACLE_HOME/bin/oracle
-  chmod g+s $GRID_ORACLE_HOME/bin/oracle
-  chmod u+s $GRID_ORACLE_HOME/bin/extjob
-  chmod u+s $GRID_ORACLE_HOME/bin/jssu
-  chmod u+s $GRID_ORACLE_HOME/bin/oradism
-  
-  #HOSTNAME=`getnodename 1`
-  #cd $GRID_ORACLE_HOME
-  #rm -rf log/$HOSTNAME
-  #rm -rf gpnp/$HOSTNAME
-  #find gpnp -type f -exec rm -f {} \;
-  #rm -rf cfgtoollogs/*
-  #rm -rf crs/init/*
-  #rm -rf cdata/*
-  #rm -rf crf/*
-  #rm -rf network/admin/*.ora
-  #rm -rf crs/install/crsconfig_params
-  #find . -name '*.ouibak' -exec rm {} \;
-  #find . -name '*.ouibak.1' -exec rm {} \;
-  #rm -rf root.sh*
-  #rm -rf rdbms/audit/*
-  #rm -rf rdbms/log/*
-  #rm -rf inventory/backup/*
 }
 
 setupnode()
