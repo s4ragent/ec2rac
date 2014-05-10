@@ -643,7 +643,7 @@ EOF
   
   
 
-chmod 777 /tmp/clusterlist.ccf
+chmod 777 /home/grid/grid.rsp
 }
 
 createclusterlist2()
