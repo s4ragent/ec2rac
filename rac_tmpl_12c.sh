@@ -920,8 +920,8 @@ setupnode()
 
 setupallforclone(){
   Region=`curl http://169.254.169.254/latest/meta-data/placement/availability-zone -s | perl -pe chop`
-  requestspotinstances $2 $3
-  instancecount=`expr $2 + $3`
+  requestspotinstances $1 $2
+  instancecount=`expr $1 + $2`
   requestcount=`aws ec2 describe-spot-instance-requests --region $Region --query 'SpotInstanceRequests[].Status[].Code' | grep "fulfilled" | wc -l`
   while [ $instancecount != $requestcount ]
   do
