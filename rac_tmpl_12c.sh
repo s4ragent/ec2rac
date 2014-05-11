@@ -161,6 +161,7 @@ fi
 
 copyfile()
 {
+rm -rf .ssh/known_hosts
 SERVER_AND_NODE="$SERVER $NODELIST"
 for i in $SERVER_AND_NODE ;
 do
@@ -486,7 +487,7 @@ sshkeyscan()
   SERVER_AND_NODE="$SERVER $NODELIST"
   for i in $SERVER_AND_NODE ;
   do
-        ssh -i $KEY_PAIR $i 'hostname'
+        ssh -i $KEY_PAIR -o "StrictHostKeyChecking no"$i 'hostname'
   done
 }
 
