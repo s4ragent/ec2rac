@@ -922,6 +922,8 @@ cleangridhome()
 
 setupnode()
 {
+  changelocale
+  chkconfig xrdp on
   changehostname $1
   setupdns $1
   createtincconf $1
