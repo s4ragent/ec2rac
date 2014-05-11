@@ -942,7 +942,7 @@ setupallforclonep1(){
   SERVER_AND_NODE="$SERVER $NODELIST"
   
   echo "server setup"
-  ssh -i $KEY_PAIR -o "StrictHostKeyChecking no" root@$SERVER "sh -x $0 setupnodeforclone 0;reboot"
+  ssh -i $KEY_PAIR root@$SERVER "sh -x $0 setupnodeforclone 0;reboot"
   
   sleep 30
   ssh -i $KEY_PAIR -o "ConnectTimeout 10" root@$SERVER 'hostname'
@@ -1076,10 +1076,6 @@ case "$1" in
   "terminateinstances" ) terminateinstances ;;
   "setupnodeforclone" ) setupnodeforclone $2;;
   "setupallforclonep1" ) setupallforclonep1 ;;
-  "setupallforclonep2" ) setupallforclonep2 ;;
-  "setupallforclonep3" ) setupallforclonep3 ;;
-  "setupallforclonep4" ) setupallforclonep4 ;;
-  "setupallforclonep5" ) setupallforclonep5 ;;
   "setupnode" ) setupnode $2;;
   "setupall" ) setupall ;;
   "setupkernel" ) setupkernel ;;
