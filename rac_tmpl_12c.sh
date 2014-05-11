@@ -940,7 +940,7 @@ setupallforclonep1(){
   copyfile $0
   SERVER_AND_NODE="$SERVER $NODELIST"
   
-  
+  echo "server setup"
   ssh -i $KEY_PAIR -o "StrictHostKeyChecking no" root@$SERVER "sh -x $0 setupnodeforclone 0;reboot"
   
   sleep 30
@@ -953,7 +953,7 @@ setupallforclonep1(){
     RET=$?
   done
   
-  
+  echo "node setup"
   NODECOUNT=1
   for i in $NODELIST ;
   do
@@ -961,6 +961,9 @@ setupallforclonep1(){
         NODECOUNT=`expr $NODECOUNT + 1`
   done
   sleep 30
+  
+  
+  echo "$GRID_ORACLE_HOME/start.sh orainstRoot.sh"
   for i in $NODELIST ;
   do
         ssh -i $KEY_PAIR -t -t -f -o "ConnectTimeout 10" root@$i "sudo -u grid /home/grid/start.sh;$ORAINVENTORY/orainstRoot.sh"
@@ -973,6 +976,7 @@ setupallforclonep1(){
         done
   done
   
+  echo "config.sh&root.th"
   #check orainstRoot.sh command finished
   runssh=`ps -elf | grep "orainstRoot.sh" | grep -v "grep" | wc -l`
   while [ $runssh != 0 ]
@@ -986,7 +990,7 @@ setupallforclonep1(){
   for i in $NODELIST ;
   do
     if [ $NODECOUNT = 1 ] ; then
-      ssh -i $KEY_PAIR -t root@${NODE[0]} "sh -x $0 createclusterlist;sudo -u $GRID_ORACLE_HOME/crs/config/config.sh -silent -responseFile /home/grid/grid.rsp;$GRID_ORACLE_HOME/crs/install/rootcrs.pl -deconfig -force -verbose;$GRID_ORACLE_HOME/root.sh -silent;ls $GRID_ORACLE_HOME/install/root* | sort -r | head -n 1 | xargs cat" > ${NODECOUNT}.log
+      ssh -i $KEY_PAIR -t root@${NODE[0]} "sh -x $0 createclusterlist;sudo -u grid $GRID_ORACLE_HOME/crs/config/config.sh -silent -responseFile /home/grid/grid.rsp;$GRID_ORACLE_HOME/crs/install/rootcrs.pl -deconfig -force -verbose;$GRID_ORACLE_HOME/root.sh -silent;ls $GRID_ORACLE_HOME/install/root* | sort -r | head -n 1 | xargs cat" > ${NODECOUNT}.log
     elif [ $NODECOUNT != $# ] ; then
         runssh=`ps -elf | grep "root.sh" | grep -v "grep" | wc -l`
         while [ $runssh <= $PARALLELS ]
@@ -1008,10 +1012,12 @@ setupallforclonep1(){
   done
   ssh -i $KEY_PAIR -t root@${NODE[0]} "sudo -u grid $GRID_ORACLE_HOME/cfgtoollogs/configToolAllCommands RESPONSE_FILE=/home/grid/asm.rsp" >> ${NODECOUNT}.log
   
-  
+  echo "$ORA_ORACLE_HOME/start.sh&root.th"
+  NODECOUNT=1
   for i in $NODELIST ;
   do
-        ssh -i $KEY_PAIR -t -t -f root@$i "sudo -u oracle /home/oracle/start.sh;$ORA_ORACLE_HOME/root.sh -silent"
+        ssh -i $KEY_PAIR -t -t -f root@$i "sudo -u oracle /home/oracle/start.sh;$ORA_ORACLE_HOME/root.sh -silent" >> ${NODECOUNT}.log
+        NODECOUNT=`expr $NODECOUNT + 1`
   done
 
   
