@@ -1018,21 +1018,6 @@ setupallforclonep1(){
   
 }
 
-setupallforclonep4(){
-
-}
-
-
-setupallforclonep2()
-{
-  
-}
-
-setupallforclonep3()
-{
-
-}
-
 setupall(){
   #startupinnstance
   setupnodelist
