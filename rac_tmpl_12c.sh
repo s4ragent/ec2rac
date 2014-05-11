@@ -1086,7 +1086,7 @@ case "$1" in
   "requestspotinstances" ) requestspotinstances $2 $3 $4 $5;;
   "stopinstances" ) stopinstances ;;
   "terminateinstances" ) terminateinstances ;;
-  "setupnodeforclone" ) setupnodeforclone $2;;
+  "setupnodeforclone" ) setupnodeforclone $2 $3 $4;;
   "setupallforclone" ) setupallforclone ;;
   "setupnode" ) setupnode $2;;
   "setupall" ) setupall ;;
