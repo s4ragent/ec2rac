@@ -946,7 +946,7 @@ setupallforclone(){
           ssh -i $KEY_PAIR -o "ConnectTimeout 10" -o "StrictHostKeyChecking no" root@$i "date"
           RET=$?
         done
-        scp -i $KEY_PAIR -r $1 root@$i:/root
+        scp -i $KEY_PAIR -r $0 root@$i:/root
   done
   
   #copyfile $0
