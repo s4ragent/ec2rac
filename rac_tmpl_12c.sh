@@ -952,15 +952,15 @@ setupallforclone(){
   #SERVER_AND_NODE="$SERVER $NODELIST"
   
   echo "server setup"
-  ssh -i $KEY_PAIR root@$SERVER "sh -x $0 setupnodeforclone 0;reboot"
+  ssh -i $KEY_PAIR root@$SERVER "sleep 10;sh -x $0 setupnodeforclone 0;reboot"
   
   sleep 30
-  ssh -i $KEY_PAIR -o "ConnectTimeout 10" root@$SERVER 'hostname'
+  ssh -i $KEY_PAIR -o "ConnectTimeout 10" root@$SERVER 'sleep 10'
   RET=$?
   while [ $RET != 0 ]
   do
     sleep 10
-    ssh -i $KEY_PAIR -o "ConnectTimeout 10" root@$SERVER 'hostname'
+    ssh -i $KEY_PAIR -o "ConnectTimeout 10" root@$SERVER 'sleep 10'
     RET=$?
   done
   
@@ -977,12 +977,12 @@ setupallforclone(){
   echo "$GRID_ORACLE_HOME/start.sh orainstRoot.sh"
   for i in $NODELIST ;
   do
-        ssh -i $KEY_PAIR -t -t -f -o "ConnectTimeout 10" root@$i "sudo -u grid /home/grid/start.sh;$ORAINVENTORY/orainstRoot.sh"
+        ssh -i $KEY_PAIR -t -t -f -o "ConnectTimeout 10" root@$i "sleep 10;sudo -u grid /home/grid/start.sh;$ORAINVENTORY/orainstRoot.sh"
         RET=$?
         while [ $RET != 0 ]
         do
           sleep 10
-          ssh -i $KEY_PAIR -t -t -f -o "ConnectTimeout 10" root@$i "sudo -u grid /home/grid/start.sh;$ORAINVENTORY/orainstRoot.sh"
+          ssh -i $KEY_PAIR -t -t -f -o "ConnectTimeout 10" root@$i "sleep 10;sudo -u grid /home/grid/start.sh;$ORAINVENTORY/orainstRoot.sh"
           RET=$?
         done
   done
