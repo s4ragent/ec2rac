@@ -372,7 +372,6 @@ requestspotinstances(){
 
 
 startinstances(){
-  ServerAmiId=$1
   ServerAmiId=$PackageAmiId
   Server_Count=$1
   NodeAmiId=$PackageAmiId
@@ -1082,12 +1081,12 @@ case "$1" in
   "setupnodelist" ) setupnodelist ;;
   "createtincconf" ) createtincconf $2;;
   "clone" ) clone $2;;
-  "startinstances" ) startinstances $2 $3 $4 $5;;
-  "requestspotinstances" ) requestspotinstances $2 $3 $4 $5;;
+  "startinstances" ) startinstances $2 $3;;
+  "requestspotinstances" ) requestspotinstances $2 $3;;
   "stopinstances" ) stopinstances ;;
   "terminateinstances" ) terminateinstances ;;
-  "setupnodeforclone" ) setupnodeforclone $2 $3 $4;;
-  "setupallforclone" ) setupallforclone ;;
+  "setupnodeforclone" ) setupnodeforclone $2;;
+  "setupallforclone" ) setupallforclone $2 $3;;
   "setupnode" ) setupnode $2;;
   "setupall" ) setupall ;;
   "setupkernel" ) setupkernel ;;
