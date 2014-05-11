@@ -862,21 +862,6 @@ setupnodeforclone()
 }
 
 
-setupnodeforclone()
-{
-  changelocale
-  chkconfig xrdp on
-  changehostname $1
-  setupdns $1
-  createtincconf $1
-  createswap $1
-  setupiscsi $1
-  mountoraclehome $1
-  cleangridhome
-  createclusterlist
-  createclonepl
-}
-
 cleangridhome()
 {
   OLD_IFS=$IFS
@@ -934,14 +919,39 @@ setupnode()
   createoraclehome
 }
 
-setupallforclonep1(){
-  #startupinnstance
+setupallforclone(){
+  Region=`curl http://169.254.169.254/latest/meta-data/placement/availability-zone -s | perl -pe chop`
+  requestspotinstances $2 $3
+  instancecount=`expr $2 + $3`
+  requestcount=`aws ec2 describe-spot-instance-requests --region $Region --query 'SpotInstanceRequests[].Status[].Code' | grep "fulfilled" | wc -l`
+  while [ $instancecount != $requestcount ]
+  do
+    sleep 10
+    requestcount=`aws ec2 describe-spot-instance-requests --region $Region --query 'SpotInstanceRequests[].Status[].Code' | grep "fulfilled" | wc -l`
+  done
+  
   setupnodelist
   sed -i "s/^NODELIST=.*/NODELIST=\"$NODELIST\"/" $0
   sed -i "s/^NODEids=.*/NODEids=\"$NODEids\"/" $0
   sed -i "s/^SERVER=.*/SERVER=\"$SERVER\"/" $0
-  copyfile $0
+  
+  rm -rf .ssh/known_hosts
   SERVER_AND_NODE="$SERVER $NODELIST"
+  for i in $SERVER_AND_NODE ;
+  do
+        ssh -i $KEY_PAIR -o "ConnectTimeout 10" -o "StrictHostKeyChecking no" root@$i "date"
+        RET=$?
+        while [ $RET != 0 ]
+        do
+          sleep 10
+          ssh -i $KEY_PAIR -o "ConnectTimeout 10" -o "StrictHostKeyChecking no" root@$i "date"
+          RET=$?
+        done
+        scp -i $KEY_PAIR -r $1 root@$i:/root
+  done
+  
+  #copyfile $0
+  #SERVER_AND_NODE="$SERVER $NODELIST"
   
   echo "server setup"
   ssh -i $KEY_PAIR root@$SERVER "sh -x $0 setupnodeforclone 0;reboot"
@@ -1077,7 +1087,7 @@ case "$1" in
   "stopinstances" ) stopinstances ;;
   "terminateinstances" ) terminateinstances ;;
   "setupnodeforclone" ) setupnodeforclone $2;;
-  "setupallforclonep1" ) setupallforclonep1 ;;
+  "setupallforclone" ) setupallforclone ;;
   "setupnode" ) setupnode $2;;
   "setupall" ) setupall ;;
   "setupkernel" ) setupkernel ;;
