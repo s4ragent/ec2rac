@@ -856,7 +856,6 @@ setupnodeforclone()
   setupiscsi $1
   mountoraclehome $1
   cleangridhome
-  #createclusterlist
   createclonepl
 }
 
