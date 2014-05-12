@@ -957,7 +957,7 @@ setupallforclone(){
   #SERVER_AND_NODE="$SERVER $NODELIST"
   
   echo "server setup"
-  ssh -i $KEY_PAIR root@$SERVER "sleep 10;sh -x $0 setupnodeforclone 0;reboot"
+  ssh -i $KEY_PAIR root@$SERVER "sleep 10;sh -x $0 setupnodeforclone 0;reboot" > 0.log
   
   sleep 30
   ssh -i $KEY_PAIR -o "ConnectTimeout 10" root@$SERVER 'sleep 10'
@@ -973,7 +973,7 @@ setupallforclone(){
   NODECOUNT=1
   for i in $NODELIST ;
   do
-        ssh -f -t -i $KEY_PAIR -o "StrictHostKeyChecking no" root@$i "sh -x $0 setupnodeforclone $NODECOUNT;reboot"
+        ssh -f -t -i $KEY_PAIR -o "StrictHostKeyChecking no" root@$i "sh -x $0 setupnodeforclone $NODECOUNT;reboot" > ${NODECOUNT}.log
         NODECOUNT=`expr $NODECOUNT + 1`
   done
   
@@ -986,16 +986,18 @@ setupallforclone(){
   
   
   echo "$GRID_ORACLE_HOME/start.sh orainstRoot.sh"
+  NODECOUNT=1
   for i in $NODELIST ;
   do
-        ssh -i $KEY_PAIR -t -t -f -o "ConnectTimeout 10" root@$i "sleep 10;sudo -u grid /home/grid/start.sh;$ORAINVENTORY/orainstRoot.sh"
+        ssh -i $KEY_PAIR -t -t -f -o "ConnectTimeout 10" root@$i "sleep 10;sudo -u grid /home/grid/start.sh;$ORAINVENTORY/orainstRoot.sh" >> ${NODECOUNT}.log
         RET=$?
         while [ $RET != 0 ]
         do
           sleep 10
-          ssh -i $KEY_PAIR -t -t -f -o "ConnectTimeout 10" root@$i "sleep 10;sudo -u grid /home/grid/start.sh;$ORAINVENTORY/orainstRoot.sh"
+          ssh -i $KEY_PAIR -t -t -f -o "ConnectTimeout 10" root@$i "sleep 10;sudo -u grid /home/grid/start.sh;$ORAINVENTORY/orainstRoot.sh" >> ${NODECOUNT}.log
           RET=$?
         done
+        NODECOUNT=`expr $NODECOUNT + 1`
   done
   
   echo "config.sh&root.th"
@@ -1012,7 +1014,7 @@ setupallforclone(){
   for i in $NODELIST ;
   do
     if [ $NODECOUNT = 1 ] ; then
-      ssh -i $KEY_PAIR -t root@$i "sudo -u grid $GRID_ORACLE_HOME/crs/config/config.sh -silent -responseFile /home/grid/grid.rsp;$GRID_ORACLE_HOME/crs/install/rootcrs.pl -deconfig -force -verbose;$GRID_ORACLE_HOME/root.sh -silent;ls $GRID_ORACLE_HOME/install/root* | sort -r | head -n 1 | xargs cat" > ${NODECOUNT}.log
+      ssh -i $KEY_PAIR -t root@$i "sudo -u grid $GRID_ORACLE_HOME/crs/config/config.sh -silent -responseFile /home/grid/grid.rsp;$GRID_ORACLE_HOME/crs/install/rootcrs.pl -deconfig -force -verbose;$GRID_ORACLE_HOME/root.sh -silent;ls $GRID_ORACLE_HOME/install/root* | sort -r | head -n 1 | xargs cat" >> ${NODECOUNT}.log
     elif [ $NODECOUNT != $# ] ; then
         runssh=`ps -elf | grep "root.sh" | grep -v "grep" | wc -l`
         while [ $runssh <= $PARALLELS ]
@@ -1020,7 +1022,7 @@ setupallforclone(){
           sleep 10
           runssh=`ps -elf | grep "root.sh" | grep -v "grep" | wc -l`
         done
-        ssh -i $KEY_PAIR -f root@$i "$GRID_ORACLE_HOME/root.sh -silent;ls $GRID_ORACLE_HOME/install/root* | sort -r | head -n 1 | xargs cat" > ${NODECOUNT}.log
+        ssh -i $KEY_PAIR -f root@$i "$GRID_ORACLE_HOME/root.sh -silent;ls $GRID_ORACLE_HOME/install/root* | sort -r | head -n 1 | xargs cat" >> ${NODECOUNT}.log
     else
         runssh=`ps -elf | grep "root.sh" | grep -v "grep" | wc -l`
         while [ $runssh != 0 ]
@@ -1028,11 +1030,11 @@ setupallforclone(){
           sleep 10
           runssh=`ps -elf | grep "root.sh" | grep -v "grep" | wc -l`
         done
-        ssh -i $KEY_PAIR root@$i "$GRID_ORACLE_HOME/root.sh -silent;ls $GRID_ORACLE_HOME/install/root* | sort -r | head -n 1 | xargs cat" > ${NODECOUNT}.log
+        ssh -i $KEY_PAIR root@$i "$GRID_ORACLE_HOME/root.sh -silent;ls $GRID_ORACLE_HOME/install/root* | sort -r | head -n 1 | xargs cat" >> ${NODECOUNT}.log
     fi
     NODECOUNT=`expr $NODECOUNT + 1`
   done
-  ssh -i $KEY_PAIR -t root@${1}  "sudo -u grid $GRID_ORACLE_HOME/cfgtoollogs/configToolAllCommands RESPONSE_FILE=/home/grid/asm.rsp" >> ${NODECOUNT}.log
+  ssh -i $KEY_PAIR -t root@$1  "sudo -u grid $GRID_ORACLE_HOME/cfgtoollogs/configToolAllCommands RESPONSE_FILE=/home/grid/asm.rsp" >> ${NODECOUNT}.log
   
   echo "$ORA_ORACLE_HOME/start.sh&root.th"
   NODECOUNT=1
