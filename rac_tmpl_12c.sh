@@ -569,24 +569,26 @@ chkconfig tinc on
 }
 
 
-createclusterlist()
+creatersp()
 {
-  MyIp=`ifconfig eth0 | grep 'inet addr' | awk -F '[: ]' '{print $13}'`
-  MyNetwork=`echo $MyIp | perl -ne ' if (/([\d]+\.[\d]+\.)/){ print $1}'`
-  MyNetwork="${MyNetwork}0.0"
+  if [ $1 = 1 ] ; then
+    MyIp=`ifconfig eth0 | grep 'inet addr' | awk -F '[: ]' '{print $13}'`
+    MyNetwork=`echo $MyIp | perl -ne ' if (/([\d]+\.[\d]+\.)/){ print $1}'`
+    MyNetwork="${MyNetwork}0.0"
 
-  NODECOUNT=1
-for i in $NODELIST ;
-do
-    NODENAME=`getnodename $NODECOUNT`
-    if [ $NODECOUNT = 1 ] ; then
-      CLUSTERNODES="${NODENAME}:${NODENAME}-vip"
-    else
-      CLUSTERNODES="$CLUSTERNODES,${NODENAME}:${NODENAME}-vip"
-    fi
+    NODECOUNT=1
+    for i in $NODELIST ;
+    do
+      NODENAME=`getnodename $NODECOUNT`
+      if [ $NODECOUNT = 1 ] ; then
+        CLUSTERNODES="${NODENAME}:${NODENAME}-vip"
+      else
+        CLUSTERNODES="$CLUSTERNODES,${NODENAME}:${NODENAME}-vip"
+      fi
     
-    NODECOUNT=`expr $NODECOUNT + 1`
-done
+      NODECOUNT=`expr $NODECOUNT + 1`
+    done
+    
   cat > /home/grid/asm.rsp <<EOF
 oracle.assistants.asm|S_ASMPASSWORD=$ORACLESOFTPASSWORD
 oracle.assistants.asm|S_ASMMONITORPASSWORD=$ORACLESOFTPASSWORD
@@ -646,8 +648,10 @@ oracle.install.asm.useExistingDiskGroup=false
 [ConfigWizard]
 EOF
 
-chmod 777 /home/grid/grid.rsp
-chmod 777 /home/grid/asm.rsp
+    chmod 777 /home/grid/grid.rsp
+    chmod 777 /home/grid/asm.rsp
+  fi
+
 }
 
 createclusterlist2()
@@ -857,6 +861,7 @@ setupnodeforclone()
   mountoraclehome $1
   cleangridhome
   createclonepl
+  creatersp $1
 }
 
 
@@ -1001,7 +1006,7 @@ setupallforclone(){
   for i in $NODELIST ;
   do
     if [ $NODECOUNT = 1 ] ; then
-      ssh -i $KEY_PAIR -t root@${NODE[0]} "sh -x $0 createclusterlist;sudo -u grid $GRID_ORACLE_HOME/crs/config/config.sh -silent -responseFile /home/grid/grid.rsp;$GRID_ORACLE_HOME/crs/install/rootcrs.pl -deconfig -force -verbose;$GRID_ORACLE_HOME/root.sh -silent;ls $GRID_ORACLE_HOME/install/root* | sort -r | head -n 1 | xargs cat" > ${NODECOUNT}.log
+      ssh -i $KEY_PAIR -t root@$i "sudo -u grid $GRID_ORACLE_HOME/crs/config/config.sh -silent -responseFile /home/grid/grid.rsp;$GRID_ORACLE_HOME/crs/install/rootcrs.pl -deconfig -force -verbose;$GRID_ORACLE_HOME/root.sh -silent;ls $GRID_ORACLE_HOME/install/root* | sort -r | head -n 1 | xargs cat" > ${NODECOUNT}.log
     elif [ $NODECOUNT != $# ] ; then
         runssh=`ps -elf | grep "root.sh" | grep -v "grep" | wc -l`
         while [ $runssh <= $PARALLELS ]
@@ -1021,7 +1026,7 @@ setupallforclone(){
     fi
     NODECOUNT=`expr $NODECOUNT + 1`
   done
-  ssh -i $KEY_PAIR -t root@${NODE[0]} "sudo -u grid $GRID_ORACLE_HOME/cfgtoollogs/configToolAllCommands RESPONSE_FILE=/home/grid/asm.rsp" >> ${NODECOUNT}.log
+  ssh -i $KEY_PAIR -t root@${1}  "sudo -u grid $GRID_ORACLE_HOME/cfgtoollogs/configToolAllCommands RESPONSE_FILE=/home/grid/asm.rsp" >> ${NODECOUNT}.log
   
   echo "$ORA_ORACLE_HOME/start.sh&root.th"
   NODECOUNT=1
@@ -1068,7 +1073,7 @@ case "$1" in
   "listinstances" ) listinstances;;
   "listami" ) listami;;
   "createclonepl" ) createclonepl;;
-  "createclusterlist" ) createclusterlist;;
+  "creatersp" ) creatersp $2;;
   "createtmpl" ) createtmpl ;;
   "installpackage" ) installpackage ;;
   "changehostname" )  changehostname $2;;
