@@ -1034,7 +1034,7 @@ setupallforclone(){
     fi
     NODECOUNT=`expr $NODECOUNT + 1`
   done
-  ssh -i $KEY_PAIR -t root@$1  "sudo -u grid $GRID_ORACLE_HOME/cfgtoollogs/configToolAllCommands RESPONSE_FILE=/home/grid/asm.rsp" >> ${NODECOUNT}.log
+  ssh -i $KEY_PAIR -t root@$1  "sudo -u grid $GRID_ORACLE_HOME/cfgtoollogs/configToolAllCommands RESPONSE_FILE=/home/grid/asm.rsp" >> 1.log
   
   echo "$ORA_ORACLE_HOME/start.sh&root.th"
   NODECOUNT=1
