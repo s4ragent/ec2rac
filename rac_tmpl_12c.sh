@@ -878,7 +878,7 @@ cleangridhome()
         chown grid:oinstall $CHMODPATH
     fi
   done
-
+  rm -rf $ORAINVENTORY
   mkdir -p $ORAINVENTORY
   chown grid:oinstall $ORAINVENTORY
   chown grid:oinstall $GRID_ORACLE_BASE
