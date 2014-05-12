@@ -976,7 +976,13 @@ setupallforclone(){
         ssh -f -t -i $KEY_PAIR -o "StrictHostKeyChecking no" root@$i "sh -x $0 setupnodeforclone $NODECOUNT;reboot"
         NODECOUNT=`expr $NODECOUNT + 1`
   done
-  sleep 30
+  
+  runssh=`ps -elf | grep "setupnodeforclone" | grep -v "grep" | wc -l`
+  while [ $runssh != 0 ]
+  do
+    sleep 10
+    runssh=`ps -elf | grep "setupnodeforclone" | grep -v "grep" | wc -l`
+  done
   
   
   echo "$GRID_ORACLE_HOME/start.sh orainstRoot.sh"
