@@ -1064,7 +1064,7 @@ setupallforclone(){
     runssh=`ps -elf | grep "start.sh" | grep -v "grep" | wc -l`
   done
 
-  dbcaoption="-silent -createDatabase -templateName TEMPLATENAME -gdbName $DBNAME -sid $SIDNAME" 
+  dbcaoption="-silent -createDatabase -templateName $TEMPLATENAME -gdbName $DBNAME -sid $SIDNAME" 
   dbcaoption="$dbcaoption -SysPassword $SYSPASSWORD -SystemPassword $SYSTEMPASSWORD -emConfiguration NONE -redoLogFileSize $REDOFILESIZE"
   dbcaoption="$dbcaoption -recoveryAreaDestination $FRA -storageType ASM -asmSysPassword $ASMPASSWORD -diskGroupName $DISKGROUPNAME"
   dbcaoption="$dbcaoption -characterSet $CHARSET -nationalCharacterSet $NCHAR -totalMemory $MEMORYTARGET -databaseType DATABASETYPE"
