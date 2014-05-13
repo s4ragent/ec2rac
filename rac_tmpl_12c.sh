@@ -936,6 +936,9 @@ setupnode()
 }
 
 setupallforclone(){
+  echo "start of clone `date`" > Master.log
+  echo "*********************" >> Master.log
+  echo "start of request spot instance startup  `date`" >> Master.log 
   Region=`curl http://169.254.169.254/latest/meta-data/placement/availability-zone -s | perl -pe chop`
   requestspotinstances $1 $2
   instancecount=`expr $1 + $2`
@@ -965,13 +968,14 @@ setupallforclone(){
         done
         scp -i $KEY_PAIR -r $0 root@$i:/root
   done
-  
+  echo "end of request spot instance startup  `date`" >> Master.log 
   #copyfile $0
   #SERVER_AND_NODE="$SERVER $NODELIST"
-  
-  echo "server setup"
+  echo "*********************" >> Master.log
+  echo "start of server dns&iscsi  `date`" >> Master.log  
   ssh -i $KEY_PAIR root@$SERVER "sleep 10;sh -x $0 setupnodeforclone 0;reboot" > 0.log
   
+  #prevent connect before reboot
   sleep 30
   ssh -i $KEY_PAIR -o "ConnectTimeout 10" root@$SERVER 'sleep 10'
   RET=$?
@@ -981,8 +985,9 @@ setupallforclone(){
     ssh -i $KEY_PAIR -o "ConnectTimeout 10" root@$SERVER 'sleep 10'
     RET=$?
   done
-  
-  echo "node setup"
+  echo "end of server dns&iscsi  `date`" >> Master.log
+  echo "*********************" >> Master.log
+  echo "start of node dns&iscsi  `date`" >> Master.log
   NODECOUNT=1
   for i in $NODELIST ;
   do
@@ -997,8 +1002,9 @@ setupallforclone(){
     runssh=`ps -elf | grep "setupnodeforclone" | grep -v "grep" | wc -l`
   done
   
-  
-  echo "$GRID_ORACLE_HOME/start.sh orainstRoot.sh"
+  echo "end of node dns&iscsi  `date`" >> Master.log
+  echo "*********************" >> Master.log
+  echo "start of grid software install  `date`" >> Master.log
   NODECOUNT=1
   for i in $NODELIST ;
   do
@@ -1013,7 +1019,6 @@ setupallforclone(){
         NODECOUNT=`expr $NODECOUNT + 1`
   done
   
-  echo "config.sh&root.th"
   #check orainstRoot.sh command finished
   runssh=`ps -elf | grep "orainstRoot.sh" | grep -v "grep" | wc -l`
   while [ $runssh != 0 ]
@@ -1021,7 +1026,9 @@ setupallforclone(){
     sleep 10
     runssh=`ps -elf | grep "orainstRoot.sh" | grep -v "grep" | wc -l`
   done
-  
+  echo "end of grid software install  `date`" >> Master.log
+  echo "*********************" >> Master.log
+  echo "start of config.sh&root.sh  `date`" >> Master.log
   set -- $NODELIST
   NODECOUNT=1
   for i in $NODELIST ;
@@ -1048,8 +1055,9 @@ setupallforclone(){
     NODECOUNT=`expr $NODECOUNT + 1`
   done
   ssh -i $KEY_PAIR -t root@$1  "sudo -u grid $GRID_ORACLE_HOME/cfgtoollogs/configToolAllCommands RESPONSE_FILE=/home/grid/asm.rsp" >> 1.log
-  
-  echo "$ORA_ORACLE_HOME/start.sh&root.th"
+  echo "end of config.sh&root.sh  `date`" >> Master.log
+  echo "*********************" >> Master.log
+  echo "start of oracle install  `date`" >> Master.log
   NODECOUNT=1
   for i in $NODELIST ;
   do
@@ -1063,6 +1071,9 @@ setupallforclone(){
     sleep 10
     runssh=`ps -elf | grep "start.sh" | grep -v "grep" | wc -l`
   done
+  echo "end of oracle install  `date`" >> Master.log
+  echo "*********************" >> Master.log
+  echo "start of dbca `date`" >> Master.log
 
   dbcaoption="-silent -createDatabase -templateName $TEMPLATENAME -gdbName $DBNAME -sid $SIDNAME" 
   dbcaoption="$dbcaoption -SysPassword $SYSPASSWORD -SystemPassword $SYSTEMPASSWORD -emConfiguration NONE -redoLogFileSize $REDOFILESIZE"
@@ -1081,8 +1092,15 @@ setupallforclone(){
   done
 
   ssh -i $KEY_PAIR -t root@$1  "sudo -u oracle $ORA_ORACLE_HOME/bin/dbca $dbcaoption" >> 1.log
-
-  
+  runssh=`ps -elf | grep "dbca" | grep -v "grep" | wc -l`
+  while [ $runssh != 0 ]
+  do
+    sleep 10
+    runssh=`ps -elf | grep "dbca" | grep -v "grep" | wc -l`
+  done
+  echo "end of dbca `date`" >> Master.log
+  echo "*********************" >> Master.log
+  echo "end of clone `date`" >> Master.log
 }
 
 setupall(){
