@@ -33,7 +33,20 @@ SUBNET_MASK="255.255.240.0"
 NETWORK_NAME=("public" "priv")
 SCAN_NAME="scan"
 CLUSTER_NAME="node-cluster"
-ORACLESOFTPASSWORD="oracle123"
+DBNAME="ORCL"
+SIDNAME="ORCL" 
+SYSPASSWORD="oracle123"
+SYSTEMPASSWORD="oracle123"
+REDOFILESIZE=500
+DISKGROUPNAME="CRS"
+FRA=$DISKGROUPNAME
+ASMPASSWORD="oracle123"
+CHARSET="AL32UTF8"
+NCHAR="AL16UTF16"
+MEMORYTARGET=2400
+TEMPLATENAME="General_Purpose.dbc"
+DATABASETYPE="MULTIPURPOSE"
+
 PARALLELS=5
 ORACLE_HOME_SIZE=15
 SWAP_SIZE=8
@@ -590,8 +603,8 @@ creatersp()
     done
     
   cat > /home/grid/asm.rsp <<EOF
-oracle.assistants.asm|S_ASMPASSWORD=$ORACLESOFTPASSWORD
-oracle.assistants.asm|S_ASMMONITORPASSWORD=$ORACLESOFTPASSWORD
+oracle.assistants.asm|S_ASMPASSWORD=$ASMPASSWORD
+oracle.assistants.asm|S_ASMMONITORPASSWORD=$ASMPASSWORD
 EOF
   cat > /home/grid/grid.rsp  <<EOF
 oracle.install.responseFileVersion=/oracle/install/rspfmt_crsinstall_response_schema_v12.1.0
@@ -626,13 +639,13 @@ oracle.install.crs.config.sharedFileSystemStorage.ocrRedundancy=NORMAL
 oracle.install.crs.config.useIPMI=false
 oracle.install.crs.config.ipmi.bmcUsername=
 oracle.install.crs.config.ipmi.bmcPassword=
-oracle.install.asm.SYSASMPassword=$ORACLESOFTPASSWORD
-oracle.install.asm.diskGroup.name=DATA
+oracle.install.asm.SYSASMPassword=$ASMPASSWORD
+oracle.install.asm.diskGroup.name=$DISKGROUPNAME
 oracle.install.asm.diskGroup.redundancy=EXTERNAL
 oracle.install.asm.diskGroup.AUSize=1
 oracle.install.asm.diskGroup.disks=/dev/sda1
 oracle.install.asm.diskGroup.diskDiscoveryString=
-oracle.install.asm.monitorPassword=$ORACLESOFTPASSWORD
+oracle.install.asm.monitorPassword=$ASMPASSWORD
 oracle.install.crs.config.ignoreDownNodes=false
 oracle.installer.autoupdates.option=
 oracle.installer.autoupdates.downloadUpdatesLoc=
@@ -1043,8 +1056,32 @@ setupallforclone(){
         ssh -i $KEY_PAIR -t -t -f root@$i "sudo -u oracle /home/oracle/start.sh;$ORA_ORACLE_HOME/root.sh -silent" >> ${NODECOUNT}.log
         NODECOUNT=`expr $NODECOUNT + 1`
   done
-
   
+  runssh=`ps -elf | grep "start.sh" | grep -v "grep" | wc -l`
+  while [ $runssh != 0 ]
+  do
+    sleep 10
+    runssh=`ps -elf | grep "start.sh" | grep -v "grep" | wc -l`
+  done
+
+  dbcaoption="-silent -createDatabase -templateName TEMPLATENAME -gdbName $DBNAME -sid $SIDNAME" 
+  dbcaoption="$dbcaoption -SysPassword $SYSPASSWORD -SystemPassword $SYSTEMPASSWORD -emConfiguration NONE -redoLogFileSize $REDOFILESIZE"
+  dbcaoption="$dbcaoption -recoveryAreaDestination $FRA -storageType ASM -asmSysPassword $ASMPASSWORD -diskGroupName $DISKGROUPNAME"
+  dbcaoption="$dbcaoption -characterSet $CHARSET -nationalCharacterSet $NCHAR -totalMemory $MEMORYTARGET -databaseType DATABASETYPE"
+
+  NODECOUNT=1
+  for i in $NODELIST ;
+  do
+    if [ $NODECOUNT = 1 ] ; then
+      dbcaoption="$dbcaoption -nodelist `getnodename $NODECOUNT`"
+    else
+      dbcaoption="$dbcaoption,`getnodename $NODECOUNT`"
+    fi
+    NODECOUNT=`expr $NODECOUNT + 1`
+  done
+
+  ssh -i $KEY_PAIR -t root@$1  "sudo -u oracle $ORA_ORACLE_HOME/bin/dbca $dbcaoption" >> 1.log
+
   
 }
 
