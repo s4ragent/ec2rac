@@ -664,6 +664,7 @@ EOF
   cat >> /home/grid/asmused.sql <<'EOF'
 select group_number, name, total_mb, free_mb,total_mb - free_mb
 from v$asm_diskgroup;
+exit;
 EOF
     chmod 777 /home/grid/grid.rsp
     chmod 777 /home/grid/asm.rsp
