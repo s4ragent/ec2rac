@@ -993,7 +993,7 @@ setupallforclone(){
   NODECOUNT=1
   for i in $NODELIST ;
   do
-        ssh -f -t -i $KEY_PAIR -o "StrictHostKeyChecking no" root@$i "sh -x $0 setupnodeforclone $NODECOUNT;reboot" > ${NODECOUNT}.log
+        ssh -f -t -i $KEY_PAIR -o "StrictHostKeyChecking no" root@$i "sh -x $0 setupnodeforclone $NODECOUNT;reboot" >> ${NODECOUNT}.log
         NODECOUNT=`expr $NODECOUNT + 1`
   done
   
@@ -1030,6 +1030,7 @@ setupallforclone(){
   done
   echo "end of grid software install  `date`" >> $Master.log
   echo "*********************" >> $Master.log
+  
   echo "start of config.sh&root.sh  `date`" >> $Master.log
   set -- $NODELIST
   NODECOUNT=1
@@ -1056,9 +1057,10 @@ setupallforclone(){
     fi
     NODECOUNT=`expr $NODECOUNT + 1`
   done
-  ssh -i $KEY_PAIR -t root@$1  "sudo -u grid $GRID_ORACLE_HOME/cfgtoollogs/configToolAllCommands RESPONSE_FILE=/home/grid/asm.rsp" >> 1.log
+  ssh -i $KEY_PAIR -t root@${NODE[0]}  "sudo -u grid $GRID_ORACLE_HOME/cfgtoollogs/configToolAllCommands RESPONSE_FILE=/home/grid/asm.rsp" >> 1.log
   echo "end of config.sh&root.sh  `date`" >> $Master.log
   echo "*********************" >> $Master.log
+  
   echo "start of oracle install  `date`" >> $Master.log
   NODECOUNT=1
   for i in $NODELIST ;
@@ -1093,7 +1095,7 @@ setupallforclone(){
     NODECOUNT=`expr $NODECOUNT + 1`
   done
 
-  ssh -i $KEY_PAIR -t root@$1  "sudo -u oracle $ORA_ORACLE_HOME/bin/dbca $dbcaoption" >> 1.log
+  ssh -i $KEY_PAIR -t root@${NODE[0]}   "sudo -u oracle $ORA_ORACLE_HOME/bin/dbca $dbcaoption" >> 1.log
   runssh=`ps -elf | grep "dbca" | grep -v "grep" | wc -l`
   while [ $runssh != 0 ]
   do
@@ -1103,9 +1105,7 @@ setupallforclone(){
   echo "end of dbca `date`" >> $Master.log
   echo "*********************" >> $Master.log
   echo "end of clone `date`" >> $Master.log
-  ssh -i $KEY_PAIR -t root@$1  "su -u grid $ORA_ORACLE_HOME/bin/sqlplus /nolog"
-  
-  
+
   
 }
 
