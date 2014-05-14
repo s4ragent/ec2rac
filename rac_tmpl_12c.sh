@@ -661,8 +661,13 @@ oracle.install.asm.useExistingDiskGroup=false
 [ConfigWizard]
 EOF
 
+  cat >> /home/grid/asmused.sql <<'EOF'
+select group_number, name, total_mb, free_mb,total_mb - free_mb
+from v$asm_diskgroup;
+EOF
     chmod 777 /home/grid/grid.rsp
     chmod 777 /home/grid/asm.rsp
+    chmod 777 /home/grid/asmused.sql
   fi
 
 }
@@ -993,7 +998,7 @@ setupallforclone(){
   NODECOUNT=1
   for i in $NODELIST ;
   do
-        ssh -f -t -i $KEY_PAIR -o "StrictHostKeyChecking no" root@$i "sh -x $0 setupnodeforclone $NODECOUNT;reboot" >> ${NODECOUNT}.log
+        ssh -f -t -i $KEY_PAIR -o "StrictHostKeyChecking no" root@$i "sh -x $0 setupnodeforclone $NODECOUNT;reboot" > ${NODECOUNT}.log
         NODECOUNT=`expr $NODECOUNT + 1`
   done
   
@@ -1105,7 +1110,8 @@ setupallforclone(){
   echo "end of dbca `date`" >> $Master.log
   echo "*********************" >> $Master.log
   echo "end of clone `date`" >> $Master.log
-
+  
+  ssh -i ./id_rsa grid@${NODE[0]} 'source .bash_profile;export ORACLE_SID=+ASM1;sqlplus "/as sysdba" @asmused.sql' >>$Master.log
   
 }
 
