@@ -47,7 +47,7 @@ NCHAR="AL16UTF16"
 
 TEMPLATENAME="General_Purpose.dbc"
 DATABASETYPE="MULTIPURPOSE"
-DELAY=30
+
 PARALLELS=5
 ORACLE_HOME_SIZE=15
 SWAP_SIZE=8
@@ -1169,7 +1169,7 @@ case "$1" in
   "stopinstances" ) stopinstances ;;
   "terminateinstances" ) terminateinstances ;;
   "setupnodeforclone" ) setupnodeforclone $2;;
-  "setupallforclone" ) setupallforclone $2 $3 $4 $5 $6;;
+  "setupallforclone" ) setupallforclone $2 $3 $4 $5 $6 $7;;
   "setupnode" ) setupnode $2;;
   "setupall" ) setupall ;;
   "setupkernel" ) setupkernel ;;
@@ -1177,5 +1177,5 @@ case "$1" in
   "createswap" ) createswap $2;;
   "setupiscsi" ) setupiscsi $2 $3;;
   "exessh" ) exessh $2;;
-  * ) echo "known option or no option" ;;
+  * ) echo "Ex \"sh -x $0 setupallforclone c1.xlarge 1 m3.medium 10 2400 0\" 2400 means memorytarget, 0 means wait 0 seconds when grid root.sh" ;;
 esac
