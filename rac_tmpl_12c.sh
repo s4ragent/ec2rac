@@ -956,7 +956,7 @@ setupnode()
 setupallforclone(){
   MEMORYTARGET=$5
   $DELAY=$6
-  Master="${1}_${2}_${3}_${4}_{5}"
+  Master="${1}_${2}_${3}_${4}_${5}"
   echo "start of clone `date`" > $Master.log
   echo "*********************" >> $Master.log
   echo "start of request spot instance startup  `date`" >> $Master.log 
