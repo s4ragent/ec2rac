@@ -368,10 +368,10 @@ prestartinstances(){
 
 requestspotinstances(){
   ServerAmiId=$PackageAmiId
-  NODE_Instance_Type=$1
+  SERVER_Instance_type=$1
   Server_Count=$2
   NodeAmiId=$PackageAmiId
-  SERVER_Instance_type=$3
+  NODE_Instance_Type=$3
   Node_Count=$4
   prestartinstances
   #JSON={\"IPs\":{\"S\":\"$NODELIST\"}}
