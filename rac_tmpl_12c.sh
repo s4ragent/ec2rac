@@ -1146,7 +1146,8 @@ setupall(){
 
 exessh()
 {
-  SERVER_AND_NODE=("$SERVER $NODELIST")
+  LIST=("$SERVER $NODELIST")
+  SERVER_AND_NODE=($LIST)
   ssh -i $KEY_PAIR -o root@${SERVER_AND_NODE[$1]}
 }
 
