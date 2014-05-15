@@ -24,6 +24,7 @@ ServerPrice="0.5"
 
 SgNodeName="node-${TMPL_NAME}"
 SgServerName="server-${TMPL_NAME}"
+LAUNCHGROUP="RACCLONE"
 
 RPMFORGE_URL="http://pkgs.repoforge.org/rpmforge-release/rpmforge-release-0.5.3-1.el6.rf.x86_64.rpm"
 EPEL_URL="http://dl.fedoraproject.org/pub/epel/6/x86_64/epel-release-6-8.noarch.rpm"
@@ -380,8 +381,8 @@ requestspotinstances(){
   NodeJson={\"ImageId\":\"${NodeAmiId}\",\"KeyName\":\"${KEY_NAME}\",\"InstanceType\":\"${NODE_Instance_Type}\",$NodedeviceJson,\"SubnetId\":\"${SubnetId}\",\"SecurityGroupIds\":[\"$SgNodeId\"]}
   ServerJson={\"ImageId\":\"${ServerAmiId}\",\"KeyName\":\"${KEY_NAME}\",\"InstanceType\":\"${SERVER_Instance_type}\",$ServerdeviceJson,\"SubnetId\":\"${SubnetId}\",\"SecurityGroupIds\":[\"$SgServerId\"]}
 
-  aws ec2 request-spot-instances --spot-price $NodePrice --region $Region --launch-group $SgNodeName --launch-specification $NodeJson --instance-count $Node_Count
-  aws ec2 request-spot-instances --spot-price $ServerPrice --region $Region --launch-group $SgServerName --launch-specification $ServerJson --instance-count $Server_Count
+  aws ec2 request-spot-instances --spot-price $NodePrice --region $Region --launch-group $LAUNCHGROUP --launch-specification $NodeJson --instance-count $Node_Count
+  aws ec2 request-spot-instances --spot-price $ServerPrice --region $Region --launch-group $LAUNCHGROUP --launch-specification $ServerJson --instance-count $Server_Count
 
 }
 
