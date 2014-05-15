@@ -411,7 +411,7 @@ terminateinstances()
 {
   setupnodelist
   aws ec2 terminate-instances --region $Region --instance-ids $NODEids $SERVERids
-  SpotInstanceRequestIds=`aws ec2 describe-spot-instance-requests --region $Region --query 'SpotInstanceRequests[].SpotInstanceRequestId'`
+  SpotInstanceRequestIds=`aws ec2 describe-spot-instance-requests --region $Region --query 'SpotInstanceRequests[].SpotInstanceRequestId' --output text`
   SpotInstanceRequestIds=`echo $SpotInstanceRequestIds`
   aws ec2 cancel-spot-instance-requests --region $Region --spot-instance-request-ids $SpotInstanceRequestIds
   requestcount=`aws ec2 describe-spot-instance-requests --region $Region --query 'SpotInstanceRequests[].Status[].Code' | grep "fulfilled" | wc -l`
