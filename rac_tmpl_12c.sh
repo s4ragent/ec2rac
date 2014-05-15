@@ -43,7 +43,7 @@ FRA=$DISKGROUPNAME
 ASMPASSWORD="oracle123"
 CHARSET="AL32UTF8"
 NCHAR="AL16UTF16"
-MEMORYTARGET=2400
+
 TEMPLATENAME="General_Purpose.dbc"
 DATABASETYPE="MULTIPURPOSE"
 DELAY=30
@@ -944,7 +944,7 @@ setupnode()
 }
 
 setupallforclone(){
-  
+  MEMORYTARGET=$5
   Master="${SERVER_Instance_type}_${1}_${NODE_Instance_Type}_${2}"
   echo "start of clone `date`" > $Master.log
   echo "*********************" >> $Master.log
@@ -1174,7 +1174,7 @@ case "$1" in
   "stopinstances" ) stopinstances ;;
   "terminateinstances" ) terminateinstances ;;
   "setupnodeforclone" ) setupnodeforclone $2;;
-  "setupallforclone" ) setupallforclone $2 $3 $4 $5;;
+  "setupallforclone" ) setupallforclone $2 $3 $4 $5 $6;;
   "setupnode" ) setupnode $2;;
   "setupall" ) setupall ;;
   "setupkernel" ) setupkernel ;;
