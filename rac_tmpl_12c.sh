@@ -946,6 +946,7 @@ setupnode()
 
 setupallforclone(){
   MEMORYTARGET=$5
+  $DELAY=$6
   Master="${1}_${2}_${3}_${4}_{5}"
   echo "start of clone `date`" > $Master.log
   echo "*********************" >> $Master.log
@@ -1042,32 +1043,24 @@ setupallforclone(){
   echo "*********************" >> $Master.log
   
   echo "start of config.sh&root.sh  `date`" >> $Master.log
-  set -- $NODELIST
   NODECOUNT=1
   for i in $NODELIST ;
   do
     if [ $NODECOUNT = 1 ] ; then
       ssh -i $KEY_PAIR -t root@$i "sudo -u grid $GRID_ORACLE_HOME/crs/config/config.sh -silent -responseFile /home/grid/grid.rsp;$GRID_ORACLE_HOME/crs/install/rootcrs.pl -deconfig -force -verbose;$GRID_ORACLE_HOME/root.sh -silent;ls $GRID_ORACLE_HOME/install/root* | sort -r | head -n 1 | xargs cat" >> ${NODECOUNT}.log
-    elif [ $NODECOUNT != $# ] ; then
-        #runssh=`ps -elf | grep "root.sh" | grep -v "grep" | wc -l`
-        #while [ $runssh <= $PARALLELS ]
-        #do
-        #  sleep 10
-        #  runssh=`ps -elf | grep "root.sh" | grep -v "grep" | wc -l`
-        #done
-        ssh -i $KEY_PAIR -f root@$i "$GRID_ORACLE_HOME/root.sh -silent;ls $GRID_ORACLE_HOME/install/root* | sort -r | head -n 1 | xargs cat" >> ${NODECOUNT}.log
-        sleep $DELAY
     else
-        runssh=`ps -elf | grep "root.sh" | grep -v "grep" | wc -l`
-        while [ $runssh != 0 ]
-        do
-          sleep 10
-          runssh=`ps -elf | grep "root.sh" | grep -v "grep" | wc -l`
-        done
-        ssh -i $KEY_PAIR root@$i "$GRID_ORACLE_HOME/root.sh -silent;ls $GRID_ORACLE_HOME/install/root* | sort -r | head -n 1 | xargs cat" >> ${NODECOUNT}.log
+      ssh -i $KEY_PAIR -f root@$i "$GRID_ORACLE_HOME/root.sh -silent;ls $GRID_ORACLE_HOME/install/root* | sort -r | head -n 1 | xargs cat" >> ${NODECOUNT}.log
+      sleep $DELAY
     fi
     NODECOUNT=`expr $NODECOUNT + 1`
   done
+  runssh=`ps -elf | grep "root.sh" | grep -v "grep" | wc -l`
+  while [ $runssh != 0 ]
+  do
+    sleep 10
+    runssh=`ps -elf | grep "root.sh" | grep -v "grep" | wc -l`
+  done
+  
   ssh -i $KEY_PAIR -t root@${NODE[0]}  "sudo -u grid $GRID_ORACLE_HOME/cfgtoollogs/configToolAllCommands RESPONSE_FILE=/home/grid/asm.rsp" >> 1.log
   echo "end of config.sh&root.sh  `date`" >> $Master.log
   echo "*********************" >> $Master.log
@@ -1148,7 +1141,7 @@ exessh()
 {
   LIST=("$SERVER $NODELIST")
   SERVER_AND_NODE=($LIST)
-  ssh -i $KEY_PAIR -o root@${SERVER_AND_NODE[$1]}
+  ssh -i $KEY_PAIR root@${SERVER_AND_NODE[$1]}
 }
 
 case "$1" in
