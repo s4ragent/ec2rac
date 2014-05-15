@@ -368,9 +368,11 @@ prestartinstances(){
 
 requestspotinstances(){
   ServerAmiId=$PackageAmiId
-  Server_Count=$1
+  NODE_Instance_Type=$1
+  Server_Count=$2
   NodeAmiId=$PackageAmiId
-  Node_Count=$2
+  SERVER_Instance_type=$3
+  Node_Count=$4
   prestartinstances
   #JSON={\"IPs\":{\"S\":\"$NODELIST\"}}
   NodedeviceJson=\"BlockDeviceMappings\":[{\"DeviceName\":\"$ORACLE_HOME_DEVICE\",\"Ebs\":{\"VolumeSize\":$ORACLE_HOME_SIZE,\"SnapshotId\":\"$RACSnapshotId\",\"DeleteOnTermination\":true,\"VolumeType\":\"standard\"}},{\"DeviceName\":\"$SWAP_DEVICE\",\"VirtualName\":\"ephemeral0\"}]
@@ -948,8 +950,9 @@ setupallforclone(){
   echo "*********************" >> $Master.log
   echo "start of request spot instance startup  `date`" >> $Master.log 
   Region=`curl http://169.254.169.254/latest/meta-data/placement/availability-zone -s | perl -pe chop`
-  requestspotinstances $1 $2
-  instancecount=`expr $1 + $2`
+  #server-instance-type sever-count node-instance-type node-count
+  requestspotinstances $1 $2 $3 $4
+  instancecount=`expr $2 + $4`
   requestcount=`aws ec2 describe-spot-instance-requests --region $Region --query 'SpotInstanceRequests[].Status[].Code' | grep "fulfilled" | wc -l`
   while [ $instancecount != $requestcount ]
   do
@@ -1112,7 +1115,7 @@ setupallforclone(){
   echo "*********************" >> $Master.log
   echo "end of clone `date`" >> $Master.log
   
-  ssh -i ./id_rsa grid@${NODE[0]} 'source .bash_profile;export ORACLE_SID=+ASM1;sqlplus "/as sysdba" @asmused.sql' >>$Master.log
+  ssh -i ./id_rsa grid@${NODE[0]} 'source .bash_profile;export ORACLE_SID=+ASM1;sqlplus "/as sysdba" @asmused.sql;crsctl status resource -t' >>$Master.log
   
 }
 
@@ -1139,7 +1142,11 @@ setupall(){
   
 }
 
-
+exessh()
+{
+  SERVER_AND_NODE=("$SERVER $NODELIST")
+  ssh -i $KEY_PAIR -o root@${SERVER_AND_NODE[$1]}
+}
 
 case "$1" in
   "cleangridhome" ) cleangridhome;;
@@ -1162,16 +1169,17 @@ case "$1" in
   "createtincconf" ) createtincconf $2;;
   "clone" ) clone $2;;
   "startinstances" ) startinstances $2 $3;;
-  "requestspotinstances" ) requestspotinstances $2 $3;;
+  "requestspotinstances" ) requestspotinstances $2 $3 $4 $5;;
   "stopinstances" ) stopinstances ;;
   "terminateinstances" ) terminateinstances ;;
   "setupnodeforclone" ) setupnodeforclone $2;;
-  "setupallforclone" ) setupallforclone $2 $3;;
+  "setupallforclone" ) setupallforclone $2 $3 $4 $5;;
   "setupnode" ) setupnode $2;;
   "setupall" ) setupall ;;
   "setupkernel" ) setupkernel ;;
   "pretincconf" ) pretincconf ;;
   "createswap" ) createswap $2;;
   "setupiscsi" ) setupiscsi $2 $3;;
+  "exessh" ) exessh $2;;
   * ) echo "known option or no option" ;;
 esac
