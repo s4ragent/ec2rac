@@ -411,14 +411,14 @@ terminateinstances()
 {
   setupnodelist
   aws ec2 terminate-instances --region $Region --instance-ids $NODEids $SERVERids
-  SpotInstanceRequestIds=`aws ec2 describe-spot-instance-requests --region $Region --query 'SpotInstanceRequests[].SpotInstanceRequestId' --output text`
+  SpotInstanceRequestIds=`aws ec2 describe-spot-instance-requests --region $Region --filters "Name=launch-group,Values=$LAUNCHGROUP" --query 'SpotInstanceRequests[].SpotInstanceRequestId' --output text`
   SpotInstanceRequestIds=`echo $SpotInstanceRequestIds`
   aws ec2 cancel-spot-instance-requests --region $Region --spot-instance-request-ids $SpotInstanceRequestIds
-  requestcount=`aws ec2 describe-spot-instance-requests --region $Region --query 'SpotInstanceRequests[].Status[].Code' | grep "fulfilled" | wc -l`
+  requestcount=`aws ec2 describe-spot-instance-requests --region $Region --filters "Name=launch-group,Values=$LAUNCHGROUP"  --query 'SpotInstanceRequests[].Status[].Code' | grep "fulfilled" | wc -l`
   while [ $requestcount != 0 ]
   do
     sleep 10
-    requestcount=`aws ec2 describe-spot-instance-requests --region $Region --query 'SpotInstanceRequests[].Status[].Code' | grep "fulfilled" | wc -l`
+    requestcount=`aws ec2 describe-spot-instance-requests --region $Region --filters "Name=launch-group,Values=$LAUNCHGROUP"  --query 'SpotInstanceRequests[].Status[].Code' | grep "fulfilled" | wc -l`
   done
 }
 
