@@ -883,6 +883,7 @@ createclonebase()
 
 setupnodeforclone()
 {
+
   MyIp=`ifconfig eth0 | grep 'inet addr' | awk -F '[: ]' '{print $13}'`
   SERVER_AND_NODE="$SERVER $NODELIST"
   NODECOUNT=0
@@ -969,6 +970,8 @@ setupnode()
 setupallforclone(){
   MEMORYTARGET=$5
   $PARALLEL=$6
+  export PDSH_SSH_ARGS_APPEND=$PDSH_SSH_ARGS_APPEND
+  
   Master="${1}_${2}_${3}_${4}_${5}_${6}"
   echo "start of clone `date`" > $Master.log
   echo "*********************" >> $Master.log
@@ -990,57 +993,65 @@ setupallforclone(){
   sed -i "s/^NODEids=.*/NODEids=\"$NODEids\"/" $0
   sed -i "s/^SERVER=.*/SERVER=\"$SERVER\"/" $0
   
-  rm -rf .ssh/known_hosts
-  SERVER_AND_NODE="$SERVER $NODELIST"
+  #create server_and_nodelist
+  cat "" > ./hostlist 
   for i in $SERVER_AND_NODE ;
   do
-        ssh -i $KEY_PAIR -o "ConnectTimeout 10" -o "StrictHostKeyChecking no" root@$i "date"
-        RET=$?
-        while [ $RET != 0 ]
-        do
-          sleep 10
-          ssh -i $KEY_PAIR -o "ConnectTimeout 10" -o "StrictHostKeyChecking no" root@$i "date"
-          RET=$?
-        done
-        scp -i $KEY_PAIR -r $0 root@$i:/root
+    echo $i >> ./hostlist
+  done  
+  
+  #check server_and_node is alive
+  CMD="pdsh -R ssh -t 10 -w ^hostlist -S date"
+  $CMD
+  while [ $RET != 0 ]
+  do
+    sleep 10
+    $CMD
+    RET=$?
   done
-  echo "end of request spot instance startup  `date`" >> $Master.log 
-  #copyfile $0
-  #SERVER_AND_NODE="$SERVER $NODELIST"
+  
+  #copy this script
+  pdcp -R ssh -w ^hostlist $0 $0
+  
+  
+  echo "end of request spot instance startup and copyfile `date`" >> $Master.log 
+
   echo "*********************" >> $Master.log
   echo "start of server dns&iscsi  `date`" >> $Master.log  
-  ssh -i $KEY_PAIR root@$SERVER "sleep 10;sh -x $0 setupnodeforclone 0;reboot" > 0.log
+  ssh -i $KEY_PAIR root@$SERVER "sleep 10;sh -x $0 setupnodeforclone 0;reboot" > server.log
   
   #prevent connect before reboot
-  sleep 30
-  ssh -i $KEY_PAIR -o "ConnectTimeout 10" root@$SERVER 'sleep 10'
+  sleep 60
+  CMD="ssh -i $KEY_PAIR -o "ConnectTimeout 10" root@$SERVER 'sleep 10'"
+  $CMD
   RET=$?
   while [ $RET != 0 ]
   do
     sleep 10
-    ssh -i $KEY_PAIR -o "ConnectTimeout 10" root@$SERVER 'sleep 10'
+    $CMD
     RET=$?
   done
   echo "end of server dns&iscsi  `date`" >> $Master.log
   echo "*********************" >> $Master.log
   echo "start of node dns&iscsi  `date`" >> $Master.log
-  NODECOUNT=1
-  for i in $NODELIST ;
-  do
-        ssh -f -t -i $KEY_PAIR -o "StrictHostKeyChecking no" root@$i "sh -x $0 setupnodeforclone $NODECOUNT;reboot" > ${NODECOUNT}.log
-        NODECOUNT=`expr $NODECOUNT + 1`
-  done
-  
-  runssh=`ps -elf | grep "setupnodeforclone" | grep -v "grep" | wc -l`
-  while [ $runssh != 0 ]
-  do
-    sleep 10
-    runssh=`ps -elf | grep "setupnodeforclone" | grep -v "grep" | wc -l`
-  done
-  
+  pdsh -R ssh -f 200 -w ^hostlist -x $SERVER "sh -x $0 setupnodeforclone;reboot"
   echo "end of node dns&iscsi  `date`" >> $Master.log
+  
   echo "*********************" >> $Master.log
   echo "start of grid software install  `date`" >> $Master.log
+  
+  #check node is alive
+  CMD="pdsh -R ssh -f 200 -w ^hostlist -x $SERVER -S date"
+  $CMD
+  while [ $RET != 0 ]
+  do
+    sleep 10
+    $CMD
+    RET=$?
+  done
+  
+  
+  
   NODECOUNT=1
   for i in $NODELIST ;
   do
