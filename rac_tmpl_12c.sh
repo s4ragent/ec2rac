@@ -1021,7 +1021,7 @@ setupallforclone(){
 
   echo "*********************" >> $Master.log
   echo "start of server dns&iscsi  `date`" >> $Master.log
-  ssh -i $KEY_PAIR root@$SERVER "sleep 10;sh -x $0 setupnodeforclone 0;reboot" > $Detail.log
+  ssh -i $KEY_PAIR -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null root@$SERVER "sleep 10;sh -x $0 setupnodeforclone 0;reboot" > $Detail.log
   
   #prevent connect before reboot
   sleep 60
@@ -1041,6 +1041,7 @@ setupallforclone(){
   echo "start of node dns&iscsi  `date`" >> $Master.log
   echo "start of node dns&iscsi  `date`" >> $Detail.log
   pdsh -R ssh -f 200 ^hostlist -x $SERVER "sh -x $0 setupnodeforclone;reboot" >> $Detail.log
+  sleep 120
   #check node is alive
   CMD="pdsh -R ssh -f 200 -w ^hostlist -x $SERVER -S date"
   $CMD
@@ -1065,7 +1066,7 @@ setupallforclone(){
   
   echo "start of config.sh `date`" >> $Master.log
   echo "start of config.sh `date`" >> $Detail.log
-  ssh -i $KEY_PAIR -t root@${NODE[0]} "sudo -u grid $GRID_ORACLE_HOME/crs/config/config.sh -silent -responseFile /home/grid/grid.rsp" >> $Detail.log
+  ssh -i $KEY_PAIR -t -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null root@${NODE[0]} "sudo -u grid $GRID_ORACLE_HOME/crs/config/config.sh -silent -responseFile /home/grid/grid.rsp" >> $Detail.log
   echo "end of config.sh `date`" >> $Master.log
   echo "start of first node of root.sh `date`" >> $Master.log
   echo "start of first node of root.sh `date`" >> $Detail.log
