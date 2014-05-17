@@ -71,6 +71,8 @@ ORACLE_PASSWORD="P@ssw0rd"
 
 ## scsi target name ###
 SCSI_TARGET_NAME="iqn.2014-05.org.jpoug:server.crs"
+PDSH_SSH_ARGS_APPEND="-i $KEY_PAIR -tt -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null"
+
 
 createclonepl()
 {
@@ -881,17 +883,29 @@ createclonebase()
 
 setupnodeforclone()
 {
+  MyIp=`ifconfig eth0 | grep 'inet addr' | awk -F '[: ]' '{print $13}'`
+  SERVER_AND_NODE="$SERVER $NODELIST"
+  NODECOUNT=0
+  for i in $SERVER_AND_NODE ;
+  do
+    if [ "$i" = "$MyIp" ] ; then
+      MyNumber=$NODECOUNT
+      break
+    fi
+    NODECOUNT=`expr $NODECOUNT + 1`
+  done
+  
   changelocale
   chkconfig xrdp on
-  changehostname $1
-  setupdns $1
-  createtincconf $1
-  createswap $1
-  setupiscsi $1
-  mountoraclehome $1
+  changehostname $MyNumber
+  setupdns $MyNumber
+  createtincconf $MyNumber
+  createswap $MyNumber
+  setupiscsi $MyNumber
+  mountoraclehome $MyNumber
   cleangridhome
   createclonepl
-  creatersp $1
+  creatersp $MyNumber
 }
 
 
@@ -954,8 +968,8 @@ setupnode()
 
 setupallforclone(){
   MEMORYTARGET=$5
-  $DELAY=$6
-  Master="${1}_${2}_${3}_${4}_${5}"
+  $PARALLEL=$6
+  Master="${1}_${2}_${3}_${4}_${5}_${6}"
   echo "start of clone `date`" > $Master.log
   echo "*********************" >> $Master.log
   echo "start of request spot instance startup  `date`" >> $Master.log 
@@ -969,6 +983,7 @@ setupallforclone(){
     sleep 10
     requestcount=`aws ec2 describe-spot-instance-requests --region $Region --query 'SpotInstanceRequests[].Status[].Code' | grep "fulfilled" | wc -l`
   done
+  echo "end of request(request is fulfilled)  `date`" >> $Master.log
   
   setupnodelist
   sed -i "s/^NODELIST=.*/NODELIST=\"$NODELIST\"/" $0
