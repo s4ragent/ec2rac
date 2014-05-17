@@ -973,6 +973,7 @@ setupallforclone(){
   export PDSH_SSH_ARGS_APPEND=$PDSH_SSH_ARGS_APPEND
   
   Master="${1}_${2}_${3}_${4}_${5}_${6}"
+  Detail="$Master_detail"
   echo "start of clone `date`" > $Master.log
   echo "*********************" >> $Master.log
   echo "start of request spot instance startup  `date`" >> $Master.log 
@@ -1003,6 +1004,7 @@ setupallforclone(){
   #check server_and_node is alive
   CMD="pdsh -R ssh -t 10 -w ^hostlist -S date"
   $CMD
+  RET=$?
   while [ $RET != 0 ]
   do
     sleep 10
@@ -1017,8 +1019,8 @@ setupallforclone(){
   echo "end of request spot instance startup and copyfile `date`" >> $Master.log 
 
   echo "*********************" >> $Master.log
-  echo "start of server dns&iscsi  `date`" >> $Master.log  
-  ssh -i $KEY_PAIR root@$SERVER "sleep 10;sh -x $0 setupnodeforclone 0;reboot" > server.log
+  echo "start of server dns&iscsi  `date`" >> $Master.log
+  ssh -i $KEY_PAIR root@$SERVER "sleep 10;sh -x $0 setupnodeforclone 0;reboot" > $Detail.log
   
   #prevent connect before reboot
   sleep 60
@@ -1031,18 +1033,17 @@ setupallforclone(){
     $CMD
     RET=$?
   done
+  
   echo "end of server dns&iscsi  `date`" >> $Master.log
   echo "*********************" >> $Master.log
+  
   echo "start of node dns&iscsi  `date`" >> $Master.log
-  pdsh -R ssh -f 200 -w ^hostlist -x $SERVER "sh -x $0 setupnodeforclone;reboot"
-  echo "end of node dns&iscsi  `date`" >> $Master.log
-  
-  echo "*********************" >> $Master.log
-  echo "start of grid software install  `date`" >> $Master.log
-  
+  echo "start of node dns&iscsi  `date`" >> $Detail.log
+  pdsh -R ssh -f 200 ^hostlist -x $SERVER "sh -x $0 setupnodeforclone;reboot" >> $Detail.log
   #check node is alive
   CMD="pdsh -R ssh -f 200 -w ^hostlist -x $SERVER -S date"
   $CMD
+  RET=$?
   while [ $RET != 0 ]
   do
     sleep 10
@@ -1050,72 +1051,43 @@ setupallforclone(){
     RET=$?
   done
   
+  sleep 10
+  echo "end of node dns&iscsi  `date`" >> $Master.log
   
+  echo "*********************" >> $Master.log
+  echo "start of grid software install  `date`" >> $Master.log
+  echo "start of grid software install  `date`">> $Detail.log
+  pdsh -R ssh -f 200 -w ^hostlist -x $SERVER "sudo -u grid /home/grid/start.sh;$ORAINVENTORY/orainstRoot.sh" >> $Detail.log
   
-  NODECOUNT=1
-  for i in $NODELIST ;
-  do
-        ssh -i $KEY_PAIR -t -t -f -o "ConnectTimeout 10" root@$i "sleep 10;sudo -u grid /home/grid/start.sh;$ORAINVENTORY/orainstRoot.sh" >> ${NODECOUNT}.log
-        RET=$?
-        while [ $RET != 0 ]
-        do
-          sleep 10
-          ssh -i $KEY_PAIR -t -t -f -o "ConnectTimeout 10" root@$i "sleep 10;sudo -u grid /home/grid/start.sh;$ORAINVENTORY/orainstRoot.sh" >> ${NODECOUNT}.log
-          RET=$?
-        done
-        NODECOUNT=`expr $NODECOUNT + 1`
-  done
-  
-  #check orainstRoot.sh command finished
-  runssh=`ps -elf | grep "orainstRoot.sh" | grep -v "grep" | wc -l`
-  while [ $runssh != 0 ]
-  do
-    sleep 10
-    runssh=`ps -elf | grep "orainstRoot.sh" | grep -v "grep" | wc -l`
-  done
   echo "end of grid software install  `date`" >> $Master.log
   echo "*********************" >> $Master.log
   
-  echo "start of config.sh&root.sh  `date`" >> $Master.log
-  NODECOUNT=1
-  for i in $NODELIST ;
-  do
-    if [ $NODECOUNT = 1 ] ; then
-      ssh -i $KEY_PAIR -t root@$i "sudo -u grid $GRID_ORACLE_HOME/crs/config/config.sh -silent -responseFile /home/grid/grid.rsp;$GRID_ORACLE_HOME/crs/install/rootcrs.pl -deconfig -force -verbose;$GRID_ORACLE_HOME/root.sh -silent;ls $GRID_ORACLE_HOME/install/root* | sort -r | head -n 1 | xargs cat" >> ${NODECOUNT}.log
-    else
-      ssh -i $KEY_PAIR -f root@$i "$GRID_ORACLE_HOME/root.sh -silent;ls $GRID_ORACLE_HOME/install/root* | sort -r | head -n 1 | xargs cat" >> ${NODECOUNT}.log
-      sleep $DELAY
-    fi
-    NODECOUNT=`expr $NODECOUNT + 1`
-  done
-  runssh=`ps -elf | grep "root.sh" | grep -v "grep" | wc -l`
-  while [ $runssh != 0 ]
-  do
-    sleep 10
-    runssh=`ps -elf | grep "root.sh" | grep -v "grep" | wc -l`
-  done
+  echo "start of config.sh `date`" >> $Master.log
+  echo "start of config.sh `date`" >> $Detail.log
+  ssh -i $KEY_PAIR -t root@${NODE[0]} "sudo -u grid $GRID_ORACLE_HOME/crs/config/config.sh -silent -responseFile /home/grid/grid.rsp" >> $Detail.log
+  echo "end of config.sh `date`" >> $Master.log
+  echo "start of first node of root.sh `date`" >> $Master.log
+  echo "start of first node of root.sh `date`" >> $Detail.log
+  ssh -i $KEY_PAIR -t root@${NODE[0]} "$GRID_ORACLE_HOME/crs/install/rootcrs.pl -deconfig -force -verbose;$GRID_ORACLE_HOME/root.sh -silent;ls $GRID_ORACLE_HOME/install/root* | sort -r | head -n 1 | xargs cat" >> $Detail.log
+  echo "end of first node of root.sh `date`" >> $Master.log
+  echo "start of second node to last node of root.sh `date`" >> $Master.log
+  echo "start of second node to last node of root.sh `date`" >> $Detail.log
+  pdsh -R ssh -f $PARALLEL -w ^hostlist -x $SERVER,${NODE[0]} "$GRID_ORACLE_HOME/root.sh -silent;ls $GRID_ORACLE_HOME/install/root* | sort -r | head -n 1 | xargs cat" >> $Detail.log
+  echo "start of second node to last node of root.sh `date`" >> $Master.log
   
-  ssh -i $KEY_PAIR -t root@${NODE[0]}  "sudo -u grid $GRID_ORACLE_HOME/cfgtoollogs/configToolAllCommands RESPONSE_FILE=/home/grid/asm.rsp" >> 1.log
-  echo "end of config.sh&root.sh  `date`" >> $Master.log
+  echo "start of first node of configToolAllCommands `date`" >> $Master.log
+  echo "start of first node of configToolAllCommands `date`" >> $Detail.log
+  ssh -i $KEY_PAIR -t root@${NODE[0]}  "sudo -u grid $GRID_ORACLE_HOME/cfgtoollogs/configToolAllCommands RESPONSE_FILE=/home/grid/asm.rsp" >> $Detail.log
+  echo "end of first node of configToolAllCommands `date`" >> $Master.log
   echo "*********************" >> $Master.log
   
   echo "start of oracle install  `date`" >> $Master.log
-  NODECOUNT=1
-  for i in $NODELIST ;
-  do
-        ssh -i $KEY_PAIR -t -t -f root@$i "sudo -u oracle /home/oracle/start.sh;$ORA_ORACLE_HOME/root.sh -silent" >> ${NODECOUNT}.log
-        NODECOUNT=`expr $NODECOUNT + 1`
-  done
-  
-  runssh=`ps -elf | grep "start.sh" | grep -v "grep" | wc -l`
-  while [ $runssh != 0 ]
-  do
-    sleep 10
-    runssh=`ps -elf | grep "start.sh" | grep -v "grep" | wc -l`
-  done
+  echo "start of oracle install  `date`" >> $Detail.log
+  pdsh -R ssh -f 200 -w ^hostlist -x $SERVER "sudo -u oracle /home/oracle/start.sh;$ORA_ORACLE_HOME/root.sh -silent" >> $Detail.log
   echo "end of oracle install  `date`" >> $Master.log
   echo "*********************" >> $Master.log
   echo "start of dbca `date`" >> $Master.log
+  echo "start of dbca `date`" >> $Detail.log
 
   dbcaoption="-silent -createDatabase -templateName $TEMPLATENAME -gdbName $DBNAME -sid $SIDNAME" 
   dbcaoption="$dbcaoption -SysPassword $SYSPASSWORD -SystemPassword $SYSTEMPASSWORD -emConfiguration NONE -redoLogFileSize $REDOFILESIZE"
@@ -1133,17 +1105,13 @@ setupallforclone(){
     NODECOUNT=`expr $NODECOUNT + 1`
   done
 
-  ssh -i $KEY_PAIR -t root@${NODE[0]}   "sudo -u oracle $ORA_ORACLE_HOME/bin/dbca $dbcaoption" >> 1.log
-  runssh=`ps -elf | grep "dbca" | grep -v "grep" | wc -l`
-  while [ $runssh != 0 ]
-  do
-    sleep 10
-    runssh=`ps -elf | grep "dbca" | grep -v "grep" | wc -l`
-  done
+  ssh -i $KEY_PAIR -t root@${NODE[0]} "sudo -u oracle $ORA_ORACLE_HOME/bin/dbca $dbcaoption" >> $Detail.log
+
   echo "end of dbca `date`" >> $Master.log
   echo "*********************" >> $Master.log
   echo "end of clone `date`" >> $Master.log
   
+  echo "result `date`" >> $Master.log
   ssh -i ./id_rsa grid@${NODE[0]} 'source .bash_profile;export ORACLE_SID=+ASM1;sqlplus "/as sysdba" @asmused.sql;crsctl status resource -t' >>$Master.log
   
 }
