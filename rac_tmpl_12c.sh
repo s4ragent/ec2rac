@@ -995,6 +995,7 @@ setupallforclone(){
   sed -i "s/^SERVER=.*/SERVER=\"$SERVER\"/" $0
   
   #create server_and_nodelist
+  SERVER_AND_NODE="$SERVER $NODELIST"
   cat "" > ./hostlist 
   for i in $SERVER_AND_NODE ;
   do
