@@ -1040,7 +1040,7 @@ setupallforclone(){
   
   echo "start of node dns&iscsi  `date`" >> $Master.log
   echo "start of node dns&iscsi  `date`" >> $Detail.log
-  pdsh -R ssh -f 200 ^hostlist -x $SERVER "sh -x $0 setupnodeforclone;reboot" >> $Detail.log
+  pdsh -R ssh -f 200 -w ^hostlist -x $SERVER "sh -x $0 setupnodeforclone;reboot" >> $Detail.log
   sleep 120
   #check node is alive
   CMD="pdsh -R ssh -f 200 -w ^hostlist -x $SERVER -S date"
@@ -1070,7 +1070,7 @@ setupallforclone(){
   echo "end of config.sh `date`" >> $Master.log
   echo "start of first node of root.sh `date`" >> $Master.log
   echo "start of first node of root.sh `date`" >> $Detail.log
-  ssh -i $KEY_PAIR -t root@${NODE[0]} "$GRID_ORACLE_HOME/crs/install/rootcrs.pl -deconfig -force -verbose;$GRID_ORACLE_HOME/root.sh -silent;ls $GRID_ORACLE_HOME/install/root* | sort -r | head -n 1 | xargs cat" >> $Detail.log
+  ssh -i $KEY_PAIR -t -oStrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null root@${NODE[0]} "$GRID_ORACLE_HOME/crs/install/rootcrs.pl -deconfig -force -verbose;$GRID_ORACLE_HOME/root.sh -silent;ls $GRID_ORACLE_HOME/install/root* | sort -r | head -n 1 | xargs cat" >> $Detail.log
   echo "end of first node of root.sh `date`" >> $Master.log
   echo "start of second node to last node of root.sh `date`" >> $Master.log
   echo "start of second node to last node of root.sh `date`" >> $Detail.log
@@ -1079,7 +1079,7 @@ setupallforclone(){
   
   echo "start of first node of configToolAllCommands `date`" >> $Master.log
   echo "start of first node of configToolAllCommands `date`" >> $Detail.log
-  ssh -i $KEY_PAIR -t root@${NODE[0]}  "sudo -u grid $GRID_ORACLE_HOME/cfgtoollogs/configToolAllCommands RESPONSE_FILE=/home/grid/asm.rsp" >> $Detail.log
+  ssh -i $KEY_PAIR -t -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null root@${NODE[0]}  "sudo -u grid $GRID_ORACLE_HOME/cfgtoollogs/configToolAllCommands RESPONSE_FILE=/home/grid/asm.rsp" >> $Detail.log
   echo "end of first node of configToolAllCommands `date`" >> $Master.log
   echo "*********************" >> $Master.log
   
