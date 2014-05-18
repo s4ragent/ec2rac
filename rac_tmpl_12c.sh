@@ -1014,7 +1014,7 @@ setupallforclone(){
   done
   
   #copy this script
-  pdcp -R ssh -w ^hostlist $0 $0
+  pdcp -R ssh -w ^hostlist $0 /root
   
   
   echo "end of request spot instance startup and copyfile `date`" >> $Master.log 
