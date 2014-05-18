@@ -1021,7 +1021,7 @@ setupallforclone(){
 
   echo "*********************" >> $Master.log
   echo "start of server dns&iscsi  `date`" >> $Master.log
-  ssh -i $KEY_PAIR -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null root@$SERVER "sleep 10;sh -x $0 setupnodeforclone 0;reboot" > $Detail.log
+  ssh -i $KEY_PAIR -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null root@$SERVER "sleep 10;sh -x $0 setupnodeforclone 0;reboot"
   
   #prevent connect before reboot
   sleep 60
@@ -1039,8 +1039,8 @@ setupallforclone(){
   echo "*********************" >> $Master.log
   
   echo "start of node dns&iscsi  `date`" >> $Master.log
-  echo "start of node dns&iscsi  `date`" >> $Detail.log
-  pdsh -R ssh -f 200 -w ^hostlist -x $SERVER "sh -x $0 setupnodeforclone;reboot" >> $Detail.log
+  echo "start of node dns&iscsi  `date`"
+  pdsh -R ssh -f 200 -w ^hostlist -x $SERVER "sh -x $0 setupnodeforclone;reboot"
   sleep 120
   #check node is alive
   CMD="pdsh -R ssh -f 200 -w ^hostlist -x $SERVER -S date"
@@ -1066,7 +1066,7 @@ setupallforclone(){
   
   echo "start of config.sh `date`" >> $Master.log
   echo "start of config.sh `date`" >> $Detail.log
-  ssh -i $KEY_PAIR -t -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null root@${NODE[0]} "sudo -u grid $GRID_ORACLE_HOME/crs/config/config.sh -silent -responseFile /home/grid/grid.rsp" >> $Detail.log
+  ssh -i $KEY_PAIR -t -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null root@${NODE[0]} "sudo -u grid $GRID_ORACLE_HOME/crs/config/config.sh -silent -responseFile /home/grid/grid.rsp"
   echo "end of config.sh `date`" >> $Master.log
   echo "start of first node of root.sh `date`" >> $Master.log
   echo "start of first node of root.sh `date`" >> $Detail.log
@@ -1074,22 +1074,22 @@ setupallforclone(){
   echo "end of first node of root.sh `date`" >> $Master.log
   echo "start of second node to last node of root.sh `date`" >> $Master.log
   echo "start of second node to last node of root.sh `date`" >> $Detail.log
-  pdsh -R ssh -f $PARALLEL -w ^hostlist -x $SERVER,${NODE[0]} "$GRID_ORACLE_HOME/root.sh -silent;ls $GRID_ORACLE_HOME/install/root* | sort -r | head -n 1 | xargs cat" >> $Detail.log
+  pdsh -R ssh -f $PARALLEL -w ^hostlist -x $SERVER,${NODE[0]} "$GRID_ORACLE_HOME/root.sh -silent;ls $GRID_ORACLE_HOME/install/root* | sort -r | head -n 1 | xargs cat"
   echo "start of second node to last node of root.sh `date`" >> $Master.log
   
   echo "start of first node of configToolAllCommands `date`" >> $Master.log
-  echo "start of first node of configToolAllCommands `date`" >> $Detail.log
-  ssh -i $KEY_PAIR -t -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null root@${NODE[0]}  "sudo -u grid $GRID_ORACLE_HOME/cfgtoollogs/configToolAllCommands RESPONSE_FILE=/home/grid/asm.rsp" >> $Detail.log
+  echo "start of first node of configToolAllCommands `date`"
+  ssh -i $KEY_PAIR -t -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null root@${NODE[0]}  "sudo -u grid $GRID_ORACLE_HOME/cfgtoollogs/configToolAllCommands RESPONSE_FILE=/home/grid/asm.rsp" 
   echo "end of first node of configToolAllCommands `date`" >> $Master.log
   echo "*********************" >> $Master.log
   
   echo "start of oracle install  `date`" >> $Master.log
-  echo "start of oracle install  `date`" >> $Detail.log
-  pdsh -R ssh -f 200 -w ^hostlist -x $SERVER "sudo -u oracle /home/oracle/start.sh;$ORA_ORACLE_HOME/root.sh -silent" >> $Detail.log
+  echo "start of oracle install  `date`"
+  pdsh -R ssh -f 200 -w ^hostlist -x $SERVER "sudo -u oracle /home/oracle/start.sh;$ORA_ORACLE_HOME/root.sh -silent"
   echo "end of oracle install  `date`" >> $Master.log
   echo "*********************" >> $Master.log
   echo "start of dbca `date`" >> $Master.log
-  echo "start of dbca `date`" >> $Detail.log
+  echo "start of dbca `date`"
 
   dbcaoption="-silent -createDatabase -templateName $TEMPLATENAME -gdbName $DBNAME -sid $SIDNAME" 
   dbcaoption="$dbcaoption -SysPassword $SYSPASSWORD -SystemPassword $SYSTEMPASSWORD -emConfiguration NONE -redoLogFileSize $REDOFILESIZE"
@@ -1107,14 +1107,14 @@ setupallforclone(){
     NODECOUNT=`expr $NODECOUNT + 1`
   done
 
-  ssh -i $KEY_PAIR -t root@${NODE[0]} "sudo -u oracle $ORA_ORACLE_HOME/bin/dbca $dbcaoption" >> $Detail.log
+  ssh -i $KEY_PAIR -t -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null root@${NODE[0]} "sudo -u oracle $ORA_ORACLE_HOME/bin/dbca $dbcaoption"
 
   echo "end of dbca `date`" >> $Master.log
   echo "*********************" >> $Master.log
   echo "end of clone `date`" >> $Master.log
   
   echo "result `date`" >> $Master.log
-  ssh -i ./id_rsa grid@${NODE[0]} 'source .bash_profile;export ORACLE_SID=+ASM1;sqlplus "/as sysdba" @asmused.sql;crsctl status resource -t' >>$Master.log
+  ssh -i ./id_rsa -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null grid@${NODE[0]} 'source .bash_profile;export ORACLE_SID=+ASM1;sqlplus "/as sysdba" @asmused.sql;crsctl status resource -t' >>$Master.log
   
 }
 
