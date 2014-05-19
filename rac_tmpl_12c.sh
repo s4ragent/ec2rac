@@ -1194,7 +1194,7 @@ case "$1" in
   "createswap" ) createswap $2;;
   "setupiscsi" ) setupiscsi $2 $3;;
   "exessh" ) exessh $2 $3;;
-  "catrootsh" ) catrootsh $2;
+  "catrootsh" ) catrootsh $2;;
   "updatescript" ) updatescript;;
   * ) echo "Ex \"sh -x $0 setupallforclone c1.xlarge 1 m3.medium 10 2400 0\" 2400 means memorytarget, 0 means wait 0 seconds when grid root.sh" ;;
 esac
