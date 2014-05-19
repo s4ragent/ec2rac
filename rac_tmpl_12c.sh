@@ -179,8 +179,7 @@ copyfile()
 SERVER_AND_NODE="$SERVER $NODELIST"
 for i in $SERVER_AND_NODE ;
 do
-        ssh -i $KEY_PAIR -o "StrictHostKeyChecking no" root@$i "date"
-        scp -i $KEY_PAIR -r $1 root@$i:/root
+        scp -i $KEY_PAIR -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null $1 root@$i:/root
 done
 }
 
