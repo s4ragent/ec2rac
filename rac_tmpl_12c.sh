@@ -967,11 +967,10 @@ setupnode()
 
 setupallforclone(){
   MEMORYTARGET=$5
-  $PARALLEL=$6
+  PARALLEL=$6
   export PDSH_SSH_ARGS_APPEND=$PDSH_SSH_ARGS_APPEND
   
   Master="${1}_${2}_${3}_${4}_${5}_${6}"
-  Detail="$Master_detail"
   echo "start of clone `date`" > $Master.log
   echo "*********************" >> $Master.log
   echo "start of request spot instance startup  `date`" >> $Master.log 
@@ -1018,7 +1017,7 @@ setupallforclone(){
 
   echo "*********************" >> $Master.log
   echo "start of server dns&iscsi  `date`" >> $Master.log
-  ssh $PDSH_SSH_ARGS_APPEND root@$SERVER "sleep 10;sh -x $0 setupnodeforclone 0;reboot"
+  ssh $PDSH_SSH_ARGS_APPEND root@$SERVER "sleep 10;sh -x $0 setupnodeforclone 0;reboot" ${Master}_.log
   
   #prevent connect before reboot
   sleep 60
