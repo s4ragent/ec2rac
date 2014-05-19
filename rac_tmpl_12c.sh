@@ -190,7 +190,7 @@ installpackage ()
   rpm -ivh $RPMFORGE_URL
   rpm -ivh $EPEL_URL
   yum -y groupinstall "Desktop" "X Window System" "Japanese Support"
-  yum -y install unzip oracle-rdbms-server-12cR1-preinstall tigervnc-server screen nfs-utils dnsmasq scsi-target-utils iscsi-initiator-utils firefox.x86_64 xrdp expect tinc patch
+  yum -y install pdsh unzip oracle-rdbms-server-12cR1-preinstall tigervnc-server screen nfs-utils dnsmasq scsi-target-utils iscsi-initiator-utils firefox.x86_64 xrdp expect tinc patch
   curl -L http://www.mail-archive.com/xrdp-devel@lists.sourceforge.net/msg00263/km-e0010411.ini -o ./km-e0010411.ini
   cp ./km-e0010411.ini /etc/xrdp/km-e0010411.ini
   cp /etc/xrdp/km-e0010411.ini /etc/xrdp/km-0411.ini
@@ -1027,7 +1027,7 @@ setupallforclone(){
   
   #prevent connect before reboot
   sleep 60
-  CMD="ssh $PDSH_SSH_ARGS_APPEND root@$SERVER 'sleep 10'"
+  CMD="ssh $PDSH_SSH_ARGS_APPEND root@$SERVER date"
   $CMD
   RET=$?
   while [ $RET != 0 ]
@@ -1042,7 +1042,7 @@ setupallforclone(){
   
   echo "start of node dns&iscsi  `date`" >> $Master.log
   echo "start of node dns&iscsi  `date`"
-  pdsh -R ssh -f 200 -w ^hostlist -x $SERVER "sh -x $0 setupnodeforclone;reboot"
+  pdsh -R ssh -f 200 -w ^hostlist -x $SERVER "sh -x $0 setupnodeforclone;reboot" | dshbak
   sleep 120
   #check node is alive
   CMD="pdsh -R ssh -f 200 -w ^hostlist -x $SERVER -S date"
@@ -1061,7 +1061,7 @@ setupallforclone(){
   echo "*********************" >> $Master.log
   echo "start of grid software install  `date`" >> $Master.log
   echo "start of grid software install  `date`"
-  pdsh -R ssh -f 200 -w ^hostlist -x $SERVER "sudo -u grid /home/grid/start.sh;$ORAINVENTORY/orainstRoot.sh"
+  pdsh -R ssh -f 200 -w ^hostlist -x $SERVER "sudo -u grid /home/grid/start.sh;$ORAINVENTORY/orainstRoot.sh" | dshbak
   
   echo "end of grid software install  `date`" >> $Master.log
   echo "*********************" >> $Master.log
@@ -1076,7 +1076,7 @@ setupallforclone(){
   echo "end of first node of root.sh `date`" >> $Master.log
   echo "start of second node to last node of root.sh `date`" >> $Master.log
   echo "start of second node to last node of root.sh `date`"
-  pdsh -R ssh -f $PARALLEL -w ^hostlist -x $SERVER,${NODE[0]} "$GRID_ORACLE_HOME/root.sh -silent;ls $GRID_ORACLE_HOME/install/root* | sort -r | head -n 1 | xargs cat"
+  pdsh -R ssh -f $PARALLEL -w ^hostlist -x $SERVER,${NODE[0]} "$GRID_ORACLE_HOME/root.sh -silent;ls $GRID_ORACLE_HOME/install/root* | sort -r | head -n 1 | xargs cat" | dshbak
   echo "start of second node to last node of root.sh `date`" >> $Master.log
   
   echo "start of first node of configToolAllCommands `date`" >> $Master.log
@@ -1087,7 +1087,7 @@ setupallforclone(){
   
   echo "start of oracle install  `date`" >> $Master.log
   echo "start of oracle install  `date`"
-  pdsh -R ssh -f 200 -w ^hostlist -x $SERVER "sudo -u oracle /home/oracle/start.sh;$ORA_ORACLE_HOME/root.sh -silent"
+  pdsh -R ssh -f 200 -w ^hostlist -x $SERVER "sudo -u oracle /home/oracle/start.sh;$ORA_ORACLE_HOME/root.sh -silent" | dshbak
   echo "end of oracle install  `date`" >> $Master.log
   echo "*********************" >> $Master.log
   echo "start of dbca `date`" >> $Master.log
@@ -1149,6 +1149,10 @@ exessh()
   SERVER_AND_NODE=($LIST)
   ssh -i $KEY_PAIR root@${SERVER_AND_NODE[$1]}
 }
+updatescript()
+{
+  curl https://raw.githubusercontent.com/s4ragent/ec2rac/master/${0}?id=${RANDOM} -o ${0}
+}  
 
 case "$1" in
   "cleangridhome" ) cleangridhome;;
@@ -1183,5 +1187,6 @@ case "$1" in
   "createswap" ) createswap $2;;
   "setupiscsi" ) setupiscsi $2 $3;;
   "exessh" ) exessh $2;;
+  "updatescript" ) updatescript;;
   * ) echo "Ex \"sh -x $0 setupallforclone c1.xlarge 1 m3.medium 10 2400 0\" 2400 means memorytarget, 0 means wait 0 seconds when grid root.sh" ;;
 esac
