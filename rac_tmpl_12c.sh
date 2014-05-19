@@ -176,7 +176,6 @@ fi
 
 copyfile()
 {
-rm -rf .ssh/known_hosts
 SERVER_AND_NODE="$SERVER $NODELIST"
 for i in $SERVER_AND_NODE ;
 do
@@ -1013,10 +1012,7 @@ setupallforclone(){
     RET=$?
   done
   
-  for i in $SERVER_AND_NODE ;
-  do
-    scp $PDSH_SSH_ARGS_APPEND -r $0 root@$i:/root
-  done
+  copyfile $0
   
   
   echo "end of request spot instance startup and copyfile `date`" >> $Master.log 
