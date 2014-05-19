@@ -1148,8 +1148,14 @@ exessh()
 {
   LIST=("$SERVER $NODELIST")
   SERVER_AND_NODE=($LIST)
-  ssh -i $KEY_PAIR -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null root@${SERVER_AND_NODE[$1]}
+  ssh -i $KEY_PAIR -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null root@${SERVER_AND_NODE[$1]} $2
 }
+
+catrootsh()
+{
+  exessh $1 "ls $GRID_ORACLE_HOME/install/root* | sort -r | head -n 1 | xargs cat"
+}
+
 updatescript()
 {
   curl https://raw.githubusercontent.com/s4ragent/ec2rac/master/${0}?id=${RANDOM} -o ${0}
@@ -1187,7 +1193,8 @@ case "$1" in
   "pretincconf" ) pretincconf ;;
   "createswap" ) createswap $2;;
   "setupiscsi" ) setupiscsi $2 $3;;
-  "exessh" ) exessh $2;;
+  "exessh" ) exessh $2 $3;;
+  "catrootsh" ) catrootsh $2;
   "updatescript" ) updatescript;;
   * ) echo "Ex \"sh -x $0 setupallforclone c1.xlarge 1 m3.medium 10 2400 0\" 2400 means memorytarget, 0 means wait 0 seconds when grid root.sh" ;;
 esac
