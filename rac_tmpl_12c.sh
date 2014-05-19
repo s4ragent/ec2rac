@@ -562,6 +562,13 @@ do
     sed -i "s/^Interface = .*/Interface = tap${k}/" /etc/tinc/$NETNAME/tinc.conf
     sed -i "s/^BindToAddress.*/BindToAddress \* $PORT/" /etc/tinc/$NETNAME/tinc.conf
     
+    NODECOUNT=1
+    for i in $NODELIST ;
+    do
+      echo "ConnectTo = `getnodename $NODECOUNT`" >> /etc/tinc/$NETNAME/tinc.conf
+      NODECOUNT=`expr $NODECOUNT + 1`
+    done
+    
     cp ./dummy/rsa_key.priv /etc/tinc/$NETNAME/rsa_key.priv
     
     IP=`getip $k real $1`
