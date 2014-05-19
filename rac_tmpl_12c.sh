@@ -977,6 +977,7 @@ setupallforclone(){
   PARALLEL=$6
   export PDSH_SSH_ARGS_APPEND=$PDSH_SSH_ARGS_APPEND
   
+  
   Master="${1}_${2}_${3}_${4}_${5}_${6}"
   echo "start of clone `date`" > $Master.log
   echo "*********************" >> $Master.log
@@ -1043,7 +1044,7 @@ setupallforclone(){
   
   echo "start of node dns&iscsi  `date`" >> $Master.log
   echo "start of node dns&iscsi  `date`"
-  pdsh -R ssh -f 200 -w ^hostlist -x $SERVER "sh -x $0 setupnodeforclone;reboot" | dshbak >> ${Master}_dns_iscsi.log
+  pdsh -R ssh -f 200 -w ^hostlist -x $SERVER "hostname;date;sh -x $0 setupnodeforclone;date;reboot" | dshbak >> ${Master}_dns_iscsi.log
   sleep 120
   #check node is alive
   CMD="pdsh -R ssh -f 200 -w ^hostlist -x $SERVER -S date"
@@ -1062,7 +1063,7 @@ setupallforclone(){
   echo "*********************" >> $Master.log
   echo "start of grid software install  `date`" >> $Master.log
   echo "start of grid software install  `date`" >> ${Master}_grid_install.log
-  pdsh -R ssh -f 200 -w ^hostlist -x $SERVER "sudo -u grid /home/grid/start.sh;$ORAINVENTORY/orainstRoot.sh" | dshbak
+  pdsh -R ssh -f 200 -w ^hostlist -x $SERVER "hostname;date;sudo -u grid /home/grid/start.sh;$ORAINVENTORY/orainstRoot.sh" | dshbak >> ${Master}_grid_install.log
   
   echo "end of grid software install  `date`" >> $Master.log
   echo "*********************" >> $Master.log
@@ -1077,7 +1078,7 @@ setupallforclone(){
   echo "end of first node of root.sh `date`" >> $Master.log
   echo "start of second node to last node of root.sh `date`" >> $Master.log
   echo "start of second node to last node of root.sh `date`" >> ${Master}_root.sh.log
-  pdsh -R ssh -f $PARALLEL -w ^hostlist -x $SERVER,${NODE[0]} "$GRID_ORACLE_HOME/root.sh -silent;ls $GRID_ORACLE_HOME/install/root* | sort -r | head -n 1 | xargs cat" | dshbak >> ${Master}_root.sh.log
+  pdsh -R ssh -f $PARALLEL -w ^hostlist -x $SERVER,${NODE[0]} "hostname;date;$GRID_ORACLE_HOME/root.sh -silent;ls $GRID_ORACLE_HOME/install/root* | sort -r | head -n 1 | xargs cat" | dshbak >> ${Master}_root.sh.log
   echo "start of second node to last node of root.sh `date`" >> $Master.log
   
   echo "start of first node of configToolAllCommands `date`" >> $Master.log
@@ -1088,7 +1089,7 @@ setupallforclone(){
   
   echo "start of oracle install  `date`" >> $Master.log
   echo "start of oracle install  `date`"
-  pdsh -R ssh -f 200 -w ^hostlist -x $SERVER "sudo -u oracle /home/oracle/start.sh;$ORA_ORACLE_HOME/root.sh -silent" | dshbak >> ${Master}_oracle_install.log
+  pdsh -R ssh -f 200 -w ^hostlist -x $SERVER "hostname;date;sudo -u oracle /home/oracle/start.sh;$ORA_ORACLE_HOME/root.sh -silent" | dshbak >> ${Master}_oracle_install.log
   echo "end of oracle install  `date`" >> $Master.log
   echo "*********************" >> $Master.log
   echo "start of dbca `date`" >> $Master.log
