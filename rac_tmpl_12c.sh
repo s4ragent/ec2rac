@@ -127,7 +127,7 @@ chown oracle.oinstall /home/oracle/start.sh
 createswap(){
   if [ "$1" != "0" ] ; then
         umount -f $SWAP_DEVICE;mkswap -f $SWAP_DEVICE;swapon $SWAP_DEVICE
-        echo "umount -f $SWAP_DEVICE;mkswap -f $SWAP_DEVICE;swapon $SWAP_DEVICE" >> /etc/rc.local
+        #echo "umount -f $SWAP_DEVICE;mkswap -f $SWAP_DEVICE;swapon $SWAP_DEVICE" >> /etc/rc.local
         echo "$SWAP_DEVICE swap swap defaults 0 0 " >> /etc/fstab
   fi
 }
@@ -599,9 +599,9 @@ done
 chkconfig tinc on
 /etc/init.d/tinc start
 
-count=`grep checktinc /etc/rc.local | wc -l`
+count=`grep checktinc /etc/rc.d/rc.local | wc -l`
 if [ $count = 0 ] ; then
-  echo "sh `pwd`/$0 checktinc $1" >> /etc/rc.local
+  echo "sh `pwd`/$0 checktinc $1" >> /etc/rc.d/rc.local
 fi
 
 }
