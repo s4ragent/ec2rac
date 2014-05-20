@@ -597,8 +597,27 @@ EOF
 done
 chkconfig tinc on
 /etc/init.d/tinc start
+
+count=`grep checktinc /etc/rc.local | wc -l`
+if [ $count = 0 ] ; then
+  echo "sh `pwd`/$0 checktinc $1" >> /etc/rc.local
+fi
+
 }
 
+checktinc(){
+multi=1
+for (( k = 0; k < ${#NETWORKS[@]}; ++k ))
+do
+  tcount=`ifconfig | grep tap${k} | wc -l`
+  multi=`expr $tcount * $multi`
+done
+
+if [ $multi = 0 ] ; then
+  sh $0 createtincconf $1
+fi
+
+}  
 
 creatersp()
 {
@@ -1198,5 +1217,6 @@ case "$1" in
   "exessh" ) exessh $2 $3;;
   "catrootsh" ) catrootsh $2;;
   "updatescript" ) updatescript;;
+  "checktinc" ) checktinc $2;;
   * ) echo "Ex \"sh -x $0 setupallforclone c1.xlarge 1 m3.medium 10 2400 0\" 2400 means memorytarget, 0 means wait 0 seconds when grid root.sh" ;;
 esac
