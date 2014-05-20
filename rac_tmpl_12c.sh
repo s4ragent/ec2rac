@@ -558,7 +558,7 @@ do
     echo $NETNAME >> /etc/tinc/nets.boot
     echo "tinc          ${PORT}/tcp             #TINC" >> /etc/services
     echo "tinc          ${PORT}/udp             #TINC" >> /etc/services
-    cp ./dummy/tinc.conf /etc/tinc/$NETNAME/tinc.conf
+    cp /root/dummy/tinc.conf /etc/tinc/$NETNAME/tinc.conf
     sed -i "s/^Name =.*/Name = $NODENAME/" /etc/tinc/$NETNAME/tinc.conf
     sed -i "s/^Interface = .*/Interface = tap${k}/" /etc/tinc/$NETNAME/tinc.conf
     sed -i "s/^BindToAddress.*/BindToAddress \* $PORT/" /etc/tinc/$NETNAME/tinc.conf
@@ -570,7 +570,7 @@ do
     #  NODECOUNT=`expr $NODECOUNT + 1`
     #done
     
-    cp ./dummy/rsa_key.priv /etc/tinc/$NETNAME/rsa_key.priv
+    cp /root/dummy/rsa_key.priv /etc/tinc/$NETNAME/rsa_key.priv
     
     IP=`getip $k real $1`
     cat > /etc/tinc/$NETNAME/tinc-up<<EOF
@@ -590,7 +590,7 @@ EOF
     for i in $SERVER_AND_NODE ;
     do
       NODENAME2=`getnodename $NODECOUNT`
-      cp ./dummy/hosts/dummy /etc/tinc/$NETNAME/hosts/$NODENAME2
+      cp /root/dummy/hosts/dummy /etc/tinc/$NETNAME/hosts/$NODENAME2
       sed -i "s/^Address = .*/Address = $i $PORT/" /etc/tinc/$NETNAME/hosts/$NODENAME2
       NODECOUNT=`expr $NODECOUNT + 1`
     done
