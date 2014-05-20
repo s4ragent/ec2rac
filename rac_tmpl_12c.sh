@@ -545,6 +545,7 @@ send \"\r\n\"
 createtincconf()
 {
   SERVER_AND_NODE="$SERVER $NODELIST"
+  rm -rf /var/run/tinc.*
   /etc/init.d/tinc stop
   sleep 5
   rm -rf /etc/tinc
@@ -610,11 +611,11 @@ multi=1
 for (( k = 0; k < ${#NETWORKS[@]}; ++k ))
 do
   tcount=`ifconfig | grep tap${k} | wc -l`
-  multi=`expr $tcount * $multi`
+  multi=`expr $tcount \* $multi`
 done
 
 if [ $multi = 0 ] ; then
-  sh $0 createtincconf $1
+  createtincconf $1
 fi
 
 }  
