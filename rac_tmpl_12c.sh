@@ -977,8 +977,8 @@ setupallforclone(){
   PARALLEL=$6
   export PDSH_SSH_ARGS_APPEND=$PDSH_SSH_ARGS_APPEND
   
-  
-  Master="${1}_${2}_${3}_${4}_${5}_${6}"
+  curtime=`date +"%Y%m%d%H%M"`
+  Master="${1}_${2}_${3}_${4}_${5}_${6}_${curtime}"
   echo "start of clone `date`" > $Master.log
   echo "*********************" >> $Master.log
   echo "start of request spot instance startup  `date`" >> $Master.log 
@@ -1025,8 +1025,8 @@ setupallforclone(){
 
   echo "*********************" >> $Master.log
   echo "start of server dns&iscsi  `date`" >> $Master.log
-  ssh $PDSH_SSH_ARGS_APPEND root@$SERVER "sleep 10;sh -x $0 setupnodeforclone 0;reboot" > ${Master}_dns_iscsi.log
-  
+  ssh $PDSH_SSH_ARGS_APPEND root@$SERVER "sleep 10;sh -x $0 setupnodeforclone;reboot" > ${Master}_dns_iscsi.log
+
   #prevent connect before reboot
   sleep 60
   CMD="ssh $PDSH_SSH_ARGS_APPEND root@$SERVER date"
@@ -1044,7 +1044,8 @@ setupallforclone(){
   
   echo "start of node dns&iscsi  `date`" >> $Master.log
   echo "start of node dns&iscsi  `date`"
-  pdsh -R ssh -f 200 -w ^hostlist -x $SERVER "hostname;date;sh -x $0 setupnodeforclone;date;reboot" | dshbak >> ${Master}_dns_iscsi.log
+  pdsh -R ssh -f 200 -w ^hostlist -x $SERVER "hostname;date;sh -x $0 setupnodeforclone;date" | dshbak >> ${Master}_dns_iscsi.log
+  pdsh -R ssh -f 200 -u 120 -w ^hostlist -x $SERVER reboot
   sleep 120
   #check node is alive
   CMD="pdsh -R ssh -f 200 -w ^hostlist -x $SERVER -S date"
