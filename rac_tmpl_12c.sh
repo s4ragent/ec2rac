@@ -598,7 +598,7 @@ EOF
       cp /root/dummy/hosts/dummy /etc/tinc/$NETNAME/hosts/$NODENAME2
       sed -i "s/^Address = .*/Address = $i $PORT/" /etc/tinc/$NETNAME/hosts/$NODENAME2
       NODENAME2IP=`getip $k real $NODECOUNT`
-      sed -i  "3a Subnet = ${NODENAME2IP}\/32"　/etc/tinc/$NETNAME/hosts/$NODENAME2
+      sed -i  "3a Subnet = ${NODENAME2IP}\/32" /etc/tinc/$NETNAME/hosts/$NODENAME2
       
       NODECOUNT=`expr $NODECOUNT + 1`
     done
