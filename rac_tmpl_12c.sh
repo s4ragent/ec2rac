@@ -1171,7 +1171,7 @@ exessh()
 {
   LIST=("$SERVER $NODELIST")
   SERVER_AND_NODE=($LIST)
-  ssh -i $KEY_PAIR -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null root@${SERVER_AND_NODE[$1]} $2
+  ssh -i $KEY_PAIR -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null root@${SERVER_AND_NODE[$1]} $2 $3 $4 $5 $6
 }
 
 catrootsh()
@@ -1216,7 +1216,7 @@ case "$1" in
   "pretincconf" ) pretincconf ;;
   "createswap" ) createswap $2;;
   "setupiscsi" ) setupiscsi $2 $3;;
-  "exessh" ) exessh $2 $3;;
+  "exessh" ) exessh $2 $3 $4 $5 $6;;
   "catrootsh" ) catrootsh $2;;
   "updatescript" ) updatescript;;
   "checktinc" ) checktinc $2;;
