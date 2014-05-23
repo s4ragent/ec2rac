@@ -563,9 +563,9 @@ do
     sed -i "s/^Interface = .*/Interface = tap${k}/" /etc/tinc/$NETNAME/tinc.conf
     sed -i "s/^BindToAddress.*/BindToAddress \* $PORT/" /etc/tinc/$NETNAME/tinc.conf
 
-
-    echo "StrictSubnets = yes" >> /etc/tinc/$NETNAME/tinc.conf
-    echo "TunnelServer = yes" >> /etc/tinc/$NETNAME/tinc.conf
+    if [ $1 = 0 ] ; then
+      echo "TunnelServer = yes" >> /etc/tinc/$NETNAME/tinc.conf
+    fi
     
     #echo "MaxTimeout = 30" >> /etc/tinc/$NETNAME/tinc.conf
     #NODECOUNT=1
@@ -598,8 +598,8 @@ EOF
       cp /root/dummy/hosts/dummy /etc/tinc/$NETNAME/hosts/$NODENAME2
       sed -i "s/^Address = .*/Address = $i $PORT/" /etc/tinc/$NETNAME/hosts/$NODENAME2
       
-      NODENAME2IP=`getip $k real $NODECOUNT`
-      sed -i  "3a Subnet = ${NETWORKS[k]}\/20" /etc/tinc/$NETNAME/hosts/$NODENAME2
+      #NODENAME2IP=`getip $k real $NODECOUNT`
+      #sed -i  "3a Subnet = ${NETWORKS[k]}\/32" /etc/tinc/$NETNAME/hosts/$NODENAME2
       
       NODECOUNT=`expr $NODECOUNT + 1`
     done
