@@ -562,18 +562,14 @@ do
     sed -i "s/^Name =.*/Name = $NODENAME/" /etc/tinc/$NETNAME/tinc.conf
     sed -i "s/^Interface = .*/Interface = tap${k}/" /etc/tinc/$NETNAME/tinc.conf
     sed -i "s/^BindToAddress.*/BindToAddress \* $PORT/" /etc/tinc/$NETNAME/tinc.conf
-
-    if [ $1 = 0 ] ; then
-      echo "TunnelServer = yes" >> /etc/tinc/$NETNAME/tinc.conf
-    fi
     
-    #echo "MaxTimeout = 30" >> /etc/tinc/$NETNAME/tinc.conf
-    #NODECOUNT=1
-    #for i in $NODELIST ;
-    #do
-    #  echo "ConnectTo = `getnodename $NODECOUNT`" >> /etc/tinc/$NETNAME/tinc.conf
-    #  NODECOUNT=`expr $NODECOUNT + 1`
-    #done
+    echo "MaxTimeout = 30" >> /etc/tinc/$NETNAME/tinc.conf
+    NODECOUNT=1
+    for i in $NODELIST ;
+    do
+      echo "ConnectTo = `getnodename $NODECOUNT`" >> /etc/tinc/$NETNAME/tinc.conf
+      NODECOUNT=`expr $NODECOUNT + 1`
+    done
     
     cp /root/dummy/rsa_key.priv /etc/tinc/$NETNAME/rsa_key.priv
     
@@ -597,10 +593,6 @@ EOF
       NODENAME2=`getnodename $NODECOUNT`
       cp /root/dummy/hosts/dummy /etc/tinc/$NETNAME/hosts/$NODENAME2
       sed -i "s/^Address = .*/Address = $i $PORT/" /etc/tinc/$NETNAME/hosts/$NODENAME2
-      
-      #NODENAME2IP=`getip $k real $NODECOUNT`
-      #sed -i  "3a Subnet = ${NETWORKS[k]}\/32" /etc/tinc/$NETNAME/hosts/$NODENAME2
-      
       NODECOUNT=`expr $NODECOUNT + 1`
     done
     PORT=`expr $PORT + 1`
