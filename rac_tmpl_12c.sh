@@ -999,7 +999,7 @@ setupallforclone(){
   export PDSH_SSH_ARGS_APPEND=$PDSH_SSH_ARGS_APPEND
   
   curtime=`date +"%Y-%m%d-%H%M"`
-  Master="${1}_${2}_${3}_${4}_${5}_${6}_${curtime}"
+  Master="./rac_logs/${1}_${2}_${3}_${4}_${5}_${6}_${curtime}"
   echo "start of clone `date`" > $Master.log
   echo "*********************" >> $Master.log
   echo "start of request spot instance startup  `date`" >> $Master.log 
