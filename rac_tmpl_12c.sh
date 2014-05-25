@@ -562,14 +562,27 @@ do
     sed -i "s/^Name =.*/Name = $NODENAME/" /etc/tinc/$NETNAME/tinc.conf
     sed -i "s/^Interface = .*/Interface = tap${k}/" /etc/tinc/$NETNAME/tinc.conf
     sed -i "s/^BindToAddress.*/BindToAddress \* $PORT/" /etc/tinc/$NETNAME/tinc.conf
+    sed -i "s/^ConnectTo.*//" /etc/tinc/$NETNAME/tinc.conf
     
     echo "MaxTimeout = 30" >> /etc/tinc/$NETNAME/tinc.conf
-    NODECOUNT=1
-    for i in $NODELIST ;
+    
+    
+    for i in `seq 1 5`
     do
-      echo "ConnectTo = `getnodename $NODECOUNT`" >> /etc/tinc/$NETNAME/tinc.conf
-      NODECOUNT=`expr $NODECOUNT + 1`
+      NUMBER=`expr $1 + $i`
+      if [ $NUMBER >= ${#NODE[@]} ] ; then
+        NUMBER = `expr $NUMBER - ${#NODE[@]}`
+      fi
+      echo "ConnectTo = `getnodename $NUMBER`" >> /etc/tinc/$NETNAME/tinc.conf
     done
+    
+    
+    #NODECOUNT=1
+    #for i in $NODELIST ;
+    #do
+    #  echo "ConnectTo = `getnodename $NODECOUNT`" >> /etc/tinc/$NETNAME/tinc.conf
+    #  NODECOUNT=`expr $NODECOUNT + 1`
+    #done
     
     cp /root/dummy/rsa_key.priv /etc/tinc/$NETNAME/rsa_key.priv
     
@@ -1124,7 +1137,7 @@ setupallforclone(){
   dbcaoption="-silent -createDatabase -templateName $TEMPLATENAME -gdbName $DBNAME -sid $SIDNAME" 
   dbcaoption="$dbcaoption -SysPassword $SYSPASSWORD -SystemPassword $SYSTEMPASSWORD -emConfiguration NONE -redoLogFileSize $REDOFILESIZE"
   dbcaoption="$dbcaoption -recoveryAreaDestination $FRA -storageType ASM -asmSysPassword $ASMPASSWORD -diskGroupName $DISKGROUPNAME"
-  dbcaoption="$dbcaoption -characterSet $CHARSET -nationalCharacterSet $NCHAR -totalMemory $MEMORYTARGET -databaseType DATABASETYPE"
+  dbcaoption="$dbcaoption -characterSet $CHARSET -nationalCharacterSet $NCHAR -totalMemory $MEMORYTARGET -databaseType $DATABASETYPE"
 
   NODECOUNT=1
   for i in $NODELIST ;
