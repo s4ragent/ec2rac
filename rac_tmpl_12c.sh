@@ -1081,7 +1081,7 @@ setupallforclone(){
   
   sleep 10
   echo "end of node dns&iscsi  `date`" >> $Master.log
-  
+  pdsh -R ssh -f 200 -w ^hostlist "hostname;date;ping -c 30 node000;sar -u" | dshbak >> ${Master}_sar.log
   echo "*********************" >> $Master.log
   echo "start of grid software install  `date`" >> $Master.log
   echo "start of grid software install  `date`" >> ${Master}_grid_install.log
@@ -1094,6 +1094,10 @@ setupallforclone(){
   echo "start of config.sh `date`" >> ${Master}_config.sh.log
   ssh $PDSH_SSH_ARGS_APPEND root@${NODE[0]} "sudo -u grid $GRID_ORACLE_HOME/crs/config/config.sh -silent -responseFile /home/grid/grid.rsp" >> ${Master}_config.sh.log
   echo "end of config.sh `date`" >> $Master.log
+  
+  pdsh -R ssh -f 200 -w ^hostlist "hostname;date;ping -c 30 node000;sar -u" | dshbak >> ${Master}_sar.log
+
+  
   echo "start of first node of root.sh `date`" >> $Master.log
   echo "start of first node of root.sh `date`" >> ${Master}_root.sh.log
   ssh $PDSH_SSH_ARGS_APPEND root@${NODE[0]} "$GRID_ORACLE_HOME/crs/install/rootcrs.pl -deconfig -force -verbose;$GRID_ORACLE_HOME/root.sh -silent;ls $GRID_ORACLE_HOME/install/root* | sort -r | head -n 1 | xargs cat" >> ${Master}_root.sh.log
@@ -1101,14 +1105,14 @@ setupallforclone(){
   echo "start of second node to last node of root.sh `date`" >> $Master.log
   echo "start of second node to last node of root.sh `date`" >> ${Master}_root.sh.log
   pdsh -R ssh -f $PARALLEL -w ^hostlist -x $SERVER,${NODE[0]} "hostname;date;$GRID_ORACLE_HOME/root.sh -silent;ls $GRID_ORACLE_HOME/install/root* | sort -r | head -n 1 | xargs cat" | dshbak >> ${Master}_root.sh.log
-  echo "start of second node to last node of root.sh `date`" >> $Master.log
+  echo "end of second node to last node of root.sh `date`" >> $Master.log
   
   echo "start of first node of configToolAllCommands `date`" >> $Master.log
   echo "start of first node of configToolAllCommands `date`"
   ssh $PDSH_SSH_ARGS_APPEND root@${NODE[0]}  "sudo -u grid $GRID_ORACLE_HOME/cfgtoollogs/configToolAllCommands RESPONSE_FILE=/home/grid/asm.rsp" >> ${Master}_config.sh.log
   echo "end of first node of configToolAllCommands `date`" >> $Master.log
   echo "*********************" >> $Master.log
-  
+  pdsh -R ssh -f 200 -w ^hostlist "hostname;date;ping -c 30 node000;sar -u" | dshbak >> ${Master}_sar.log
   echo "start of oracle install  `date`" >> $Master.log
   echo "start of oracle install  `date`"
   pdsh -R ssh -f 200 -w ^hostlist -x $SERVER "hostname;date;sudo -u oracle /home/oracle/start.sh;$ORA_ORACLE_HOME/root.sh -silent" | dshbak >> ${Master}_oracle_install.log
@@ -1142,6 +1146,9 @@ setupallforclone(){
   echo "result `date`" >> $Master.log
   ssh -i ./id_rsa -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null grid@${NODE[0]} 'source .bash_profile;export ORACLE_SID=+ASM1;sqlplus "/as sysdba" @asmused.sql;crsctl status resource -t' >>$Master.log
   
+  pdsh -R ssh -f 200 -w ^hostlist "hostname;date;ping -c 30 node000;sar -u" | dshbak >> ${Master}_sar.log
+  
+  terminateinstances
 }
 
 setupall(){
