@@ -567,11 +567,15 @@ do
     echo "MaxTimeout = 30" >> /etc/tinc/$NETNAME/tinc.conf
     
     
-    for i in `seq 1 5`
+    HALF=`expr ${#NODE[@]} / 2`
+    QUARTER=`expr ${#NODE[@]} / 4`
+    EIGHTH=`expr ${#NODE[@]} / 8` 
+    
+    for i in 1 2 $EIGHTH $QUARTER $HALF
     do
       NUMBER=`expr $1 + $i`
-      if [ $NUMBER >= ${#NODE[@]} ] ; then
-        NUMBER = `expr $NUMBER - ${#NODE[@]}`
+      if [ $NUMBER -ge ${#NODE[@]} ] ; then
+        NUMBER=`expr $NUMBER - ${#NODE[@]}`
       fi
       echo "ConnectTo = `getnodename $NUMBER`" >> /etc/tinc/$NETNAME/tinc.conf
     done
