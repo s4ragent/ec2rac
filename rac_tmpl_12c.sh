@@ -1246,6 +1246,7 @@ done
 getlogs()
 {
   getfile /root/watch $1
+  getfile $GRID_ORACLE_HOME/log $1
 }
 
 case "$1" in
