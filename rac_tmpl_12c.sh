@@ -1011,7 +1011,7 @@ setupallforclone(){
   
   curtime=`date +"%Y-%m%d-%H%M"`
   Master_dir="./logs/${curtime}"
-  mkdir $Master_dir
+  mkdir -p $Master_dir
   Master="$Master_dir/${1}_${2}_${3}_${4}_${5}_${6}"
   echo "start of clone `date`" > $Master.log
   echo "*********************" >> $Master.log
