@@ -1208,7 +1208,19 @@ updatescript()
   curl https://raw.githubusercontent.com/s4ragent/ec2rac/master/${0}?id=${RANDOM} -o ${0}
 }  
 
+checkping()
+{
+count=`grep checkping /etc/rc.d/crontab | wc -l`
+if [ $count = 0 ] ; then
+  echo "* * * * * root /root/$0" >> /etc/crontab
+  /etc/init.d/crond restart
+fi
+
+
+}  
+
 case "$1" in
+  "checkping" ) checkping;;
   "cleangridhome" ) cleangridhome;;
   "sshkeyscan" ) sshkeyscan;;
   "createclonebase" ) createclonebase;;
