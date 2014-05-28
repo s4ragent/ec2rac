@@ -174,14 +174,7 @@ fi
 
 
 
-copyfile()
-{
-SERVER_AND_NODE="$SERVER $NODELIST"
-for i in $SERVER_AND_NODE ;
-do
-        scp -i $KEY_PAIR -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null $1 root@$i:/root
-done
-}
+
 
 installpackage ()
 {
@@ -524,7 +517,7 @@ Name = dummy
 Interface = tap0
 Mode = switch
 BindToAddress * 655
-ConnectTo = `getnodename 0`
+#ConnectTo = `getnodename 0`
 EOF
   cat > ./dummy/hosts/dummy<<EOF
 Address = 127.0.0.1 655
@@ -614,27 +607,27 @@ EOF
     done
     PORT=`expr $PORT + 1`
 done
-chkconfig tinc on
-/etc/init.d/tinc start
+  chkconfig tinc on
+  /etc/init.d/tinc start
 
-count=`grep checktinc /etc/rc.d/rc.local | wc -l`
-if [ $count = 0 ] ; then
-  echo "sh `pwd`/$0 checktinc $1" >> /etc/rc.d/rc.local
-fi
+  count=`grep checktinc /etc/rc.d/rc.local | wc -l`
+  if [ $count = 0 ] ; then
+    echo "sh `pwd`/$0 checktinc $1" >> /etc/rc.d/rc.local
+  fi
 
 }
 
 checktinc(){
-multi=1
-for (( k = 0; k < ${#NETWORKS[@]}; ++k ))
-do
-  tcount=`ifconfig | grep tap${k} | wc -l`
-  multi=`expr $tcount \* $multi`
-done
+  multi=1
+  for (( k = 0; k < ${#NETWORKS[@]}; ++k ))
+  do
+    tcount=`ifconfig | grep tap${k} | wc -l`
+    multi=`expr $tcount \* $multi`
+  done
 
-if [ $multi = 0 ] ; then
-  createtincconf $1
-fi
+  if [ $multi = 0 ] ; then
+    createtincconf $1
+  fi
 
 }  
 
@@ -950,6 +943,7 @@ setupnodeforclone()
   cleangridhome
   createclonepl
   creatersp $MyNumber
+  watch
 }
 
 
@@ -1016,7 +1010,9 @@ setupallforclone(){
   export PDSH_SSH_ARGS_APPEND=$PDSH_SSH_ARGS_APPEND
   
   curtime=`date +"%Y-%m%d-%H%M"`
-  Master="./rac_logs/${1}_${2}_${3}_${4}_${5}_${6}_${curtime}"
+  Master_dir="./logs/${curtime}"
+  mkdir $Master_dir
+  Master="$Master_dir/${1}_${2}_${3}_${4}_${5}_${6}"
   echo "start of clone `date`" > $Master.log
   echo "*********************" >> $Master.log
   echo "start of request spot instance startup  `date`" >> $Master.log 
@@ -1163,9 +1159,9 @@ setupallforclone(){
   echo "result `date`" >> $Master.log
   ssh -i ./id_rsa -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null grid@${NODE[0]} 'source .bash_profile;export ORACLE_SID=+ASM1;sqlplus "/as sysdba" @asmused.sql;crsctl status resource -t' >>$Master.log
   
-  pdsh -R ssh -f 200 -w ^hostlist "hostname;date;ping -c 30 node000;sar -u" | dshbak >> ${Master}_sar.log
+  pdsh -R ssh -f 200 -w ^hostlist "hostname;date;sar -u;sar -b" | dshbak >> ${Master}_sar.log
+  getlogs $Master_dir
   
-  terminateinstances
 }
 
 setupall(){
@@ -1208,19 +1204,54 @@ updatescript()
   curl https://raw.githubusercontent.com/s4ragent/ec2rac/master/${0}?id=${RANDOM} -o ${0}
 }  
 
-checkping()
+watch()
 {
-count=`grep checkping /etc/rc.d/crontab | wc -l`
+count=`grep watch /etc/crontab | wc -l`
 if [ $count = 0 ] ; then
-  echo "* * * * * root /root/$0" >> /etc/crontab
+  echo "* * * * * root /root/$0 watch" >> /etc/crontab
   /etc/init.d/crond restart
+else
+  mkdir /root/watch
+  SERVER_AND_NODE="$SERVER $NODELIST"
+  NODECOUNT=0
+  for i in $SERVER_AND_NODE ;
+  do
+    echo `date` >> /root/watch/`getnodename $NODECOUNT`
+    ping -c 10 $i >> /root/watch/`getnodename $NODECOUNT` &
+    NODECOUNT=`expr $NODECOUNT + 1`
+  done
 fi
 
+}
 
-}  
+copyfile()
+{
+  SERVER_AND_NODE="$SERVER $NODELIST"
+  for i in $SERVER_AND_NODE ;
+  do
+    scp -i $KEY_PAIR -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null $1 root@$i:/root
+  done
+}
+
+getfile()
+{
+  SERVER_AND_NODE="$SERVER $NODELIST"
+  NODECOUNT=0
+for i in $SERVER_AND_NODE ;
+do
+        scp -i $KEY_PAIR -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -r root@$i:$1 $2/`getnodename $NODECOUNT`
+done
+}
+
+getlogs()
+{
+  getfile /root/watch $1
+}
 
 case "$1" in
-  "checkping" ) checkping;;
+  "getlogs" ) getlogs $2 $3;;
+  "getfile" ) getfile $2 $3;;
+  "watch" ) watch;;
   "cleangridhome" ) cleangridhome;;
   "sshkeyscan" ) sshkeyscan;;
   "createclonebase" ) createclonebase;;
