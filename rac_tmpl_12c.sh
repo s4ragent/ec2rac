@@ -1208,7 +1208,7 @@ watch()
 {
 count=`grep watch /etc/crontab | wc -l`
 if [ $count = 0 ] ; then
-  echo "* * * * * root /root/$0 watch" >> /etc/crontab
+  echo "* * * * * root sh /root/$0 watch" >> /etc/crontab
   /etc/init.d/crond restart
 else
   mkdir /root/watch
