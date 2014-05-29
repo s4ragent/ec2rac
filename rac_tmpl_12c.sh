@@ -1117,7 +1117,7 @@ setupallforclone(){
   echo "end of first node of root.sh `date`" >> $Master.log
   echo "start of second node to last node of root.sh `date`" >> $Master.log
   echo "start of second node to last node of root.sh `date`" >> ${Master}_root.sh.log
-  pdsh -R ssh -f $PARALLEL -w ^hostlist -x $SERVER,${NODE[0]} "hostname;date;$GRID_ORACLE_HOME/root.sh -silent;ls $GRID_ORACLE_HOME/install/root* | sort -r | head -n 1 | xargs cat" | dshbak >> ${Master}_root.sh.log
+  pdsh -R ssh -f $PARALLEL -w ^hostlist -x $SERVER,${NODE[0]} "sh $0 exerootsh" 
   echo "end of second node to last node of root.sh `date`" >> $Master.log
   
   echo "start of first node of configToolAllCommands `date`" >> $Master.log
@@ -1250,7 +1250,18 @@ getlogs()
   getfile $GRID_ORACLE_HOME/log $1
 }
 
+exerootsh()
+{
+  $GRID_ORACLE_HOME/root.sh -silent
+  RET=$?
+  if [ $RET != 0 ] ; then
+      MyIp=`ifconfig eth0 | grep 'inet addr' | awk -F '[: ]' '{print $13}'`
+      echo $MyIp
+  fi
+}
+
 case "$1" in
+  "exerootsh" ) exerootsh;;
   "getlogs" ) getlogs $2 $3;;
   "getfile" ) getfile $2 $3;;
   "watch" ) watch;;
