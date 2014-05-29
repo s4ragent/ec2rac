@@ -1154,7 +1154,7 @@ setupallforclone(){
   echo "end of clone `date`" >> $Master_dir/main.log
   
   echo "result `date`" >> $Master_dir/main.log
-  ssh -i ./id_rsa -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null grid@`getnodename 1` 'source .bash_profile;export ORACLE_SID=+ASM1;sqlplus "/as sysdba" @asmused.sql;crsctl status resource -t' $Master_dir/main.log
+  ssh -i ./id_rsa -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null grid@`getnodename 1` 'source .bash_profile;export ORACLE_SID=+ASM1;sqlplus "/as sysdba" @asmused.sql;crsctl status resource -t' >> $Master_dir/main.log
   
   pdsh -R ssh -f 200 -w ^hostlist "hostname;date;sar -u;sar -b" | dshbak >> $Master_dir/sar.log
   getlogs $Master_dir
