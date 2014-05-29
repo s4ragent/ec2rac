@@ -1240,6 +1240,7 @@ getfile()
 for i in $SERVER_AND_NODE ;
 do
         scp -i $KEY_PAIR -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -r root@$i:$1 $2/`getnodename $NODECOUNT`
+        NODECOUNT=`expr $NODECOUNT + 1`
 done
 }
 
