@@ -1065,11 +1065,11 @@ setupallforclone(){
 
   echo "*********************" >> $Master_dir/main.log
   echo "start of server dns&iscsi  `date`" >> $Master_dir/main.log
-  ssh $PDSH_SSH_ARGS_APPEND root@`getnodemane 0` "sleep 10;sh -x $0 setupnodeforclone;reboot" > $Master_dir/dns_iscsi.log
+  ssh $PDSH_SSH_ARGS_APPEND root@`getnodename 0` "sleep 10;sh -x $0 setupnodeforclone;reboot" > $Master_dir/dns_iscsi.log
 
   #prevent connect before reboot
   sleep 60
-  CMD="ssh $PDSH_SSH_ARGS_APPEND root@`getnodemane 0` date"
+  CMD="ssh $PDSH_SSH_ARGS_APPEND root@`getnodename 0` date"
   $CMD
   RET=$?
   while [ $RET != 0 ]
@@ -1084,11 +1084,11 @@ setupallforclone(){
   
   echo "start of node dns&iscsi  `date`" >> $Master.log
   echo "start of node dns&iscsi  `date`"
-  pdsh -R ssh -f 200 -w ^hostlist -x `getnodemane 0` "hostname;date;sh -x $0 setupnodeforclone;date" | dshbak >>$Master_dir/dns_iscsi.log
-  pdsh -R ssh -f 200 -u 120 -w ^hostlist -x `getnodemane 0` reboot
+  pdsh -R ssh -f 200 -w ^hostlist -x `getnodename 0` "hostname;date;sh -x $0 setupnodeforclone;date" | dshbak >>$Master_dir/dns_iscsi.log
+  pdsh -R ssh -f 200 -u 120 -w ^hostlist -x `getnodename 0` reboot
   sleep 120
   #check node is alive
-  CMD="pdsh -R ssh -f 200 -w ^hostlist -x `getnodemane 0` -S date"
+  CMD="pdsh -R ssh -f 200 -w ^hostlist -x `getnodename 0` -S date"
   $CMD
   RET=$?
   while [ $RET != 0 ]
