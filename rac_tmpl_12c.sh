@@ -1258,7 +1258,8 @@ getlogs()
   getfile /root/watch $1
   getfile $GRID_ORACLE_HOME/log $1
   getfile $GRID_ORACLE_HOME/install/root* $1
-  getfil /var/log/tinc.log $1
+  getfile /var/log/tinc.log $1
+  getfile $ORAINVENTORY/logs $1
 }
 
 exerootsh()
