@@ -1116,7 +1116,7 @@ setupallforclone(){
 
   
   echo "start of first node of root.sh `date`" >>  $Master_dir/main.log
-  ssh $PDSH_SSH_ARGS_APPEND root@`getnodename 1` "$GRID_ORACLE_HOME/crs/install/rootcrs.pl -deconfig -force -verbose;$GRID_ORACLE_HOME/root.sh -silent"
+  ssh $PDSH_SSH_ARGS_APPEND root@`getnodename 1` "sh $0 exerootsh" >> $Master_dir/failhost
   echo "end of first node of root.sh `date`" >> $Master_dir/main.log
   echo "start of second node to last node of root.sh `date`" >> $Master_dir/main.log
   pdsh -R ssh -f $PARALLEL -w ^hostlist -x `getnodename 0`,`getnodename 1` "sh $0 exerootsh"  >> $Master_dir/failhost
@@ -1262,7 +1262,8 @@ getlogs()
 
 exerootsh()
 {
-  $GRID_ORACLE_HOME/root.sh -silent 1>/dev/null 2>/dev/null
+  $GRID_ORACLE_HOME/crs/install/rootcrs.pl -deconfig -force -verbose >& /dev/null
+  $GRID_ORACLE_HOME/root.sh -silent >& /dev/null
   RET=$?
   if [ $RET != 0 ] ; then
 	echo `hostname -s`
