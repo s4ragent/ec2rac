@@ -1261,11 +1261,10 @@ getlogs()
 
 exerootsh()
 {
-  $GRID_ORACLE_HOME/root.sh -silent
+  $GRID_ORACLE_HOME/root.sh -silent 1>/dev/null 2>/dev/null
   RET=$?
   if [ $RET != 0 ] ; then
-      MyIp=`ifconfig eth0 | grep 'inet addr' | awk -F '[: ]' '{print $13}'`
-      echo $MyIp
+	echo `hostname -s`
   fi
 }
 
