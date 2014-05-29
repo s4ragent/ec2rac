@@ -1219,6 +1219,7 @@ else
       do
 	      NETNAME=${NETWORK_NAME[$k]}     
 	      IP=`getip $k real $NODECOUNT`
+	      echo "*****************************" >> /root/watch/`getnodename $NODECOUNT`_${NETNAME}.log
 	      echo `date` >> /root/watch/`getnodename $NODECOUNT`_${NETNAME}.log
         ping -w 4 -c 3 $IP >> /root/watch/`getnodename $NODECOUNT`_${NETNAME}.log &
       done
