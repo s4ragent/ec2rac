@@ -1,5 +1,15 @@
 #/bin/bash
 export LANG=C
+
+LAUNCHGROUP="RACCLONE"
+#RoleName,InstanceType,Instance-count,Price,amiid,device:size:snap-id node or server 
+Roles=(
+"TINC m3.large 1 0.1 ami-974234a7 /dev/xvdb:ephemeral0: server"
+"STORAGE m3.large 1 0.1 ami-974234a7 /dev/xvdb:ephemeral0: server"
+"NODE m3.medium 2 0.05 ami-974234a7 /dev/xvdb:ephemeral0:,/dev/xvdc:15:snap-99a6676b node"
+)
+
+
 SERVER="192.168.0.100"
 NODELIST="192.168.0.101 192.168.0.102"
 NODE=($NODELIST)
@@ -24,7 +34,7 @@ ServerPrice="0.5"
 
 SgNodeName="node-${TMPL_NAME}"
 SgServerName="server-${TMPL_NAME}"
-LAUNCHGROUP="RACCLONE"
+
 
 RPMFORGE_URL="http://pkgs.repoforge.org/rpmforge-release/rpmforge-release-0.5.3-1.el6.rf.x86_64.rpm"
 EPEL_URL="http://dl.fedoraproject.org/pub/epel/6/x86_64/epel-release-6-8.noarch.rpm"
