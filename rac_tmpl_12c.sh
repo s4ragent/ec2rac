@@ -2,11 +2,21 @@
 export LANG=C
 
 LAUNCHGROUP="RACCLONE"
+SWAP_DEVICE="/dev/xvdb"
+STORAGE_DEVICE="/dev/xvdb"
+ORACLE_HOME_DEVICE="/dev/xvdc"
+PackageAmiId="ami-974234a7"
+RACSnapshotId="snap-99a6676b"
+ORACLE_HOME_SIZE=15
+#STORAGE_SIZE=30
+STORAGE_SIZE="ephemeral0"
+SWAP_SIZE="ephemeral0"
+#SWAP_SIZE=8
 #RoleName,InstanceType,Instance-count,Price,amiid,device:size:snap-id node or server 
 Roles=(
-"TINC m3.large 1 0.1 ami-974234a7 /dev/xvdb:ephemeral0: server"
-"STORAGE m3.large 1 0.1 ami-974234a7 /dev/xvdb:ephemeral0: server"
-"NODE m3.medium 2 0.05 ami-974234a7 /dev/xvdb:ephemeral0:,/dev/xvdc:15:snap-99a6676b node"
+"tinc m3.large 1 0.1 $PackageAmiId"
+"storage m3.large 1 0.1 $PackageAmiId $STORAGE_DEVICE:$STORAGE_SIZE"
+"node m3.medium 2 0.05 $PackageAmiId $SWAP_DEVICE:$SWAP_SIZE:,$ORACLE_HOME_DEVICE:$ORACLE_HOME_SIZE:$RACSnapshotId"
 )
 
 
@@ -21,8 +31,7 @@ INSTALL_LANG=ja
 TMPL_NAME="RACTMPL"
 KEY_NAME="oregon"
 KEY_PAIR="${KEY_NAME}.pem"
-PackageAmiId="ami-974234a7"
-RACSnapshotId="snap-99a6676b"
+
 IamRole="root"
 NODE_Instance_Type="m3.medium"
 #NODE_Instance_Type="t1.micro"
@@ -58,13 +67,9 @@ NCHAR="AL16UTF16"
 TEMPLATENAME="General_Purpose.dbc"
 DATABASETYPE="MULTIPURPOSE"
 
-ORACLE_HOME_SIZE=15
-SWAP_SIZE=8
-STORAGE_SIZE=30
+
 STORAGE_FILE=/mnt/iscsi.img
-SWAP_DEVICE="/dev/xvdb"
-STORAGE_DEVICE="/dev/xvdb"
-ORACLE_HOME_DEVICE="/dev/xvdc"
+
 
 #ORACLE_BASE and ORACLE_HOME edit it if need this path must under /u01 ##
 MOUNT_PATH=/u01
