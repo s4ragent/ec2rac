@@ -12,7 +12,7 @@ ORACLE_HOME_SIZE=15
 STORAGE_SIZE="ephemeral0"
 SWAP_SIZE="ephemeral0"
 #SWAP_SIZE=8
-#RoleName,InstanceType,Instance-count,Price,amiid,device:size:snap-id node or server 
+#RoleName,InstanceType,Instance-count,Price,amiid,device:size:snap-id,device:size:snap-id.....
 Roles=(
 "tinc m3.large 1 0.1 $PackageAmiId"
 "storage m3.large 1 0.1 $PackageAmiId $STORAGE_DEVICE:$STORAGE_SIZE"
@@ -347,41 +347,75 @@ listami()
   aws ec2 describe-images --region $Region --owner self --query 'Images[].[Name,ImageId]' --output text
 }
 
-prestartinstances(){
+createsecuritygroup(){
   InstanceId=`curl -s http://169.254.169.254/latest/meta-data/instance-id`
   Az=`curl -s http://169.254.169.254/latest/meta-data/placement/availability-zone`
   Region=`echo $Az | perl -lne 'print substr($_,0,-1)'`
   VpcSubnet=`aws ec2 describe-instances --region $Region --instance-id $InstanceId --query 'Reservations[].Instances[].[VpcId,SubnetId]' --output text`
   VpcId=`echo $VpcSubnet | awk -F " " '{print $1}'`
   SubnetId=`echo $VpcSubnet | awk -F " " '{print $2}'`
-  aws ec2 delete-security-group --group-name $SgNodeName --region $Region
-  aws ec2 delete-security-group --group-name $SgServerName --region $Region
-  SgNodeId=`aws ec2 create-security-group --group-name $SgNodeName --description "$SgNodeName"  --vpc-id $VpcId --region $Region --query 'GroupId' --output text`
-  SgServerId=`aws ec2 create-security-group --group-name $SgServerName --description "$SgServerName"  --vpc-id $VpcId --region $Region --query 'GroupId' --output text`
   
-  #SgNodeId=`aws ec2 describe-security-groups --region $Region --query "SecurityGroups[][?contains(GroupName,\\\`$SgNodeName\\\`)==\\\`true\\\`].[GroupId]" --output text`
-  #SgServerId=`aws ec2 describe-security-groups --region $Region --query "SecurityGroups[][?contains(GroupName,\\\`$SgServerName\\\`)==\\\`true\\\`].[GroupId]" --output text`
+  SgName="${1}-${LAUNCHGROUP}-${VpcId}"
   
-  MyIp=`ifconfig eth0 | grep 'inet addr' | awk -F '[: ]' '{print $13}'`
-  MyNetwork=`echo $MyIp | perl -ne ' if (/([\d]+\.[\d]+\.)/){ print $1}'`
-  MyNetwork="${MyNetwork}0.0"
-  aws ec2 authorize-security-group-ingress --group-id $SgNodeId --cidr $MyNetwork/16 --protocol -1 --port -1 --region $Region 
-  aws ec2 authorize-security-group-ingress --group-id $SgServerId --cidr $MyNetwork/16 --protocol -1 --port -1 --region $Region 
-  
-  if [ ! -e $KEY_PAIR ] ; then
-        aws ec2 create-key-pair --region $Region --key-name $KEY_NAME --query 'KeyMaterial' --output text > $KEY_PAIR
+  SgId=`aws ec2 describe-security-groups --region $Region --group-names $SgName --query 'SecurityGroups[].GroupId' --output text`
+  if [ "$SgId" = "" ] ; then
+  	MyIp=`ifconfig eth0 | grep 'inet addr' | awk -F '[: ]' '{print $13}'`
+  	MyNetwork=`echo $MyIp | perl -ne ' if (/([\d]+\.[\d]+\.)/){ print $1}'`
+  	MyNetwork="${MyNetwork}0.0"
+  	SgId=`aws ec2 create-security-group --group-name $SgName --description "$SgName"  --vpc-id $VpcId --region $Region --query 'GroupId' --output text`
+  	aws ec2 authorize-security-group-ingress --group-id $SgId --cidr $MyNetwork/16 --protocol -1 --port -1 --region $Region > /dev/null
   fi
+
+  echo $SgId
+  
+  #if [ ! -e $KEY_PAIR ] ; then
+  #      aws ec2 create-key-pair --region $Region --key-name $KEY_NAME --query 'KeyMaterial' --output text > $KEY_PAIR
+  #fi
 
 }
 
 requestspotinstances(){
+#$Roles
+#RoleName,InstanceType,Instance-count,Price,amiid,device:size:snap-id,device:size:snap-id.....
+  for Role in "${Roles[@]}"
+  do
+        SgId=`createsecuritygroup ${Role}`
+        DeviceJson=\"BlockDeviceMappings\":[
+        #NodedeviceJson=\"BlockDeviceMappings\":[{\"DeviceName\":\"$ORACLE_HOME_DEVICE\",\"Ebs\":{\"VolumeSize\":$ORACLE_HOME_SIZE,\"SnapshotId\":\"$RACSnapshotId\",\"DeleteOnTermination\":true,\"VolumeType\":\"standard\"}},{\"DeviceName\":\"$SWAP_DEVICE\",\"VirtualName\":\"ephemeral0\"}]
+        devicelist=$6
+        FIRST_IFS=$IFS
+        local IFS=','
+        for device in $devicelist
+        do
+                SECOND_IFS=$IFS
+                local IFS=':'
+
+                for arg in $device
+                do
+                        if [ ! -z `echo $arg | grep "ephemeral"` ]; then
+                                DeviceJson=
+                        else
+                        	
+                        fi
+                done
+                local IFS=$SECOND_IFS
+        done
+        local IFS=$FIRST_IFS
+
+        
+        
+        
+  done
+	
+	
+	
   ServerAmiId=$PackageAmiId
   SERVER_Instance_type=$1
   Server_Count=$2
   NodeAmiId=$PackageAmiId
   NODE_Instance_Type=$3
   Node_Count=$4
-  prestartinstances
+  
   #JSON={\"IPs\":{\"S\":\"$NODELIST\"}}
   NodedeviceJson=\"BlockDeviceMappings\":[{\"DeviceName\":\"$ORACLE_HOME_DEVICE\",\"Ebs\":{\"VolumeSize\":$ORACLE_HOME_SIZE,\"SnapshotId\":\"$RACSnapshotId\",\"DeleteOnTermination\":true,\"VolumeType\":\"standard\"}},{\"DeviceName\":\"$SWAP_DEVICE\",\"VirtualName\":\"ephemeral0\"}]
   ServerdeviceJson=\"BlockDeviceMappings\":[{\"DeviceName\":\"$STORAGE_DEVICE\",\"VirtualName\":\"ephemeral0\"}]
@@ -965,9 +999,9 @@ setupnodeforclone()
 cleangridhome()
 {
   OLD_IFS=$IFS
-  IFS='/'
+  local IFS='/'
   set -- $GRID_ORACLE_HOME
-  IFS=$OLD_IFS
+  local IFS=$OLD_IFS
   for i in "$@"
   do
     if [ "$i" != "" ] ; then
