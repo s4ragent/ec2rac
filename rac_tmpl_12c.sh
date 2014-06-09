@@ -409,7 +409,7 @@ createdevicejson()
 {
 	#NodedeviceJson=\"BlockDeviceMappings\":[{\"DeviceName\":\"$ORACLE_HOME_DEVICE\",\"Ebs\":{\"VolumeSize\":$ORACLE_HOME_SIZE,\"SnapshotId\":\"$RACSnapshotId\",\"DeleteOnTermination\":true,\"VolumeType\":\"standard\"}},{\"DeviceName\":\"$SWAP_DEVICE\",\"VirtualName\":\"ephemeral0\"}]
   devicelist=$6
-  if [ $devicelist != "" ]; then
+  if [ "$devicelist" != "" ]; then
         #$6=device:size:snap-id,device:size:snap-id
         DeviceJson="["
         FIRST_IFS=$IFS
