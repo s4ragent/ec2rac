@@ -420,6 +420,7 @@ createdevicejson()
             SECOND_IFS=$IFS
             local IFS=':'
             local args=($device)
+            echo ${#args[@]}
                 
             if [ $CNT != 1 ]; then
             	DeviceJson="$DeviceJson,"
