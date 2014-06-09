@@ -382,6 +382,7 @@ requestspotinstances(){
   SubnetId=`echo $VpcSubnet | awk -F " " '{print $2}'`
 #$Roles
 #RoleName,InstanceType,Instance-count,Price,amiid,device:size:snap-id,device:size:snap-id.....
+#ex storage m3.medium 1 0.05 $PackageAmiId $STORAGE_DEVICE
   for Role in "${Roles[@]}"
   do
         SgId=`createsecuritygroup ${Role}`
@@ -393,7 +394,7 @@ requestspotinstances(){
         	Json={\"ImageId\":\"${PARAMS[4]}\",\"KeyName\":\"${KEY_NAME}\",\"InstanceType\":\"${PARAMS[1]}\",\"SubnetId\":\"${SubnetId}\",\"SecurityGroupIds\":[\"${SgId}\"]}
         fi
         
-        aws ec2 request-spot-instances --spot-price ${PARAMS[3]} --region $Region --launch-group $LAUNCHGROUP --launch-specification $Json --instance-count ${PARAMS[4]} 
+        aws ec2 request-spot-instances --spot-price ${PARAMS[3]} --region $Region --launch-group $LAUNCHGROUP --launch-specification $Json --instance-count ${PARAMS[2]} 
   done
 	
 	
