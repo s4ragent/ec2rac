@@ -1376,5 +1376,6 @@ case "$1" in
   "catrootsh" ) catrootsh $2;;
   "updatescript" ) updatescript;;
   "checktinc" ) checktinc $2;;
+  "createdevicejson" ) createdevicejson $2;;
   * ) echo "Ex \"sh -x $0 setupallforclone c1.xlarge 1 m3.medium 10 2400 0\" 2400 means memorytarget, 0 means wait 0 seconds when grid root.sh" ;;
 esac
