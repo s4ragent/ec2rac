@@ -377,31 +377,9 @@ requestspotinstances(){
   for Role in "${Roles[@]}"
   do
         SgId=`createsecuritygroup ${Role}`
-        DeviceJson=\"BlockDeviceMappings\":[
-        #NodedeviceJson=\"BlockDeviceMappings\":[{\"DeviceName\":\"$ORACLE_HOME_DEVICE\",\"Ebs\":{\"VolumeSize\":$ORACLE_HOME_SIZE,\"SnapshotId\":\"$RACSnapshotId\",\"DeleteOnTermination\":true,\"VolumeType\":\"standard\"}},{\"DeviceName\":\"$SWAP_DEVICE\",\"VirtualName\":\"ephemeral0\"}]
-        devicelist=$6
-        FIRST_IFS=$IFS
-        local IFS=','
-        for device in $devicelist
-        do
-                SECOND_IFS=$IFS
-                local IFS=':'
-
-                for arg in $device
-                do
-                        if [ ! -z `echo $arg | grep "ephemeral"` ]; then
-                                DeviceJson=
-                        else
-                        	
-                        fi
-                done
-                local IFS=$SECOND_IFS
-        done
-        local IFS=$FIRST_IFS
-
         
         
-        
+        DeviceJson=`createdevicejson ${Role}`
   done
 	
 	
@@ -422,6 +400,34 @@ requestspotinstances(){
   aws ec2 request-spot-instances --spot-price $NodePrice --region $Region --launch-group $LAUNCHGROUP --launch-specification $NodeJson --instance-count $Node_Count
   aws ec2 request-spot-instances --spot-price $ServerPrice --region $Region --launch-group $LAUNCHGROUP --launch-specification $ServerJson --instance-count $Server_Count
 
+}
+
+cratedevicejson()
+{
+	#NodedeviceJson=\"BlockDeviceMappings\":[{\"DeviceName\":\"$ORACLE_HOME_DEVICE\",\"Ebs\":{\"VolumeSize\":$ORACLE_HOME_SIZE,\"SnapshotId\":\"$RACSnapshotId\",\"DeleteOnTermination\":true,\"VolumeType\":\"standard\"}},{\"DeviceName\":\"$SWAP_DEVICE\",\"VirtualName\":\"ephemeral0\"}]
+        devicelist=$6
+        #$6=device:size:snap-id,device:size:snap-id
+        DeviceJson="["
+        FIRST_IFS=$IFS
+        local IFS=','
+        local cnt=1
+        for device in $devicelist
+        do
+                SECOND_IFS=$IFS
+                local IFS=':'
+                local args=($device)
+
+                if [ ! -z `echo $arg | grep "ephemeral"` ]; then
+                                #ephemeral"
+                                DeviceJson=$DeviceJson{\"DeviceName\":\"$args[0]\",\"VirtualName\":\"$args[1]\"}
+                else
+                        	
+                fi
+
+                local IFS=$SECOND_IFS
+                cnt=`expr $cnt +1`
+        done
+        local IFS=$FIRST_IFS
 }
 
 
