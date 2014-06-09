@@ -488,7 +488,8 @@ terminate()
   VpcSubnet=`aws ec2 describe-instances --region $Region --instance-id $InstanceId --query 'Reservations[].Instances[].[VpcId,SubnetId]' --output text`
   VpcId=`echo $VpcSubnet | awk -F " " '{print $1}'`
   SubnetId=`echo $VpcSubnet | awk -F " " '{print $2}'`
-  #setupnodelist
+  
+  #setupnodelist 
   #aws ec2 terminate-instances --region $Region --instance-ids $NODEids $SERVERids
   SpotInstanceRequestIds=`aws ec2 describe-spot-instance-requests --region $Region --filters "Name=launch-group,Values=$LAUNCHGROUP" --query 'SpotInstanceRequests[].SpotInstanceRequestId' --output text`
   SpotInstanceRequestIds=`echo $SpotInstanceRequestIds`
