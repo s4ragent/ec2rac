@@ -2,21 +2,18 @@
 export LANG=C
 
 LAUNCHGROUP="RACCLONE"
-SWAP_DEVICE="/dev/xvdb"
-STORAGE_DEVICE="/dev/xvdb"
-ORACLE_HOME_DEVICE="/dev/xvdc"
-PackageAmiId="ami-974234a7"
 RACSnapshotId="snap-99a6676b"
-ORACLE_HOME_SIZE=15
-#STORAGE_SIZE=30
-STORAGE_SIZE="ephemeral0"
-SWAP_SIZE="ephemeral0"
+PackageAmiId="ami-974234a7"
+SWAP_DEVICE="/dev/xvdb:ephemeral0"
+STORAGE_DEVICE="/dev/xvdb:ephemeral0"
+ORACLE_HOME_DEVICE="/dev/xvdc:15:$RACSnapshotId"
+
 #SWAP_SIZE=8
 #RoleName,InstanceType,Instance-count,Price,amiid,device:size:snap-id,device:size:snap-id.....
 Roles=(
 "tinc m3.large 1 0.1 $PackageAmiId"
-"storage m3.large 1 0.1 $PackageAmiId $STORAGE_DEVICE:$STORAGE_SIZE"
-"node m3.medium 2 0.05 $PackageAmiId $SWAP_DEVICE:$SWAP_SIZE:,$ORACLE_HOME_DEVICE:$ORACLE_HOME_SIZE:$RACSnapshotId"
+"storage m3.large 1 0.1 $PackageAmiId $STORAGE_DEVICE"
+"node m3.medium 2 0.05 $PackageAmiId $SWAP_DEVICE,$ORACLE_HOME_DEVICE"
 )
 
 
