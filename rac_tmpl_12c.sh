@@ -420,20 +420,19 @@ createdevicejson()
             SECOND_IFS=$IFS
             local IFS=':'
             local args=($device)
-            echo ${#args[@]}
                 
             if [ $CNT != 1 ]; then
             	DeviceJson="$DeviceJson,"
             fi
 
-            if [ ! -z `echo $arg | grep "ephemeral"` ]; then
+            if [ ! -z `echo ${args[1]} | grep "ephemeral"` ]; then
                #ephemeral"
-               DeviceJson=$DeviceJson{\"DeviceName\":\"$args[0]\",\"VirtualName\":\"$args[1]\"}
+               DeviceJson=$DeviceJson{\"DeviceName\":\"${args[0]}\",\"VirtualName\":\"${args[1]}\"}
             else
             	if [ $args[2] != "" ]; then
-               		DeviceJson=$DeviceJson{\"DeviceName\":\"$args[0]\",\"Ebs\":{\"VolumeSize\":$args[1],\"SnapshotId\":\"$args[2]\",\"DeleteOnTermination\":true,\"VolumeType\":\"standard\"}}        	
+               		DeviceJson=$DeviceJson{\"DeviceName\":\"${args[0]}\",\"Ebs\":{\"VolumeSize\":${args[1]},\"SnapshotId\":\"${args[2]}\",\"DeleteOnTermination\":true,\"VolumeType\":\"standard\"}}        	
             	else
-            		DeviceJson=$DeviceJson{\"DeviceName\":\"$args[0]\",\"Ebs\":{\"VolumeSize\":$args[1],\"DeleteOnTermination\":true,\"VolumeType\":\"standard\"}}
+            		DeviceJson=$DeviceJson{\"DeviceName\":\"${args[0]}\",\"Ebs\":{\"VolumeSize\":${args[1]},\"DeleteOnTermination\":true,\"VolumeType\":\"standard\"}}
             	fi
             fi
 
