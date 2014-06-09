@@ -1380,7 +1380,7 @@ case "$1" in
   "startinstances" ) startinstances $2 $3;;
   "requestspotinstances" ) requestspotinstances $2 $3 $4 $5;;
   "stopinstances" ) stopinstances ;;
-  "terminate" ) terminateinstances ;;
+  "terminate" ) terminate ;;
   "setupnodeforclone" ) setupnodeforclone $2;;
   "setupallforclone" ) setupallforclone $2 $3 $4 $5 $6 $7;;
   "setupnode" ) setupnode $2;;
