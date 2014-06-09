@@ -11,8 +11,8 @@ ORACLE_HOME_DEVICE="/dev/xvdc:15:$RACSnapshotId"
 #SWAP_SIZE=8
 #RoleName,InstanceType,Instance-count,Price,amiid,device:size:snap-id,device:size:snap-id.....
 Roles=(
-"tinc m3.large 1 0.1 $PackageAmiId"
-"storage m3.large 1 0.1 $PackageAmiId $STORAGE_DEVICE"
+"tinc m3.medium 1 0.05 $PackageAmiId"
+"storage m3.medium 1 0.05 $PackageAmiId $STORAGE_DEVICE"
 "node m3.medium 2 0.05 $PackageAmiId $SWAP_DEVICE,$ORACLE_HOME_DEVICE"
 )
 
@@ -374,15 +374,26 @@ createsecuritygroup(){
 
 
 requestspotinstances(){
+  InstanceId=`curl -s http://169.254.169.254/latest/meta-data/instance-id`
+  Az=`curl -s http://169.254.169.254/latest/meta-data/placement/availability-zone`
+  Region=`echo $Az | perl -lne 'print substr($_,0,-1)'`
+  VpcSubnet=`aws ec2 describe-instances --region $Region --instance-id $InstanceId --query 'Reservations[].Instances[].[VpcId,SubnetId]' --output text`
+  VpcId=`echo $VpcSubnet | awk -F " " '{print $1}'`
+  SubnetId=`echo $VpcSubnet | awk -F " " '{print $2}'`
 #$Roles
 #RoleName,InstanceType,Instance-count,Price,amiid,device:size:snap-id,device:size:snap-id.....
   for Role in "${Roles[@]}"
   do
-        #SgId=`createsecuritygroup ${Role}`
-        
-        
+        SgId=`createsecuritygroup ${Role}`
         DeviceJson=`createdevicejson ${Role}`
-        echo $DeviceJson
+        $PARAMS=($Role)
+        if [ "$DeviceJson" != "" ]; then
+        	Json={\"ImageId\":\"${PARAMS[4]}\",\"KeyName\":\"${KEY_NAME}\",\"InstanceType\":\"${PARAMS[1]}\",$DeviceJson,\"SubnetId\":\"${SubnetId}\",\"SecurityGroupIds\":[\"${SgId}\"]}
+        else
+        	Json={\"ImageId\":\"${PARAMS[4]}\",\"KeyName\":\"${KEY_NAME}\",\"InstanceType\":\"${PARAMS[1]}\",\"SubnetId\":\"${SubnetId}\",\"SecurityGroupIds\":[\"${SgId}\"]}
+        fi
+        
+        aws ec2 request-spot-instances --spot-price ${PARAMS[3]} --region $Region --launch-group $LAUNCHGROUP --launch-specification $Json --instance-count ${PARAMS[4]} 
   done
 	
 	
