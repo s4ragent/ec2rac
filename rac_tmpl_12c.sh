@@ -371,38 +371,6 @@ createsecuritygroup(){
 
 }
 
-requestspotinstances(){
-#$Roles
-#RoleName,InstanceType,Instance-count,Price,amiid,device:size:snap-id,device:size:snap-id.....
-  for Role in "${Roles[@]}"
-  do
-        #SgId=`createsecuritygroup ${Role}`
-        
-        
-        DeviceJson=`createdevicejson ${Role}`
-        echo $DeviceJson
-  done
-	
-	
-	
-  #ServerAmiId=$PackageAmiId
-  #SERVER_Instance_type=$1
-  #Server_Count=$2
-  #NodeAmiId=$PackageAmiId
-  #NODE_Instance_Type=$3
-  #Node_Count=$4
-  
-  #JSON={\"IPs\":{\"S\":\"$NODELIST\"}}
-  #NodedeviceJson=\"BlockDeviceMappings\":[{\"DeviceName\":\"$ORACLE_HOME_DEVICE\",\"Ebs\":{\"VolumeSize\":$ORACLE_HOME_SIZE,\"SnapshotId\":\"$RACSnapshotId\",\"DeleteOnTermination\":true,\"VolumeType\":\"standard\"}},{\"DeviceName\":\"$SWAP_DEVICE\",\"VirtualName\":\"ephemeral0\"}]
-  #ServerdeviceJson=\"BlockDeviceMappings\":[{\"DeviceName\":\"$STORAGE_DEVICE\",\"VirtualName\":\"ephemeral0\"}]
-  #NodeJson={\"ImageId\":\"${NodeAmiId}\",\"KeyName\":\"${KEY_NAME}\",\"InstanceType\":\"${NODE_Instance_Type}\",$NodedeviceJson,\"SubnetId\":\"${SubnetId}\",\"SecurityGroupIds\":[\"$SgNodeId\"]}
-  #ServerJson={\"ImageId\":\"${ServerAmiId}\",\"KeyName\":\"${KEY_NAME}\",\"InstanceType\":\"${SERVER_Instance_type}\",$ServerdeviceJson,\"SubnetId\":\"${SubnetId}\",\"SecurityGroupIds\":[\"$SgServerId\"]}
-
-  #aws ec2 request-spot-instances --spot-price $NodePrice --region $Region --launch-group $LAUNCHGROUP --launch-specification $NodeJson --instance-count $Node_Count
-  #aws ec2 request-spot-instances --spot-price $ServerPrice --region $Region --launch-group $LAUNCHGROUP --launch-specification $ServerJson --instance-count $Server_Count
-
-}
-
 cratedevicejson()
 {
 	#NodedeviceJson=\"BlockDeviceMappings\":[{\"DeviceName\":\"$ORACLE_HOME_DEVICE\",\"Ebs\":{\"VolumeSize\":$ORACLE_HOME_SIZE,\"SnapshotId\":\"$RACSnapshotId\",\"DeleteOnTermination\":true,\"VolumeType\":\"standard\"}},{\"DeviceName\":\"$SWAP_DEVICE\",\"VirtualName\":\"ephemeral0\"}]
@@ -440,6 +408,38 @@ cratedevicejson()
         local IFS=$FIRST_IFS
         DeviceJson="$DeviceJson]"
         echo $DeviceJson
+}
+
+requestspotinstances(){
+#$Roles
+#RoleName,InstanceType,Instance-count,Price,amiid,device:size:snap-id,device:size:snap-id.....
+  for Role in "${Roles[@]}"
+  do
+        #SgId=`createsecuritygroup ${Role}`
+        
+        
+        DeviceJson=`createdevicejson ${Role}`
+        echo $DeviceJson
+  done
+	
+	
+	
+  #ServerAmiId=$PackageAmiId
+  #SERVER_Instance_type=$1
+  #Server_Count=$2
+  #NodeAmiId=$PackageAmiId
+  #NODE_Instance_Type=$3
+  #Node_Count=$4
+  
+  #JSON={\"IPs\":{\"S\":\"$NODELIST\"}}
+  #NodedeviceJson=\"BlockDeviceMappings\":[{\"DeviceName\":\"$ORACLE_HOME_DEVICE\",\"Ebs\":{\"VolumeSize\":$ORACLE_HOME_SIZE,\"SnapshotId\":\"$RACSnapshotId\",\"DeleteOnTermination\":true,\"VolumeType\":\"standard\"}},{\"DeviceName\":\"$SWAP_DEVICE\",\"VirtualName\":\"ephemeral0\"}]
+  #ServerdeviceJson=\"BlockDeviceMappings\":[{\"DeviceName\":\"$STORAGE_DEVICE\",\"VirtualName\":\"ephemeral0\"}]
+  #NodeJson={\"ImageId\":\"${NodeAmiId}\",\"KeyName\":\"${KEY_NAME}\",\"InstanceType\":\"${NODE_Instance_Type}\",$NodedeviceJson,\"SubnetId\":\"${SubnetId}\",\"SecurityGroupIds\":[\"$SgNodeId\"]}
+  #ServerJson={\"ImageId\":\"${ServerAmiId}\",\"KeyName\":\"${KEY_NAME}\",\"InstanceType\":\"${SERVER_Instance_type}\",$ServerdeviceJson,\"SubnetId\":\"${SubnetId}\",\"SecurityGroupIds\":[\"$SgServerId\"]}
+
+  #aws ec2 request-spot-instances --spot-price $NodePrice --region $Region --launch-group $LAUNCHGROUP --launch-specification $NodeJson --instance-count $Node_Count
+  #aws ec2 request-spot-instances --spot-price $ServerPrice --region $Region --launch-group $LAUNCHGROUP --launch-specification $ServerJson --instance-count $Server_Count
+
 }
 
 
