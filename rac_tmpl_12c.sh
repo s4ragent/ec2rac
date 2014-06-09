@@ -480,10 +480,10 @@ stopinstances()
   aws ec2 stop-instances --region $Region --instance-ids $NODEids $SERVERids 
 }
 
-terminateinstances()
+terminate()
 {
-  setupnodelist
-  aws ec2 terminate-instances --region $Region --instance-ids $NODEids $SERVERids
+  #setupnodelist
+  #aws ec2 terminate-instances --region $Region --instance-ids $NODEids $SERVERids
   SpotInstanceRequestIds=`aws ec2 describe-spot-instance-requests --region $Region --filters "Name=launch-group,Values=$LAUNCHGROUP" --query 'SpotInstanceRequests[].SpotInstanceRequestId' --output text`
   SpotInstanceRequestIds=`echo $SpotInstanceRequestIds`
   aws ec2 cancel-spot-instance-requests --region $Region --spot-instance-request-ids $SpotInstanceRequestIds
@@ -1380,7 +1380,7 @@ case "$1" in
   "startinstances" ) startinstances $2 $3;;
   "requestspotinstances" ) requestspotinstances $2 $3 $4 $5;;
   "stopinstances" ) stopinstances ;;
-  "terminateinstances" ) terminateinstances ;;
+  "terminate" ) terminateinstances ;;
   "setupnodeforclone" ) setupnodeforclone $2;;
   "setupallforclone" ) setupallforclone $2 $3 $4 $5 $6 $7;;
   "setupnode" ) setupnode $2;;
