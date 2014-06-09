@@ -376,29 +376,30 @@ requestspotinstances(){
 #RoleName,InstanceType,Instance-count,Price,amiid,device:size:snap-id,device:size:snap-id.....
   for Role in "${Roles[@]}"
   do
-        SgId=`createsecuritygroup ${Role}`
+        #SgId=`createsecuritygroup ${Role}`
         
         
         DeviceJson=`createdevicejson ${Role}`
+        echo $DeviceJson
   done
 	
 	
 	
-  ServerAmiId=$PackageAmiId
-  SERVER_Instance_type=$1
-  Server_Count=$2
-  NodeAmiId=$PackageAmiId
-  NODE_Instance_Type=$3
-  Node_Count=$4
+  #ServerAmiId=$PackageAmiId
+  #SERVER_Instance_type=$1
+  #Server_Count=$2
+  #NodeAmiId=$PackageAmiId
+  #NODE_Instance_Type=$3
+  #Node_Count=$4
   
   #JSON={\"IPs\":{\"S\":\"$NODELIST\"}}
-  NodedeviceJson=\"BlockDeviceMappings\":[{\"DeviceName\":\"$ORACLE_HOME_DEVICE\",\"Ebs\":{\"VolumeSize\":$ORACLE_HOME_SIZE,\"SnapshotId\":\"$RACSnapshotId\",\"DeleteOnTermination\":true,\"VolumeType\":\"standard\"}},{\"DeviceName\":\"$SWAP_DEVICE\",\"VirtualName\":\"ephemeral0\"}]
-  ServerdeviceJson=\"BlockDeviceMappings\":[{\"DeviceName\":\"$STORAGE_DEVICE\",\"VirtualName\":\"ephemeral0\"}]
-  NodeJson={\"ImageId\":\"${NodeAmiId}\",\"KeyName\":\"${KEY_NAME}\",\"InstanceType\":\"${NODE_Instance_Type}\",$NodedeviceJson,\"SubnetId\":\"${SubnetId}\",\"SecurityGroupIds\":[\"$SgNodeId\"]}
-  ServerJson={\"ImageId\":\"${ServerAmiId}\",\"KeyName\":\"${KEY_NAME}\",\"InstanceType\":\"${SERVER_Instance_type}\",$ServerdeviceJson,\"SubnetId\":\"${SubnetId}\",\"SecurityGroupIds\":[\"$SgServerId\"]}
+  #NodedeviceJson=\"BlockDeviceMappings\":[{\"DeviceName\":\"$ORACLE_HOME_DEVICE\",\"Ebs\":{\"VolumeSize\":$ORACLE_HOME_SIZE,\"SnapshotId\":\"$RACSnapshotId\",\"DeleteOnTermination\":true,\"VolumeType\":\"standard\"}},{\"DeviceName\":\"$SWAP_DEVICE\",\"VirtualName\":\"ephemeral0\"}]
+  #ServerdeviceJson=\"BlockDeviceMappings\":[{\"DeviceName\":\"$STORAGE_DEVICE\",\"VirtualName\":\"ephemeral0\"}]
+  #NodeJson={\"ImageId\":\"${NodeAmiId}\",\"KeyName\":\"${KEY_NAME}\",\"InstanceType\":\"${NODE_Instance_Type}\",$NodedeviceJson,\"SubnetId\":\"${SubnetId}\",\"SecurityGroupIds\":[\"$SgNodeId\"]}
+  #ServerJson={\"ImageId\":\"${ServerAmiId}\",\"KeyName\":\"${KEY_NAME}\",\"InstanceType\":\"${SERVER_Instance_type}\",$ServerdeviceJson,\"SubnetId\":\"${SubnetId}\",\"SecurityGroupIds\":[\"$SgServerId\"]}
 
-  aws ec2 request-spot-instances --spot-price $NodePrice --region $Region --launch-group $LAUNCHGROUP --launch-specification $NodeJson --instance-count $Node_Count
-  aws ec2 request-spot-instances --spot-price $ServerPrice --region $Region --launch-group $LAUNCHGROUP --launch-specification $ServerJson --instance-count $Server_Count
+  #aws ec2 request-spot-instances --spot-price $NodePrice --region $Region --launch-group $LAUNCHGROUP --launch-specification $NodeJson --instance-count $Node_Count
+  #aws ec2 request-spot-instances --spot-price $ServerPrice --region $Region --launch-group $LAUNCHGROUP --launch-specification $ServerJson --instance-count $Server_Count
 
 }
 
@@ -410,24 +411,35 @@ cratedevicejson()
         DeviceJson="["
         FIRST_IFS=$IFS
         local IFS=','
-        local cnt=1
+        local CNT=1
+        
         for device in $devicelist
         do
-                SECOND_IFS=$IFS
-                local IFS=':'
-                local args=($device)
+            SECOND_IFS=$IFS
+            local IFS=':'
+            local args=($device)
+                
+            if [ $CNT != 1 ]; then
+            	DeviceJson="$DeviceJson,"
+            fi
 
-                if [ ! -z `echo $arg | grep "ephemeral"` ]; then
-                                #ephemeral"
-                                DeviceJson=$DeviceJson{\"DeviceName\":\"$args[0]\",\"VirtualName\":\"$args[1]\"}
-                else
-                        	
-                fi
+            if [ ! -z `echo $arg | grep "ephemeral"` ]; then
+               #ephemeral"
+               DeviceJson=$DeviceJson{\"DeviceName\":\"$args[0]\",\"VirtualName\":\"$args[1]\"}
+            else
+            	if [ $args[2] != "" ]; then
+               		DeviceJson=$DeviceJson{\"DeviceName\":\"$args[0]\",\"Ebs\":{\"VolumeSize\":$args[1],\"SnapshotId\":\"$args[2]\",\"DeleteOnTermination\":true,\"VolumeType\":\"standard\"}}        	
+            	else
+            		DeviceJson=$DeviceJson{\"DeviceName\":\"$args[0]\",\"Ebs\":{\"VolumeSize\":$args[1],\"DeleteOnTermination\":true,\"VolumeType\":\"standard\"}}
+            	fi
+            fi
 
-                local IFS=$SECOND_IFS
-                cnt=`expr $cnt +1`
+            local IFS=$SECOND_IFS
+            CNT=`expr $CNT + 1`
         done
         local IFS=$FIRST_IFS
+        DeviceJson="$DeviceJson]"
+        echo $DeviceJson
 }
 
 
