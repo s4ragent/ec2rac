@@ -386,7 +386,7 @@ requestspotinstances(){
   do
         SgId=`createsecuritygroup ${Role}`
         DeviceJson=`createdevicejson ${Role}`
-        $PARAMS=($Role)
+        PARAMS=($Role)
         if [ "$DeviceJson" != "" ]; then
         	Json={\"ImageId\":\"${PARAMS[4]}\",\"KeyName\":\"${KEY_NAME}\",\"InstanceType\":\"${PARAMS[1]}\",$DeviceJson,\"SubnetId\":\"${SubnetId}\",\"SecurityGroupIds\":[\"${SgId}\"]}
         else
