@@ -250,14 +250,22 @@ getnodename ()
   echo "node"`printf "%.3d" $1`
 }
 
-setupnodelist()
+getnodelist()
 {
   Region=`curl http://169.254.169.254/latest/meta-data/placement/availability-zone -s | perl -pe chop`
   #NODELIST=`aws ec2 describe-instances --region $Region --query 'Reservations[].Instances[?contains(KeyName,\`node\`)==\`true\`].[NetworkInterfaces[].PrivateIpAddress]' --output text`
   #NODELIST=`aws ec2 describe-instances --region $Region --query "Reservations[].Instances[][?contains(NetworkInterfaces[].Groups[].GroupName,\\\`$SgNodeName\\\`)==\\\`true\\\`].[NetworkInterfaces[].PrivateIpAddress]" --output text`
+  SgName=`getsgname ${1} ${VpcId}`
+  SgId=`getsgid $SgName $Region`
+  
   SgNodeId=`aws ec2 describe-security-groups --region $Region --filter "Name=group-name,Values=$SgNodeName" --query 'SecurityGroups[].GroupId' --output text`
   NODEOBJ=`aws ec2 describe-instances --region $Region --filter "Name=instance.group-id,Values=$SgNodeId" --query 'Reservations[].Instances[].[InstanceId,[NetworkInterfaces[].PrivateIpAddress]]' --output text`
   NODEOBJ=`echo $NODEOBJ`
+
+}
+
+getnodeips()
+{
   NODELIST=""
   NODEids=""
   CNT=0
@@ -274,26 +282,6 @@ setupnodelist()
       fi
       CNT=`expr $CNT + 1`
   done
-  
-  
-  #SERVER=`aws ec2 describe-instances --region $Region --query "Reservations[].Instances[][?contains(NetworkInterfaces[].Groups[].GroupName,\\\`$SgServerName\\\`)==\\\`true\\\`].[NetworkInterfaces[].PrivateIpAddress]" --output text`
-  SgServerId=`aws ec2 describe-security-groups --region $Region --filter "Name=group-name,Values=$SgServerName" --query 'SecurityGroups[].GroupId' --output text`
-  SERVEROBJ=`aws ec2 describe-instances --region $Region --filter "Name=instance.group-id,Values=$SgServerId" --query 'Reservations[].Instances[].[InstanceId,[NetworkInterfaces[].PrivateIpAddress]]' --output text`
-  SERVEROBJ=`echo $SERVEROBJ`
-  SERVER=""
-  SERVERids=""
-  CNT=0
-  for i in $SERVEROBJ ;
-  do
-      if [ `expr $CNT % 2` == 0 ]; then
-        SERVERids="$i"
-      else
-        SERVER="$i"
-      fi
-      CNT=`expr $CNT + 1`
-  done
-  NODE=($NODELIST)
-  NODEid=($NODEids)
 }
 
 clone()
@@ -344,6 +332,18 @@ listami()
   aws ec2 describe-images --region $Region --owner self --query 'Images[].[Name,ImageId]' --output text
 }
 
+getsgname()
+{
+	SgName="${1}-${LAUNCHGROUP}-${2}"
+	echo $SgName
+}
+
+getsgid()
+{
+	SgId=`aws ec2 describe-security-groups --region $2 --group-names $1 --query 'SecurityGroups[].GroupId' --output text`
+	echo $SgId
+}
+
 createsecuritygroup(){
   InstanceId=`curl -s http://169.254.169.254/latest/meta-data/instance-id`
   Az=`curl -s http://169.254.169.254/latest/meta-data/placement/availability-zone`
@@ -352,9 +352,8 @@ createsecuritygroup(){
   VpcId=`echo $VpcSubnet | awk -F " " '{print $1}'`
   SubnetId=`echo $VpcSubnet | awk -F " " '{print $2}'`
   
-  SgName="${1}-${LAUNCHGROUP}-${VpcId}"
-  
-  SgId=`aws ec2 describe-security-groups --region $Region --group-names $SgName --query 'SecurityGroups[].GroupId' --output text`
+  SgName=`getsgname ${1} ${VpcId}`
+  SgId=`getsgid $SgName $Region`
   if [ "$SgId" = "" ] ; then
   	MyIp=`ifconfig eth0 | grep 'inet addr' | awk -F '[: ]' '{print $13}'`
   	MyNetwork=`echo $MyIp | perl -ne ' if (/([\d]+\.[\d]+\.)/){ print $1}'`
