@@ -85,6 +85,44 @@ ORACLE_PASSWORD="P@ssw0rd"
 SCSI_TARGET_NAME="iqn.2014-05.org.jpoug:server.crs"
 PDSH_SSH_ARGS_APPEND="-i $KEY_PAIR -tt -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null"
 
+mac=`curl http://169.254.169.254/latest/meta-data/network/interfaces/macs/ -s`
+VpcId=`curl http://169.254.169.254/latest/meta-data/network/interfaces/macs/$mac/vpc-id -s`
+SubnetId=`curl http://169.254.169.254/latest/meta-data/network/interfaces/macs/$mac/subnet-id -s`
+Region=`curl http://169.254.169.254/latest/meta-data/placement/availability-zone -s | perl -pe chop`
+
+## $1 network number, $2 real/vip/priv $3 nodenumber ###
+## Ex.   network 172,16.0.0 , 172.17.0.0 >>>##
+## getip 0 vip 2 >>> 172.16.2.2 ###
+getip ()
+{
+  SEGMENT=`echo ${NETWORKS[$1]} | perl -ne ' if (/([\d]+\.[\d]+\.)/){ print $1}'`
+  if [ $2 == "real" ] ; then
+    echo "${SEGMENT}1.${3}"
+  elif [ $2 == "vip" ] ; then
+    echo "${SEGMENT}2.${3}"
+  elif [ $2 == "scan" ] ; then
+    echo "${SEGMENT}0.30 ${SCAN_NAME}.${NETWORK_NAME[0]} ${SCAN_NAME}"
+    echo "${SEGMENT}0.31 ${SCAN_NAME}.${NETWORK_NAME[0]} ${SCAN_NAME}"
+    echo "${SEGMENT}0.32 ${SCAN_NAME}.${NETWORK_NAME[0]} ${SCAN_NAME}"
+  fi
+}
+
+getnodename ()
+{
+  echo "node"`printf "%.3d" $1`
+}
+
+getsgname()
+{
+	SgName="${1}-${LAUNCHGROUP}-${VpcId}"
+	echo $SgName
+}
+
+getsgid()
+{
+	SgId=`aws ec2 describe-security-groups --region $Region --group-names $1 --query 'SecurityGroups[].GroupId' --output text`
+	echo $SgId
+}
 
 createclonepl()
 {
@@ -228,35 +266,15 @@ EOF
 }
 
 
-## $1 network number, $2 real/vip/priv $3 nodenumber ###
-## Ex.   network 172,16.0.0 , 172.17.0.0 >>>##
-## getip 0 vip 2 >>> 172.16.2.2 ###
-getip ()
-{
-  SEGMENT=`echo ${NETWORKS[$1]} | perl -ne ' if (/([\d]+\.[\d]+\.)/){ print $1}'`
-  if [ $2 == "real" ] ; then
-    echo "${SEGMENT}1.${3}"
-  elif [ $2 == "vip" ] ; then
-    echo "${SEGMENT}2.${3}"
-  elif [ $2 == "scan" ] ; then
-    echo "${SEGMENT}0.30 ${SCAN_NAME}.${NETWORK_NAME[0]} ${SCAN_NAME}"
-    echo "${SEGMENT}0.31 ${SCAN_NAME}.${NETWORK_NAME[0]} ${SCAN_NAME}"
-    echo "${SEGMENT}0.32 ${SCAN_NAME}.${NETWORK_NAME[0]} ${SCAN_NAME}"
-  fi
-}
 
-getnodename ()
-{
-  echo "node"`printf "%.3d" $1`
-}
 
 getnodelist()
 {
-  Region=`curl http://169.254.169.254/latest/meta-data/placement/availability-zone -s | perl -pe chop`
+  
   #NODELIST=`aws ec2 describe-instances --region $Region --query 'Reservations[].Instances[?contains(KeyName,\`node\`)==\`true\`].[NetworkInterfaces[].PrivateIpAddress]' --output text`
   #NODELIST=`aws ec2 describe-instances --region $Region --query "Reservations[].Instances[][?contains(NetworkInterfaces[].Groups[].GroupName,\\\`$SgNodeName\\\`)==\\\`true\\\`].[NetworkInterfaces[].PrivateIpAddress]" --output text`
-  SgName=`getsgname ${1} ${VpcId}`
-  SgId=`getsgid $SgName $Region`
+  SgName=`getsgname ${1}`
+  SgId=`getsgid $SgName`
   
   SgNodeId=`aws ec2 describe-security-groups --region $Region --filter "Name=group-name,Values=$SgNodeName" --query 'SecurityGroups[].GroupId' --output text`
   NODEOBJ=`aws ec2 describe-instances --region $Region --filter "Name=instance.group-id,Values=$SgNodeId" --query 'Reservations[].Instances[].[InstanceId,[NetworkInterfaces[].PrivateIpAddress]]' --output text`
@@ -332,17 +350,7 @@ listami()
   aws ec2 describe-images --region $Region --owner self --query 'Images[].[Name,ImageId]' --output text
 }
 
-getsgname()
-{
-	SgName="${1}-${LAUNCHGROUP}-${2}"
-	echo $SgName
-}
 
-getsgid()
-{
-	SgId=`aws ec2 describe-security-groups --region $2 --group-names $1 --query 'SecurityGroups[].GroupId' --output text`
-	echo $SgId
-}
 
 createsecuritygroup(){
   InstanceId=`curl -s http://169.254.169.254/latest/meta-data/instance-id`
@@ -582,16 +590,6 @@ setupdns ()
   fi        
 
 
-}
-
-sshkeyscan()
-{
-  setupnodelist
-  SERVER_AND_NODE="$SERVER $NODELIST"
-  for i in $SERVER_AND_NODE ;
-  do
-        ssh -i $KEY_PAIR -o "StrictHostKeyChecking no" $i 'hostname'
-  done
 }
 
 
@@ -1365,7 +1363,6 @@ case "$1" in
   "getfile" ) getfile $2 $3;;
   "watch" ) watch;;
   "cleangridhome" ) cleangridhome;;
-  "sshkeyscan" ) sshkeyscan;;
   "createclonebase" ) createclonebase;;
   "createsnapshot" ) createsnapshot $2 $3;;
   "listinstances" ) listinstances;;
