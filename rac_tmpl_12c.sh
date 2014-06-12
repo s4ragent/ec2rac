@@ -274,8 +274,8 @@ setnodelist()
   mkdir -p $WORK_DIR
   rm -rf $WORK_DIR/*.id
   rm -rf $WORK_DIR/*.ip
-  echo "" >$WORK_DIR/all.id
-  echo "" >$WORK_DIR/all.ip
+  cat /dev/null >$WORK_DIR/all.id
+  cat /dev/null >$WORK_DIR/all.ip
   for Role in "${Roles[@]}"
   do
         PARAMS=($Role)
@@ -287,8 +287,8 @@ setnodelist()
 	NODEOBJ=`echo $NODEOBJ`
 	
 	  
-  	echo "" >$WORK_DIR/${PARAMS[0]}.id
-  	echo "" >$WORK_DIR/${PARAMS[0]}.ip
+  	cat /dev/null >$WORK_DIR/${PARAMS[0]}.id
+  	cat /dev/null >$WORK_DIR/${PARAMS[0]}.ip
 	CNT=0
 	for i in $NODEOBJ ;
 	do
