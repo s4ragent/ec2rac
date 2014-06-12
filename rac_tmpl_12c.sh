@@ -307,7 +307,7 @@ setnodelist()
 
 getnodelist()
 {
-	echo `cat ${1}.${2}`
+	echo `cat $WORK_DIR/${1}.${2}`
 }
 
 clone()
