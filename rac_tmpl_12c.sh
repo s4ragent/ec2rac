@@ -473,6 +473,7 @@ stopinstances()
 
 terminate()
 {
+  setnodelist
   instanceIds=`getnodelist all id`
   aws ec2 stop-instances --region $Region --instance-ids $instanceIds
   SpotInstanceRequestIds=`aws ec2 describe-spot-instance-requests --region $Region --filters "Name=launch-group,Values=$LAUNCHGROUP" --query 'SpotInstanceRequests[].SpotInstanceRequestId' --output text`
