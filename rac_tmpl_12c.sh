@@ -1359,7 +1359,7 @@ case "$1" in
   "changelocale" ) changelocale ;;
   "createoraclehome" ) createoraclehome ;;
   "setupdns" ) setupdns $2;;
-  "getnodelist" ) getnodelist $2 $3;;
+  "setnodelist" ) setnodelist;;
   "createtincconf" ) createtincconf $2;;
   "clone" ) clone $2;;
   "startinstances" ) startinstances $2 $3;;
