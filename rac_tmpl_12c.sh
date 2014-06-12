@@ -304,14 +304,6 @@ setnodelist()
   done
 }
 
-getnodelist()
-{
-	if [ "$1" = "all" ]; then
-		
-	else
-		
-	fi
-}
 
 clone()
 {
