@@ -272,9 +272,10 @@ EOF
 setnodelist()
 {
   mkdir -p $WORK_DIR
-  rm -rf $WORK_DIR/*
-  echo "" >>$WORK_DIR/all.Id
-  echo "" >>$WORK_DIR/all.Ip
+  rm -rf $WORK_DIR/*.id
+  rm -rf $WORK_DIR/*.ip
+  echo "" >$WORK_DIR/all.id
+  echo "" >$WORK_DIR/all.ip
   for Role in "${Roles[@]}"
   do
         PARAMS=($Role)
@@ -286,8 +287,8 @@ setnodelist()
 	NODEOBJ=`echo $NODEOBJ`
 	
 	  
-	NODEips=""
-	NODEids=""
+  	echo "" >$WORK_DIR/${PARAMS[0]}.id
+  	echo "" >$WORK_DIR/${PARAMS[0]}.ip
 	CNT=0
 	for i in $NODEOBJ ;
 	do
@@ -304,6 +305,10 @@ setnodelist()
   done
 }
 
+getnodelist()
+{
+	echo `cat ${$1}.${2}
+}
 
 clone()
 {
@@ -1350,6 +1355,7 @@ case "$1" in
   "createoraclehome" ) createoraclehome ;;
   "setupdns" ) setupdns $2;;
   "setnodelist" ) setnodelist;;
+  "getnodelist" ) getnodelist $2 $3;;
   "createtincconf" ) createtincconf $2;;
   "clone" ) clone $2;;
   "startinstances" ) startinstances $2 $3;;
