@@ -7,6 +7,7 @@ PackageAmiId="ami-974234a7"
 SWAP_DEVICE="/dev/xvdb:ephemeral0"
 STORAGE_DEVICE="/dev/xvdb:ephemeral0"
 ORACLE_HOME_DEVICE="/dev/xvdc:15:$RACSnapshotId"
+WORK_DIR="`pwd`/work"
 
 #SWAP_SIZE=8
 #RoleName,InstanceType,Instance-count,Price,amiid,device:size:snap-id,device:size:snap-id.....
@@ -268,43 +269,49 @@ EOF
 
 
 
-getnodelist()
+setnodelist()
 {
-  
-  SgName=`getsgname ${1}`
-  SgId=`getsgid $SgName`
-  
-  NODEOBJ=`aws ec2 describe-instances --region $Region --filter "Name=instance.group-id,Values=$SgId" --query 'Reservations[].Instances[].[InstanceId,[NetworkInterfaces[].PrivateIpAddress]]' --output text`
-  NODEOBJ=`echo $NODEOBJ`
-  NODEips=""
-  NODEids=""
-  CNT=0
-  for i in $NODEOBJ ;
+  mkdir -p $WORK_DIR
+  rm -rf $WORK_DIR/*
+  echo "" >>$WORK_DIR/all.IDs
+  echo "" >>$WORK_DIR/all.IPs
+  for Role in "${Roles[@]}"
   do
-      if [ $CNT == 0 ]; then
-        NODEids="$i"      
-      elif [ $CNT == 1 ]; then
-        NODEips="$i"
-      elif [ `expr $CNT % 2` == 0 ]; then
-        NODEids="$NODEids $i"
-      else
-        NODEips="$NODEips $i"
-      fi
-      CNT=`expr $CNT + 1`
+        PARAMS=($Role)
+        
+	SgName=`getsgname ${PARAMS[0]}`
+	SgId=`getsgid $SgName`
+	  
+	NODEOBJ=`aws ec2 describe-instances --region $Region --filter "Name=instance.group-id,Values=$SgId" --query 'Reservations[].Instances[].[InstanceId,[NetworkInterfaces[].PrivateIpAddress]]' --output text`
+	NODEOBJ=`echo $NODEOBJ`
+	
+	  
+	NODEips=""
+	NODEids=""
+	CNT=0
+	for i in $NODEOBJ ;
+	do
+		if [ $CNT == 0 ]; then
+	        	NODEids="$i"      
+	      	elif [ $CNT == 1 ]; then
+	        	NODEips="$i"
+	      	elif [ `expr $CNT % 2` == 0 ]; then
+	        	NODEids="$NODEids $i"
+	      	else
+	        	NODEips="$NODEips $i"
+	      	fi
+	      	CNT=`expr $CNT + 1`
+	done
+	
+	echo $NODEids >$WORK_DIR/${PARAMS[0]}.IDs
+	echo $NODEips >$WORK_DIR/${PARAMS[0]}.IPs
+	echo $NODEids >>$WORK_DIR/all.IDs
+	echo $NODEips >>$WORK_DIR/all.IPs
   done
-  
-  if [ "$2" = "ip" ] ; then
-  	echo "$NODEips"
-  elif [ "$2" = "id" ] ; then
-  	echo "$NODEids"
-  else
-  	echo "$NODEOBJ"
-  fi
 }
 
 clone()
 {
-  Region=`curl http://169.254.169.254/latest/meta-data/placement/availability-zone -s | perl -pe chop`
   #deviceJson=[{\"DeviceName\":\"/dev/sda1\",\"Ebs\":{\"VolumeSize\":25,\"DeleteOnTermination\":true,\"VolumeType\":\"standard\"}},{\"DeviceName\":\"/dev/sdb\",\"VirtualName\":\"ephemeral0\"}]
   #InstanceId=`curl -s http://169.254.169.254/latest/meta-data/instance-id`
   InstanceId=$1
@@ -325,7 +332,6 @@ createsnapshot()
 {
   InstanceId=$1
   DeviceName=$2
-  Region=`curl http://169.254.169.254/latest/meta-data/placement/availability-zone -s | perl -pe chop`
   #VolumeId=`aws ec2 describe-volumes --region $Region --query "Volumes[].Attachments[][?Device==\\\`$DeviceName\\\`][?InstanceId==\\\`$InstanceId\\\`].VolumeId" --output text`
   VolumeId=`aws ec2 describe-volumes --region $Region --filters "Name=attachment.instance-id,Values=$InstanceId" "Name=attachment.device,Values=$DeviceName" --query "Volumes[].Attachments[].VolumeId" --output text`
   SnapshotId=`aws ec2 create-snapshot --region $Region --volume-id $VolumeId --query 'SnapshotId' --output text`
@@ -340,26 +346,17 @@ createsnapshot()
 
 listinstances()
 {
-  Region=`curl http://169.254.169.254/latest/meta-data/placement/availability-zone -s | perl -pe chop`
   aws ec2 describe-instances --region $Region --query 'Reservations[].Instances[].[InstanceId,NetworkInterfaces[]."PrivateIpAddress"]' --output text
 }
 
 listami()
 {
-  Region=`curl http://169.254.169.254/latest/meta-data/placement/availability-zone -s | perl -pe chop`
   aws ec2 describe-images --region $Region --owner self --query 'Images[].[Name,ImageId]' --output text
 }
 
 
 
 createsecuritygroup(){
-  InstanceId=`curl -s http://169.254.169.254/latest/meta-data/instance-id`
-  Az=`curl -s http://169.254.169.254/latest/meta-data/placement/availability-zone`
-  Region=`echo $Az | perl -lne 'print substr($_,0,-1)'`
-  VpcSubnet=`aws ec2 describe-instances --region $Region --instance-id $InstanceId --query 'Reservations[].Instances[].[VpcId,SubnetId]' --output text`
-  VpcId=`echo $VpcSubnet | awk -F " " '{print $1}'`
-  SubnetId=`echo $VpcSubnet | awk -F " " '{print $2}'`
-  
   SgName=`getsgname ${1} ${VpcId}`
   SgId=`getsgid $SgName $Region`
   if [ "$SgId" = "" ] ; then
@@ -371,25 +368,12 @@ createsecuritygroup(){
   fi
 
   echo $SgId
-  
-  #if [ ! -e $KEY_PAIR ] ; then
-  #      aws ec2 create-key-pair --region $Region --key-name $KEY_NAME --query 'KeyMaterial' --output text > $KEY_PAIR
-  #fi
 
 }
 
 
 
 requestspotinstances(){
-  InstanceId=`curl -s http://169.254.169.254/latest/meta-data/instance-id`
-  Az=`curl -s http://169.254.169.254/latest/meta-data/placement/availability-zone`
-  Region=`echo $Az | perl -lne 'print substr($_,0,-1)'`
-  VpcSubnet=`aws ec2 describe-instances --region $Region --instance-id $InstanceId --query 'Reservations[].Instances[].[VpcId,SubnetId]' --output text`
-  VpcId=`echo $VpcSubnet | awk -F " " '{print $1}'`
-  SubnetId=`echo $VpcSubnet | awk -F " " '{print $2}'`
-#$Roles
-#RoleName,InstanceType,Instance-count,Price,amiid,device:size:snap-id,device:size:snap-id.....
-#ex storage m3.medium 1 0.05 $PackageAmiId $STORAGE_DEVICE
   for Role in "${Roles[@]}"
   do
         SgId=`createsecuritygroup ${Role}`
@@ -489,15 +473,13 @@ stopinstances()
 
 terminate()
 {
-  InstanceId=`curl -s http://169.254.169.254/latest/meta-data/instance-id`
-  Az=`curl -s http://169.254.169.254/latest/meta-data/placement/availability-zone`
-  Region=`echo $Az | perl -lne 'print substr($_,0,-1)'`
-  VpcSubnet=`aws ec2 describe-instances --region $Region --instance-id $InstanceId --query 'Reservations[].Instances[].[VpcId,SubnetId]' --output text`
-  VpcId=`echo $VpcSubnet | awk -F " " '{print $1}'`
-  SubnetId=`echo $VpcSubnet | awk -F " " '{print $2}'`
+  instanceIds=""
+  for Role in "${Roles[@]}"
+  do
+	local args=($device)
+  	instanceIds="$instanceIds `getnodelist ${args[0]} id`"
+  done
   
-  #setupnodelist 
-  #aws ec2 terminate-instances --region $Region --instance-ids $NODEids $SERVERids
   SpotInstanceRequestIds=`aws ec2 describe-spot-instance-requests --region $Region --filters "Name=launch-group,Values=$LAUNCHGROUP" --query 'SpotInstanceRequests[].SpotInstanceRequestId' --output text`
   SpotInstanceRequestIds=`echo $SpotInstanceRequestIds`
   aws ec2 cancel-spot-instance-requests --region $Region --spot-instance-request-ids $SpotInstanceRequestIds
