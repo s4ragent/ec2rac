@@ -271,20 +271,12 @@ EOF
 getnodelist()
 {
   
-  #NODELIST=`aws ec2 describe-instances --region $Region --query 'Reservations[].Instances[?contains(KeyName,\`node\`)==\`true\`].[NetworkInterfaces[].PrivateIpAddress]' --output text`
-  #NODELIST=`aws ec2 describe-instances --region $Region --query "Reservations[].Instances[][?contains(NetworkInterfaces[].Groups[].GroupName,\\\`$SgNodeName\\\`)==\\\`true\\\`].[NetworkInterfaces[].PrivateIpAddress]" --output text`
   SgName=`getsgname ${1}`
   SgId=`getsgid $SgName`
   
-  SgNodeId=`aws ec2 describe-security-groups --region $Region --filter "Name=group-name,Values=$SgNodeName" --query 'SecurityGroups[].GroupId' --output text`
-  NODEOBJ=`aws ec2 describe-instances --region $Region --filter "Name=instance.group-id,Values=$SgNodeId" --query 'Reservations[].Instances[].[InstanceId,[NetworkInterfaces[].PrivateIpAddress]]' --output text`
+  NODEOBJ=`aws ec2 describe-instances --region $Region --filter "Name=instance.group-id,Values=$SgId" --query 'Reservations[].Instances[].[InstanceId,[NetworkInterfaces[].PrivateIpAddress]]' --output text`
   NODEOBJ=`echo $NODEOBJ`
-
-}
-
-getnodeips()
-{
-  NODELIST=""
+  NODEips=""
   NODEids=""
   CNT=0
   for i in $NODEOBJ ;
@@ -292,14 +284,22 @@ getnodeips()
       if [ $CNT == 0 ]; then
         NODEids="$i"      
       elif [ $CNT == 1 ]; then
-        NODELIST="$i"
+        NODEips="$i"
       elif [ `expr $CNT % 2` == 0 ]; then
         NODEids="$NODEids $i"
       else
-        NODELIST="$NODELIST $i"
+        NODEips="$NODEips $i"
       fi
       CNT=`expr $CNT + 1`
   done
+  
+  if [ "$2" = "ip" ] ; then
+  	echo "$NODEips"
+  elif [ "$2" = "id" ] ; then
+  	echo "$NODEids"
+  else
+  	echo "$NODEOBJ"
+  fi
 }
 
 clone()
@@ -1377,7 +1377,7 @@ case "$1" in
   "changelocale" ) changelocale ;;
   "createoraclehome" ) createoraclehome ;;
   "setupdns" ) setupdns $2;;
-  "setupnodelist" ) setupnodelist ;;
+  "getnodelist" ) getnodelist ;;
   "createtincconf" ) createtincconf $2;;
   "clone" ) clone $2;;
   "startinstances" ) startinstances $2 $3;;
