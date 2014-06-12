@@ -273,8 +273,8 @@ setnodelist()
 {
   mkdir -p $WORK_DIR
   rm -rf $WORK_DIR/*
-  echo "" >>$WORK_DIR/all.IDs
-  echo "" >>$WORK_DIR/all.IPs
+  echo "" >>$WORK_DIR/all.Id
+  echo "" >>$WORK_DIR/all.Ip
   for Role in "${Roles[@]}"
   do
         PARAMS=($Role)
@@ -291,23 +291,26 @@ setnodelist()
 	CNT=0
 	for i in $NODEOBJ ;
 	do
-		if [ $CNT == 0 ]; then
-	        	NODEids="$i"      
-	      	elif [ $CNT == 1 ]; then
-	        	NODEips="$i"
-	      	elif [ `expr $CNT % 2` == 0 ]; then
-	        	NODEids="$NODEids $i"
+	      	if [ `expr $CNT % 2` == 0 ]; then
+	      		echo $i >> $WORK_DIR/${PARAMS[0]}.id
+	      		echo $i >> $WORK_DIR/all.id
 	      	else
-	        	NODEips="$NODEips $i"
+	        	echo $i >> $WORK_DIR/${PARAMS[0]}.ip
+	        	echo $i >> $WORK_DIR/all.ip
 	      	fi
 	      	CNT=`expr $CNT + 1`
 	done
-	
-	echo $NODEids >$WORK_DIR/${PARAMS[0]}.IDs
-	echo $NODEips >$WORK_DIR/${PARAMS[0]}.IPs
-	echo $NODEids >>$WORK_DIR/all.IDs
-	echo $NODEips >>$WORK_DIR/all.IPs
+
   done
+}
+
+getnodelist()
+{
+	if [ "$1" = "all" ]; then
+		
+	else
+		
+	fi
 }
 
 clone()
@@ -473,13 +476,8 @@ stopinstances()
 
 terminate()
 {
-  instanceIds=""
-  for Role in "${Roles[@]}"
-  do
-	local args=($device)
-  	instanceIds="$instanceIds `getnodelist ${args[0]} id`"
-  done
-  
+  instanceIds=`getnodelist all id`
+  aws ec2 stop-instances --region $Region --instance-ids $instanceIds
   SpotInstanceRequestIds=`aws ec2 describe-spot-instance-requests --region $Region --filters "Name=launch-group,Values=$LAUNCHGROUP" --query 'SpotInstanceRequests[].SpotInstanceRequestId' --output text`
   SpotInstanceRequestIds=`echo $SpotInstanceRequestIds`
   aws ec2 cancel-spot-instance-requests --region $Region --spot-instance-request-ids $SpotInstanceRequestIds
