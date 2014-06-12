@@ -307,7 +307,7 @@ setnodelist()
 
 getnodelist()
 {
-	echo `cat ${$1}.${2}
+	echo `cat ${$1}.${2}`
 }
 
 clone()
