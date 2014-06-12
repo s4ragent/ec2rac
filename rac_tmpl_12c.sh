@@ -388,24 +388,6 @@ requestspotinstances(){
         aws ec2 request-spot-instances --spot-price ${PARAMS[3]} --region $Region --launch-group $LAUNCHGROUP --launch-specification $Json --instance-count ${PARAMS[2]} 
   done
 	
-	
-	
-  #ServerAmiId=$PackageAmiId
-  #SERVER_Instance_type=$1
-  #Server_Count=$2
-  #NodeAmiId=$PackageAmiId
-  #NODE_Instance_Type=$3
-  #Node_Count=$4
-  
-  #JSON={\"IPs\":{\"S\":\"$NODELIST\"}}
-  #NodedeviceJson=\"BlockDeviceMappings\":[{\"DeviceName\":\"$ORACLE_HOME_DEVICE\",\"Ebs\":{\"VolumeSize\":$ORACLE_HOME_SIZE,\"SnapshotId\":\"$RACSnapshotId\",\"DeleteOnTermination\":true,\"VolumeType\":\"standard\"}},{\"DeviceName\":\"$SWAP_DEVICE\",\"VirtualName\":\"ephemeral0\"}]
-  #ServerdeviceJson=\"BlockDeviceMappings\":[{\"DeviceName\":\"$STORAGE_DEVICE\",\"VirtualName\":\"ephemeral0\"}]
-  #NodeJson={\"ImageId\":\"${NodeAmiId}\",\"KeyName\":\"${KEY_NAME}\",\"InstanceType\":\"${NODE_Instance_Type}\",$NodedeviceJson,\"SubnetId\":\"${SubnetId}\",\"SecurityGroupIds\":[\"$SgNodeId\"]}
-  #ServerJson={\"ImageId\":\"${ServerAmiId}\",\"KeyName\":\"${KEY_NAME}\",\"InstanceType\":\"${SERVER_Instance_type}\",$ServerdeviceJson,\"SubnetId\":\"${SubnetId}\",\"SecurityGroupIds\":[\"$SgServerId\"]}
-
-  #aws ec2 request-spot-instances --spot-price $NodePrice --region $Region --launch-group $LAUNCHGROUP --launch-specification $NodeJson --instance-count $Node_Count
-  #aws ec2 request-spot-instances --spot-price $ServerPrice --region $Region --launch-group $LAUNCHGROUP --launch-specification $ServerJson --instance-count $Server_Count
-
 }
 
 createdevicejson()
@@ -467,15 +449,16 @@ startinstances(){
 
 stopinstances()
 {
-  setupnodelist
-  aws ec2 stop-instances --region $Region --instance-ids $NODEids $SERVERids 
+  setnodelist
+  instanceIds=`getnodelist all id`
+  aws ec2 stop-instances --region $Region --instance-ids $instanceIds 
 }
 
 terminate()
 {
   setnodelist
   instanceIds=`getnodelist all id`
-  aws ec2 stop-instances --region $Region --instance-ids $instanceIds
+  aws ec2 terminate-instances --region $Region --instance-ids $instanceIds
   SpotInstanceRequestIds=`aws ec2 describe-spot-instance-requests --region $Region --filters "Name=launch-group,Values=$LAUNCHGROUP" --query 'SpotInstanceRequests[].SpotInstanceRequestId' --output text`
   SpotInstanceRequestIds=`echo $SpotInstanceRequestIds`
   aws ec2 cancel-spot-instance-requests --region $Region --spot-instance-request-ids $SpotInstanceRequestIds
