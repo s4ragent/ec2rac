@@ -110,7 +110,7 @@ getip ()
 
 getnodename ()
 {
-  echo "node"`printf "%.3d" $1`
+  echo "$1"`printf "%.3d" $2`
 }
 
 getsgname()
@@ -176,16 +176,14 @@ chown oracle.oinstall /home/oracle/start.sh
 }
 
 createswap(){
-  if [ "$1" != "0" ] ; then
-        umount -f $SWAP_DEVICE;mkswap -f $SWAP_DEVICE;swapon $SWAP_DEVICE
-        #echo "umount -f $SWAP_DEVICE;mkswap -f $SWAP_DEVICE;swapon $SWAP_DEVICE" >> /etc/rc.local
-        echo "$SWAP_DEVICE swap swap defaults 0 0 " >> /etc/fstab
-  fi
+    umount -f $SWAP_DEVICE;mkswap -f $SWAP_DEVICE;swapon $SWAP_DEVICE
+    echo "$SWAP_DEVICE swap swap defaults 0 0 " >> /etc/fstab
 }
 
-setupiscsi(){
-if [ $1 = 0 ]; then
-    umount -f $STORAGE_DEVICE
+#1　Storage_device
+createtgtd()
+{
+    umount -f $1
     sfdisk -uM ${STORAGE_DEVICE} <<EOF
 ,,83
 EOF
@@ -203,24 +201,25 @@ EOF
 sed -i 's/\(.*cloudconfig\)/#\1/' /etc/fstab
 /etc/init.d/tgtd start
 chkconfig tgtd on
-tgt-admin --show
+tgt-admin --show	
+}
 
-else
+#$1 targetip $2 target_name $nodenumber
+setupiscsi(){
         /etc/init.d/iscsi start
-        iscsiadm --mode discovery --type sendtargets -p ${SERVER}
-        iscsiadm --mode node --targetname ${SCSI_TARGET_NAME} --login
+        iscsiadm --mode discovery --type sendtargets -p ${1}
+        iscsiadm --mode node --targetname ${2} --login
         chkconfig iscsi on
         /etc/init.d/iscsi restart
         sleep 15
         echo 'KERNEL=="sd[a-d]*",ACTION=="add|change",OWNER="grid",GROUP="asmadmin",MODE="0660"' > /etc/udev/rules.d/99-oracle.rules
         #initialize asmdisk if nodenumber=1 ####        
-        if [ $1 = 1 ]; then     
+        if [ $3 = 1 ]; then     
                 sfdisk /dev/sda << EOF
 ,,83
 EOF
                 dd if=/dev/zero of=/dev/sda1 bs=1M count=100
         fi
-fi
 }
 
 
