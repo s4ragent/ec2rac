@@ -18,29 +18,14 @@ Roles=(
 )
 
 
-SERVER="192.168.0.100"
-NODELIST="192.168.0.101 192.168.0.102"
-NODE=($NODELIST)
-SERVERids=""
-NODEids=""
-NODEid=($NODEids)
+
 
 INSTALL_LANG=ja
 TMPL_NAME="RACTMPL"
 KEY_NAME="oregon"
 KEY_PAIR="${KEY_NAME}.pem"
 
-IamRole="root"
-NODE_Instance_Type="m3.medium"
-#NODE_Instance_Type="t1.micro"
-SERVER_Instance_type="c1.xlarge"
-#SERVER_Instance_type="t1.micro"
 
-NodePrice="0.05"
-ServerPrice="0.5"
-
-SgNodeName="node-${TMPL_NAME}"
-SgServerName="server-${TMPL_NAME}"
 
 
 RPMFORGE_URL="http://pkgs.repoforge.org/rpmforge-release/rpmforge-release-0.5.3-1.el6.rf.x86_64.rpm"
@@ -64,9 +49,6 @@ NCHAR="AL16UTF16"
 
 TEMPLATENAME="General_Purpose.dbc"
 DATABASETYPE="MULTIPURPOSE"
-
-
-STORAGE_FILE=/mnt/iscsi.img
 
 
 #ORACLE_BASE and ORACLE_HOME edit it if need this path must under /u01 ##
@@ -125,13 +107,59 @@ getsgid()
 	echo $SgId
 }
 
+setnodelist()
+{
+  mkdir -p $WORK_DIR
+  rm -rf $WORK_DIR/*.id
+  rm -rf $WORK_DIR/*.ip
+  cat /dev/null >$WORK_DIR/all.id
+  cat /dev/null >$WORK_DIR/all.ip
+  for Role in "${Roles[@]}"
+  do
+        PARAMS=($Role)
+        
+	SgName=`getsgname ${PARAMS[0]}`
+	SgId=`getsgid $SgName`
+	  
+	NODEOBJ=`aws ec2 describe-instances --region $Region --filter "Name=instance.group-id,Values=$SgId" --query 'Reservations[].Instances[].[InstanceId,[NetworkInterfaces[].PrivateIpAddress]]' --output text`
+	NODEOBJ=`echo $NODEOBJ`
+	
+	  
+  	cat /dev/null >$WORK_DIR/${PARAMS[0]}.id
+  	cat /dev/null >$WORK_DIR/${PARAMS[0]}.ip
+	CNT=0
+	for i in $NODEOBJ ;
+	do
+	      	if [ `expr $CNT % 2` == 0 ]; then
+	      		echo $i >> $WORK_DIR/${PARAMS[0]}.id
+	      		echo $i >> $WORK_DIR/all.id
+	      	else
+	        	echo $i >> $WORK_DIR/${PARAMS[0]}.ip
+	        	echo $i >> $WORK_DIR/all.ip
+	      	fi
+	      	CNT=`expr $CNT + 1`
+	done
+
+  done
+}
+
+#$1 nodetype(ex node/tinc/storage" $2 ip or id
+getnodelist()
+{
+	echo `cat $WORK_DIR/${1}.${2}`
+}
+
+
+
+#$1 nodetype(ex node/tinc/storage")
 createclonepl()
 {
+  $NODELIST=`getnodelist $1 ip`
   CLUSTER_NODES="{"
   NODECOUNT=1
   for i in $NODELIST ;
   do
-        HOSTNAME=`getnodename $NODECOUNT`
+        HOSTNAME=`getnodename $1 $NODECOUNT`
         if [ $NODECOUNT != 1 ] ; then
                 CLUSTER_NODES=${CLUSTER_NODES},
         fi
@@ -176,13 +204,45 @@ chown oracle.oinstall /home/oracle/start.sh
 }
 
 createswap(){
-    umount -f $SWAP_DEVICE;mkswap -f $SWAP_DEVICE;swapon $SWAP_DEVICE
-    echo "$SWAP_DEVICE swap swap defaults 0 0 " >> /etc/fstab
+	FIRST_IFS=$IFS
+        local IFS=','
+        for device in $SWAP_DEVICE
+        do
+            SECOND_IFS=$IFS
+            local IFS=':'
+            local args=($device)
+            
+            mount -f ${args[0]};mkswap -f ${args[0]};swapon ${args[0]}
+            echo "${args[0]} swap swap defaults 0 0 " >> /etc/fstab
+       
+            local IFS=$SECOND_IFS
+        done
+        local IFS=$FIRST_IFS
 }
 
 #1　Storage_device
 createtgtd()
 {
+	FIRST_IFS=$IFS
+        local IFS=','
+        local CNT=0
+        for device in ${STORAGE_DEVICE}
+        do
+            SECOND_IFS=$IFS
+            local IFS=':'
+            local args=($device)
+            mddevice="$mddevice ${args[0]}"
+       
+            local IFS=$SECOND_IFS
+            CNT=`expr $CNT + 1`
+        done
+        local IFS=$FIRST_IFS
+        mdadm --create /dev/md0 --level=0 -c256 --raid-devices=$CNT $mddevice
+
+
+
+
+
     umount -f $1
     sfdisk -uM ${STORAGE_DEVICE} <<EOF
 ,,83
@@ -268,46 +328,7 @@ EOF
 
 
 
-setnodelist()
-{
-  mkdir -p $WORK_DIR
-  rm -rf $WORK_DIR/*.id
-  rm -rf $WORK_DIR/*.ip
-  cat /dev/null >$WORK_DIR/all.id
-  cat /dev/null >$WORK_DIR/all.ip
-  for Role in "${Roles[@]}"
-  do
-        PARAMS=($Role)
-        
-	SgName=`getsgname ${PARAMS[0]}`
-	SgId=`getsgid $SgName`
-	  
-	NODEOBJ=`aws ec2 describe-instances --region $Region --filter "Name=instance.group-id,Values=$SgId" --query 'Reservations[].Instances[].[InstanceId,[NetworkInterfaces[].PrivateIpAddress]]' --output text`
-	NODEOBJ=`echo $NODEOBJ`
-	
-	  
-  	cat /dev/null >$WORK_DIR/${PARAMS[0]}.id
-  	cat /dev/null >$WORK_DIR/${PARAMS[0]}.ip
-	CNT=0
-	for i in $NODEOBJ ;
-	do
-	      	if [ `expr $CNT % 2` == 0 ]; then
-	      		echo $i >> $WORK_DIR/${PARAMS[0]}.id
-	      		echo $i >> $WORK_DIR/all.id
-	      	else
-	        	echo $i >> $WORK_DIR/${PARAMS[0]}.ip
-	        	echo $i >> $WORK_DIR/all.ip
-	      	fi
-	      	CNT=`expr $CNT + 1`
-	done
 
-  done
-}
-
-getnodelist()
-{
-	echo `cat $WORK_DIR/${1}.${2}`
-}
 
 clone()
 {
