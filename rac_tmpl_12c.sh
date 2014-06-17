@@ -72,6 +72,10 @@ mac=`curl http://169.254.169.254/latest/meta-data/network/interfaces/macs/ -s`
 VpcId=`curl http://169.254.169.254/latest/meta-data/network/interfaces/macs/$mac/vpc-id -s`
 SubnetId=`curl http://169.254.169.254/latest/meta-data/network/interfaces/macs/$mac/subnet-id -s`
 Region=`curl http://169.254.169.254/latest/meta-data/placement/availability-zone -s | perl -pe chop`
+MyInstanceId=`curl -s http://169.254.169.254/latest/meta-data/instance-id`
+MyIp=`ifconfig eth0 | grep 'inet addr' | awk -F '[: ]' '{print $13}'`
+MyNetwork=`echo $MyIp | perl -ne ' if (/([\d]+\.[\d]+\.)/){ print $1}'`
+MyNetwork="${MyNetwork}0.0"
 
 ## $1 network number, $2 real/vip/priv $3 nodenumber ###
 ## Ex.   network 172,16.0.0 , 172.17.0.0 >>>##
@@ -149,17 +153,30 @@ getnodelist()
 	echo `cat $WORK_DIR/${1}.${2}`
 }
 
+getmynumber()
+{
+	$LIST=`getnodelist $1 id`
+	CNT=1
+	for i in $LIST ;
+	do
+	      	if [ $i == $MyInstanceId ]; then
+	      		echo $CNT
+	      	fi
+	      	CNT=`expr $CNT + 1`
+	done
+	
+}
 
 
 #$1 nodetype(ex node/tinc/storage")
 createclonepl()
 {
-  $NODELIST=`getnodelist $1 ip`
+  $NODELIST=`getnodelist node ip`
   CLUSTER_NODES="{"
   NODECOUNT=1
   for i in $NODELIST ;
   do
-        HOSTNAME=`getnodename $1 $NODECOUNT`
+        HOSTNAME=`getnodename node $NODECOUNT`
         if [ $NODECOUNT != 1 ] ; then
                 CLUSTER_NODES=${CLUSTER_NODES},
         fi
@@ -203,16 +220,18 @@ chmod 755 /home/oracle/start.sh
 chown oracle.oinstall /home/oracle/start.sh
 }
 
+#$1 device
 createswap(){
 	FIRST_IFS=$IFS
         local IFS=','
-        for device in $SWAP_DEVICE
+        for device in ${SWAP_DEVICE}
         do
             SECOND_IFS=$IFS
             local IFS=':'
             local args=($device)
             
             mount -f ${args[0]};mkswap -f ${args[0]};swapon ${args[0]}
+            sed -i 's/\(.*cloudconfig\)/#\1/' /etc/fstab
             echo "${args[0]} swap swap defaults 0 0 " >> /etc/fstab
        
             local IFS=$SECOND_IFS
@@ -237,44 +256,48 @@ createtgtd()
             CNT=`expr $CNT + 1`
         done
         local IFS=$FIRST_IFS
-        mdadm --create /dev/md0 --level=0 -c256 --raid-devices=$CNT $mddevice
-
-
-
-
-
-    umount -f $1
-    sfdisk -uM ${STORAGE_DEVICE} <<EOF
+        if [ $CNT != 1 ] ; then
+                mdadm --create /dev/md0 --level=0 --raid-devices=$CNT $mddevice
+                mdadm --detail --scan >> /etc/mdadm/mdadm.conf
+                DEVICE=/dev/md0
+        else
+        	DEVICE=$mddevice
+        fi
+      
+    	umount -f ${DEVICE}
+    	sfdisk -uM ${DEVICE} <<EOF
 ,,83
 EOF
-    sleep 15
-    cat > /etc/tgt/targets.conf <<EOF
+    	sleep 15
+    	cat > /etc/tgt/targets.conf <<EOF
 <target ${SCSI_TARGET_NAME}>
 # List of files to export as LUNs
-        <backing-store ${STORAGE_DEVICE}1>
+        <backing-store ${DEVICE}1>
                 lun 1
         </backing-store>
 initiator-address ALL
 </target>
 EOF
 
-sed -i 's/\(.*cloudconfig\)/#\1/' /etc/fstab
-/etc/init.d/tgtd start
-chkconfig tgtd on
-tgt-admin --show	
+	sed -i 's/\(.*cloudconfig\)/#\1/' /etc/fstab
+	/etc/init.d/tgtd start
+	chkconfig tgtd on
+	tgt-admin --show	
 }
 
-#$1 targetip $2 target_name $nodenumber
+#$1 targetip $2 targetname $3 nodenumber
 setupiscsi(){
+	TARGETIP=`getnodelist storage ip`
+	MYNUMBER=`getmynumber node`
         /etc/init.d/iscsi start
-        iscsiadm --mode discovery --type sendtargets -p ${1}
-        iscsiadm --mode node --targetname ${2} --login
+        iscsiadm --mode discovery --type sendtargets -p ${TARGETIP}
+        iscsiadm --mode node --targetname ${SCSI_TARGET_NAME} --login
         chkconfig iscsi on
         /etc/init.d/iscsi restart
         sleep 15
         echo 'KERNEL=="sd[a-d]*",ACTION=="add|change",OWNER="grid",GROUP="asmadmin",MODE="0660"' > /etc/udev/rules.d/99-oracle.rules
         #initialize asmdisk if nodenumber=1 ####        
-        if [ $3 = 1 ]; then     
+        if [ $MYNUMBER = 1 ]; then     
                 sfdisk /dev/sda << EOF
 ,,83
 EOF
@@ -379,13 +402,13 @@ listami()
 createsecuritygroup(){
   SgName=`getsgname ${1} ${VpcId}`
   SgId=`getsgid $SgName $Region`
-  if [ "$SgId" = "" ] ; then
-  	MyIp=`ifconfig eth0 | grep 'inet addr' | awk -F '[: ]' '{print $13}'`
-  	MyNetwork=`echo $MyIp | perl -ne ' if (/([\d]+\.[\d]+\.)/){ print $1}'`
-  	MyNetwork="${MyNetwork}0.0"
-  	SgId=`aws ec2 create-security-group --group-name $SgName --description "$SgName"  --vpc-id $VpcId --region $Region --query 'GroupId' --output text`
-  	aws ec2 authorize-security-group-ingress --group-id $SgId --cidr $MyNetwork/16 --protocol -1 --port -1 --region $Region > /dev/null
+
+  if [ "$SgId" != "" ] ; then
+ 	aws ec2 delete-security-group --group-id $SgId --region $Region > /dev/null
   fi
+  SgId=`aws ec2 create-security-group --group-name $SgName --description "$SgName"  --vpc-id $VpcId --region $Region --query 'GroupId' --output text`
+  aws ec2 authorize-security-group-ingress --group-id $SgId --cidr $MyNetwork/16 --protocol -1 --port -1 --region $Region > /dev/null
+
 
   echo $SgId
 
@@ -469,7 +492,6 @@ startinstances(){
 
 stopinstances()
 {
-  setnodelist
   instanceIds=`getnodelist all id`
   aws ec2 stop-instances --region $Region --instance-ids $instanceIds 
 }
@@ -544,31 +566,29 @@ mv /etc/ntp.conf /etc/ntp.conf.original
 rm /var/run/ntpd.pid
 }
 
+setdhcp()
+{
+	SERVER=`getnodelist storage ip`
+	echo "supersede domain-name-servers ${SERVER};" >> /etc/dhcp/dhclient-eth0.conf
+}
+
 setupdns ()
 {
-        
-  if [ "$1" != "0" ] ; then
-        #echo "nameserver ${SERVER}" >/etc/resolv.conf
-        #echo "nameserver ${SERVER}" >/etc/resolv.tmpl
-        #sed -i "6i cp -f /etc/resolv.tmpl /etc/resolv.conf" /etc/rc.local
-        echo "supersede domain-name-servers ${SERVER};" >> /etc/dhcp/dhclient-eth0.conf
-  else
-    SERVER_AND_NODE="$SERVER $NODELIST"
-    SEGMENT=`echo ${NETWORKS[0]} | perl -ne ' if (/([\d]+\.[\d]+\.[\d]+\.)/){ print $1}'`
+
+    NODELIST=`getnodelist node ip`
     echo "### scan entry ###" >> /etc/hosts
     getip 0 scan >> /etc/hosts
     echo "### public,vip entry###" >> /etc/hosts
-    NODECOUNT=0
-    for i in $SERVER_AND_NODE ;
+    NODECOUNT=1
+    for i in $NODELIST ;
     do
-        echo "`getip 0 real $NODECOUNT` `getnodename $NODECOUNT`.${NETWORK_NAME[0]} `getnodename $NODECOUNT`" >> /etc/hosts
-        echo "`getip 0 vip $NODECOUNT` `getnodename $NODECOUNT`-vip.${NETWORK_NAME[0]} `getnodename $NODECOUNT`-vip" >> /etc/hosts
+        echo "`getip 0 real $NODECOUNT` `getnodename node $NODECOUNT`.${NETWORK_NAME[0]} `getnodename node $NODECOUNT`" >> /etc/hosts
+        echo "`getip 0 vip $NODECOUNT` `getnodename node $NODECOUNT`-vip.${NETWORK_NAME[0]} `getnodename node $NODECOUNT`-vip" >> /etc/hosts
         NODECOUNT=`expr $NODECOUNT + 1`
     done
     ###enable dnsmasq####
     chkconfig dnsmasq on
     /etc/init.d/dnsmasq start
-  fi        
 
 
 }
@@ -576,22 +596,22 @@ setupdns ()
 
 pretincconf()
 {
-  rm -rf ./dummy
-  mkdir -p ./dummy/hosts
-  cat > ./dummy/tinc.conf <<EOF
+  rm -rf $WORK_DIR/hosts
+  mkdir -p $WORK_DIR/hosts
+  cat > $WORK_DIR/tinc.conf <<EOF
 Name = dummy
 Interface = tap0
 Mode = switch
 BindToAddress * 655
-#ConnectTo = `getnodename 0`
+
 EOF
-  cat > ./dummy/hosts/dummy<<EOF
+  cat > $WORK_DIR/hosts/dummy<<EOF
 Address = 127.0.0.1 655
 Cipher = none
 Digest = none
 EOF
   expect -c "
-spawn tincd --config ./dummy -K
+spawn tincd --config $WORK_DIR -K
 expect \"Please enter a file to save private RSA key to\"
 sleep 3
 send \"\r\n\"
@@ -609,7 +629,7 @@ createtincconf()
   sleep 5
   rm -rf /etc/tinc
 PORT=655
-NODENAME=`getnodename $1`
+NODENAME=`getnodename $1 $2`
 for (( k = 0; k < ${#NETWORKS[@]}; ++k ))
 do
     NETNAME=${NETWORK_NAME[$k]}     
@@ -617,7 +637,7 @@ do
     echo $NETNAME >> /etc/tinc/nets.boot
     echo "tinc          ${PORT}/tcp             #TINC" >> /etc/services
     echo "tinc          ${PORT}/udp             #TINC" >> /etc/services
-    cp /root/dummy/tinc.conf /etc/tinc/$NETNAME/tinc.conf
+    cp $WORK_DIR/tinc.conf /etc/tinc/$NETNAME/tinc.conf
     sed -i "s/^Name =.*/Name = $NODENAME/" /etc/tinc/$NETNAME/tinc.conf
     sed -i "s/^Interface = .*/Interface = tap${k}/" /etc/tinc/$NETNAME/tinc.conf
     sed -i "s/^BindToAddress.*/BindToAddress \* $PORT/" /etc/tinc/$NETNAME/tinc.conf
@@ -625,28 +645,7 @@ do
     
     echo "MaxTimeout = 30" >> /etc/tinc/$NETNAME/tinc.conf
     
-    
-    HALF=`expr ${#NODE[@]} / 2`
-    QUARTER=`expr ${#NODE[@]} / 4`
-    EIGHTH=`expr ${#NODE[@]} / 8` 
-    
-    for i in 1 2 $EIGHTH $QUARTER $HALF
-    do
-      NUMBER=`expr $1 + $i`
-      if [ $NUMBER -ge ${#NODE[@]} ] ; then
-        NUMBER=`expr $NUMBER - ${#NODE[@]}`
-      fi
-      echo "ConnectTo = `getnodename $NUMBER`" >> /etc/tinc/$NETNAME/tinc.conf
-    done
-    
-    
-    #NODECOUNT=1
-    #for i in $NODELIST ;
-    #do
-    #  echo "ConnectTo = `getnodename $NODECOUNT`" >> /etc/tinc/$NETNAME/tinc.conf
-    #  NODECOUNT=`expr $NODECOUNT + 1`
-    #done
-    
+
     cp /root/dummy/rsa_key.priv /etc/tinc/$NETNAME/rsa_key.priv
     
     IP=`getip $k real $1`
@@ -700,9 +699,6 @@ checktinc(){
 creatersp()
 {
   if [ $1 = 1 ] ; then
-    MyIp=`ifconfig eth0 | grep 'inet addr' | awk -F '[: ]' '{print $13}'`
-    MyNetwork=`echo $MyIp | perl -ne ' if (/([\d]+\.[\d]+\.)/){ print $1}'`
-    MyNetwork="${MyNetwork}0.0"
 
     NODECOUNT=1
     for i in $NODELIST ;
