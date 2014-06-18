@@ -12,9 +12,9 @@ WORK_DIR="`pwd`/work"
 #SWAP_SIZE=8
 #RoleName,InstanceType,Instance-count,Price,amiid,device:size:snap-id,device:size:snap-id.....
 Roles=(
+"node m3.medium 2 0.05 $PackageAmiId $SWAP_DEVICE,$ORACLE_HOME_DEVICE"
 "tinc m3.medium 1 0.05 $PackageAmiId"
 "storage m3.medium 1 0.05 $PackageAmiId $STORAGE_DEVICE"
-"node m3.medium 2 0.05 $PackageAmiId $SWAP_DEVICE,$ORACLE_HOME_DEVICE"
 )
 
 
