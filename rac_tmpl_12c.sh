@@ -94,6 +94,7 @@ getip ()
   fi
 }
 
+#$1 RoleName $2 nodenumber
 getnodename ()
 {
   echo "$1"`printf "%.3d" $2`
@@ -155,7 +156,7 @@ getnodelist()
 
 getmynumber()
 {
-	$LIST=`getnodelist $1 id`
+	LIST=`getnodelist $1 id`
 	CNT=1
 	for i in $LIST ;
 	do
@@ -165,6 +166,23 @@ getmynumber()
 	      	CNT=`expr $CNT + 1`
 	done
 	
+}
+getmyrole()
+{
+	MyRole="unknown"
+	for Role in "${Roles[@]}"
+	do
+        	PARAMS=($Role)
+        	RoleName=${PARAMS[0]}
+        	LIST=`getnodelist RoleName id`
+		for i in $LIST ;
+  		do
+        		if [ "$i" == "$MyInstanceId" ] ; then
+                		MyRole=$RoleName
+        		fi
+  		done
+  	done
+  	echo $MyRole
 }
 
 
@@ -619,6 +637,39 @@ expect \"Please enter a file to save public RSA key to\"
 sleep 3
 send \"\r\n\"
 "
+}
+
+createtinchosts()
+{
+	PORT=655
+	for (( k = 0; k < ${#NETWORKS[@]}; ++k ))
+	do
+		NETNAME=${NETWORK_NAME[$k]}
+    		mkdir -p /etc/tinc/$NETNAME/hosts
+		
+		for Role in "${Roles[@]}"
+  		do
+        		PARAMS=($Role)
+        		RoleName=${PARAMS[0]}
+        		LIST=`getnodelist RoleName ip`
+        		NODECOUNT=1
+			for i in $LIST ;
+			do
+				NODENAME=`getnodename $RoleName $NODECOUNT`
+				cp $WORK_DIR/hosts/dummy /etc/tinc/$NETNAME/hosts/$NODENAME
+				sed -i "s/^Address = .*/Address = $i $PORT/" /etc/tinc/$NETNAME/hosts/$NODENAME
+				NODECOUNT=`expr $NODECOUNT + 1`
+			done
+    		done
+		PORT=`expr $PORT + 1`
+	done
+	
+}
+
+
+createtinchub()
+{
+	myRole=`getmyrole`
 }
 
 createtincconf()
