@@ -167,6 +167,7 @@ getmynumber()
 	done
 	
 }
+
 getmyrole()
 {
 	MyRole="unknown"
@@ -185,6 +186,12 @@ getmyrole()
   	echo $MyRole
 }
 
+getmyname()
+{
+	MyRole=`getmyrole`
+	MyNumber=`getmynumber $MyRole`
+	echo `getnodename $MyRole $MyNumber`
+}
 
 #$1 nodetype(ex node/tinc/storage")
 createclonepl()
@@ -639,14 +646,41 @@ send \"\r\n\"
 "
 }
 
-createtinchosts()
+
+createtincconf()
 {
-	PORT=655
+	myRole=`getmyrole`
+	myNumber=`getmynumber all`
+	rm -rf /var/run/tinc.*
+	/etc/init.d/tinc stop
+	sleep 5
+	rm -rf /etc/tinc
+	createtinchosts
+	NODENAME=`getmyname`
 	for (( k = 0; k < ${#NETWORKS[@]}; ++k ))
 	do
-		NETNAME=${NETWORK_NAME[$k]}
+    		NETNAME=${NETWORK_NAME[$k]}
+    		
+    		echo $NETNAME >> /etc/tinc/nets.boot
+    		echo "tinc          ${PORT}/tcp             #TINC" >> /etc/services
+    		echo "tinc          ${PORT}/udp             #TINC" >> /etc/services
+    		cp $WORK_DIR/tinc.conf /etc/tinc/$NETNAME/tinc.conf
+    		sed -i "s/^Name =.*/Name = $NODENAME/" /etc/tinc/$NETNAME/tinc.conf
+    		sed -i "s/^Interface = .*/Interface = tap${k}/" /etc/tinc/$NETNAME/tinc.conf
+    		sed -i "s/^BindToAddress.*/BindToAddress \* $PORT/" /etc/tinc/$NETNAME/tinc.conf
+		echo "MaxTimeout = 30" >> /etc/tinc/$NETNAME/tinc.conf
+    		cp $WORK_DIR/rsa_key.priv /etc/tinc/$NETNAME/rsa_key.priv
+    		
+    		
+    		IP=`getip $k real $myNumber`
+		echo '#!/bin/sh' > /etc/tinc/$NETNAME/tinc-up
+		echo "ifconfig \$INTERFACE ${IP} netmask $SUBNET_MASK" >> /etc/tinc/$NETNAME/tinc-up
+		chmod 755 /etc/tinc/$NETNAME/tinc-up
+		echo '#!/bin/sh' > /etc/tinc/$NETNAME/tinc-down
+		echo "ifconfig \$INTERFACE down" >> /etc/tinc/$NETNAME/tinc-down
+		chmod 755 /etc/tinc/$NETNAME/tinc-down
+
     		mkdir -p /etc/tinc/$NETNAME/hosts
-		
 		for Role in "${Roles[@]}"
   		do
         		PARAMS=($Role)
@@ -661,15 +695,32 @@ createtinchosts()
 				NODECOUNT=`expr $NODECOUNT + 1`
 			done
     		done
+		
 		PORT=`expr $PORT + 1`
 	done
-	
+	chkconfig tinc on
+	/etc/init.d/tinc start
+
+	count=`grep checktinc /etc/rc.d/rc.local | wc -l`
+	if [ $count = 0 ] ; then
+		echo "sh `pwd`/$0 checktinc $1" >> /etc/rc.d/rc.local
+	fi
+
 }
 
+checktinc(){
+  multi=1
+  for (( k = 0; k < ${#NETWORKS[@]}; ++k ))
+  do
+    tcount=`ifconfig | grep tap${k} | wc -l`
+    multi=`expr $tcount \* $multi`
+  done
 
-createtinchub()
-{
-	myRole=`getmyrole`
+  if [ $multi = 0 ] ; then
+    createtincconf $1
+  fi
+
+}	
 }
 
 createtincconf()
