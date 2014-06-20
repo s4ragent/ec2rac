@@ -479,9 +479,9 @@ createdevicejson()
                DeviceJson=$DeviceJson{\"DeviceName\":\"${args[0]}\",\"VirtualName\":\"${args[1]}\"}
             else
             	if [ "${args[2]}" != "" ]; then
-               		DeviceJson=$DeviceJson{\"DeviceName\":\"${args[0]}\",\"Ebs\":{\"VolumeSize\":${args[1]},\"SnapshotId\":\"${args[2]}\",\"DeleteOnTermination\":true,\"VolumeType\":\"standard\"}}        	
+               		DeviceJson=$DeviceJson{\"DeviceName\":\"${args[0]}\",\"Ebs\":{\"VolumeSize\":${args[1]},\"SnapshotId\":\"${args[2]}\",\"DeleteOnTermination\":true,\"VolumeType\":\"gp2\"}}        	
             	else
-            		DeviceJson=$DeviceJson{\"DeviceName\":\"${args[0]}\",\"Ebs\":{\"VolumeSize\":${args[1]},\"DeleteOnTermination\":true,\"VolumeType\":\"standard\"}}
+            		DeviceJson=$DeviceJson{\"DeviceName\":\"${args[0]}\",\"Ebs\":{\"VolumeSize\":${args[1]},\"DeleteOnTermination\":true,\"VolumeType\":\"gp2\"}}
             	fi
             fi
 
@@ -835,18 +835,6 @@ EOF
 
 }
 
-createclusterlist2()
-{
-NODECOUNT=1
-for i in $NODELIST ;
-do
-    NODENAME=`getnodename $NODECOUNT`
-    echo "${NODENAME} ${NODENAME}-vip" >> /tmp/clusterlist.ccf
-    NODECOUNT=`expr $NODECOUNT + 1`
-done
-chmod 777 /tmp/clusterlist.ccf
-}
-
 
 changehostname ()
 {
@@ -859,16 +847,6 @@ HOSTNAME=${HOSTNAME}.${NETWORK_NAME[0]}
 EOF
 }
 
-createsshkey ()
-{
-rm -rf ./id_rsa*
-ssh-keygen -t rsa -P "" -f ./id_rsa
-cat ./id_rsa.pub >>  .ssh/authorized_keys
-for i in `seq 0 200` ;
-do
-  echo "`getnodename $i`,`getip 0 real $i` `cat /etc/ssh/ssh_host_rsa_key.pub`" >> ./known_hosts
-done
-}
 
 createuser ()
 {
@@ -893,9 +871,13 @@ useradd -u 1001 -m -g oinstall -G asmadmin,asmdba,asmoper -d /home/grid -s /bin/
 for user in oracle grid
 do
         mkdir /home/$user/.ssh
-        cat ./id_rsa.pub >> /home/$user/.ssh/authorized_keys
-        cp ./id_rsa /home/$user/.ssh/
-        cp ./known_hosts /home/$user/.ssh
+        cat /root/.ssh/authorized_keys >> /home/$user/.ssh/authorized_keys
+        cp $WORK_DIR/$KEY_PAIR /home/$user/.ssh/id_rsa
+        cat >> /home/$user/.ssh/ <<'EOF'
+host *        
+StrictHostKeyChecking no
+UserKnownHostsFile=/dev/null
+EOF
         chown -R ${user}.oinstall /home/$user/.ssh
         chmod 700 /home/$user/.ssh
         chmod 600 /home/$user/.ssh/*
