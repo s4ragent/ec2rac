@@ -20,7 +20,7 @@ Roles=(
 INSTALL_LANG=ja
 TMPL_NAME="RACTMPL"
 KEY_NAME="oregon"
-KEY_PAIR="${KEY_NAME}.pem"
+KEY_PAIR="/root/work/${KEY_NAME}.pem"
 
 RPMFORGE_URL="http://pkgs.repoforge.org/rpmforge-release/rpmforge-release-0.5.3-1.el6.rf.x86_64.rpm"
 EPEL_URL="http://dl.fedoraproject.org/pub/epel/6/x86_64/epel-release-6-8.noarch.rpm"
@@ -60,7 +60,7 @@ ORACLE_PASSWORD="P@ssw0rd"
 
 ## scsi target name ###
 SCSI_TARGET_NAME="iqn.2014-05.org.jpoug:server.crs"
-PDSH_SSH_ARGS_APPEND="-i $KEY_PAIR -tt -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null"
+SSH_ARGS_APPEND="-i $KEY_PAIR -tt -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null"
 
 mac=`curl http://169.254.169.254/latest/meta-data/network/interfaces/macs/ -s`
 VpcId=`curl http://169.254.169.254/latest/meta-data/network/interfaces/macs/$mac/vpc-id -s`
@@ -747,14 +747,18 @@ checktinc(){
 
 }
 
+
 creatersp()
 {
-  if [ $1 = 1 ] ; then
+  myRole=`getmyrole`
+  myNumber=`getmynumber $myRole`
+  if [ $myNumber = 1 ] ; then
 
     NODECOUNT=1
+    NODELIST=`getnodelist $myRole ip`
     for i in $NODELIST ;
     do
-      NODENAME=`getnodename $NODECOUNT`
+      NODENAME=`getnodename $myRole $NODECOUNT`
       if [ $NODECOUNT = 1 ] ; then
         CLUSTERNODES="${NODENAME}:${NODENAME}-vip"
       else
@@ -838,7 +842,7 @@ EOF
 
 changehostname ()
 {
-  HOSTNAME=`getnodename $1`
+  HOSTNAME=`getmyname`
   sed -i 's/hostname/#hostname/' /etc/rc.local
   cat > /etc/sysconfig/network <<EOF
 NETWORKING=yes
@@ -872,7 +876,7 @@ for user in oracle grid
 do
         mkdir /home/$user/.ssh
         cat /root/.ssh/authorized_keys >> /home/$user/.ssh/authorized_keys
-        cp $WORK_DIR/$KEY_PAIR /home/$user/.ssh/id_rsa
+        cp $KEY_PAIR /home/$user/.ssh/id_rsa
         cat >> /home/$user/.ssh/ <<'EOF'
 host *        
 StrictHostKeyChecking no
@@ -960,23 +964,18 @@ fi
 
 fdiskoraclehome()
 {
-  if [ "$1" != "0" ] ; then
     sfdisk -uM ${ORACLE_HOME_DEVICE} <<EOF
 ,,83
 EOF
     sleep 15
     mkfs.ext3 -F ${ORACLE_HOME_DEVICE}1
-  fi
 }
 
 mountoraclehome()
 {
-  
-  if [ "$1" != "0" ] ; then
     echo "${ORACLE_HOME_DEVICE}1               ${MOUNT_PATH}                    ext3    defaults        0 0" >> /etc/fstab
     mkdir ${MOUNT_PATH}
     mount ${MOUNT_PATH}
-  fi
 }
 
 createoraclehome ()
@@ -1279,11 +1278,11 @@ setupall(){
   
 }
 
+
 exessh()
 {
-  LIST=("$SERVER $NODELIST")
-  SERVER_AND_NODE=($LIST)
-  ssh -i $KEY_PAIR -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null root@${SERVER_AND_NODE[$1]} $2 $3 $4 $5 $6
+  LIST=(`getnodelist node ip`)
+  ssh $SSH_ARGS_APPEND root@${SLIST[$1]} $2 $3 $4 $5 $6
 }
 
 catrootsh()
@@ -1294,56 +1293,26 @@ catrootsh()
 updatescript()
 {
   curl https://raw.githubusercontent.com/s4ragent/ec2rac/master/${0}?id=${RANDOM} -o ${0}
-}  
-
-watch()
-{
-count=`grep watch /etc/crontab | wc -l`
-if [ $count = 0 ] ; then
-  echo "@reboot root sh /root/$0 watch" >> /etc/crontab
-  /etc/init.d/crond restart
-else
-  mkdir /root/watch
-  SERVER_AND_NODE="$SERVER $NODELIST"
-  while :
-  do
-    NODECOUNT=0
-    for i in $SERVER_AND_NODE ;
-    do
-      for (( k = 0; k < ${#NETWORKS[@]}; ++k ))
-      do
-	      NETNAME=${NETWORK_NAME[$k]}     
-	      IP=`getip $k real $NODECOUNT`
-	      echo "*****************************" >> /root/watch/`getnodename $NODECOUNT`_${NETNAME}.log
-	      echo `date` >> /root/watch/`getnodename $NODECOUNT`_${NETNAME}.log
-        ping -w 4 -c 3 $IP >> /root/watch/`getnodename $NODECOUNT`_${NETNAME}.log &
-      done
-      NODECOUNT=`expr $NODECOUNT + 1`
-    done
-    sleep 5
-  done
-
-fi
-
 }
 
 copyfile()
 {
-  SERVER_AND_NODE="$SERVER $NODELIST"
-  for i in $SERVER_AND_NODE ;
+  LIST=(`getnodelist $1 ip`)
+  for i in $LIST ;
   do
-    scp -i $KEY_PAIR -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null $1 root@$i:/root
+    scp $SSH_ARGS_APPEND -r $2 root@$i:/root
   done
 }
 
-getfile()
+#$1 RoleName $2 remotedir(getdir) $3 localdir
 {
-  SERVER_AND_NODE="$SERVER $NODELIST"
-  NODECOUNT=0
-  for i in $SERVER_AND_NODE ;
+  LIST=(`getnodelist $1 ip`)
+  NODECOUNT=1
+  for i in $LIST ;
   do
-        mkdir $2/`getnodename $NODECOUNT`
-        scp -i $KEY_PAIR -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -r root@$i:$1 $2/`getnodename $NODECOUNT`
+  	localdir=$3/`getnodename $1 $NODECOUNT`/$2
+        mkdir $localdir
+        scp $SSH_ARGS_APPEND -r root@$i:$2 $localdir
         NODECOUNT=`expr $NODECOUNT + 1`
   done
 }
