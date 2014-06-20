@@ -17,16 +17,10 @@ Roles=(
 "storage m3.medium 1 0.05 $PackageAmiId $STORAGE_DEVICE"
 )
 
-
-
-
 INSTALL_LANG=ja
 TMPL_NAME="RACTMPL"
 KEY_NAME="oregon"
 KEY_PAIR="${KEY_NAME}.pem"
-
-
-
 
 RPMFORGE_URL="http://pkgs.repoforge.org/rpmforge-release/rpmforge-release-0.5.3-1.el6.rf.x86_64.rpm"
 EPEL_URL="http://dl.fedoraproject.org/pub/epel/6/x86_64/epel-release-6-8.noarch.rpm"
@@ -193,15 +187,16 @@ getmyname()
 	echo `getnodename $MyRole $MyNumber`
 }
 
-#$1 nodetype(ex node/tinc/storage")
+#
 createclonepl()
 {
-  $NODELIST=`getnodelist node ip`
+	Role=`getmyrole`
+  $NODELIST=`getnodelist $Role ip`
   CLUSTER_NODES="{"
   NODECOUNT=1
   for i in $NODELIST ;
   do
-        HOSTNAME=`getnodename node $NODECOUNT`
+        HOSTNAME=`getnodename $Role $NODECOUNT`
         if [ $NODECOUNT != 1 ] ; then
                 CLUSTER_NODES=${CLUSTER_NODES},
         fi
@@ -310,10 +305,10 @@ EOF
 	tgt-admin --show	
 }
 
-#$1 targetip $2 targetname $3 nodenumber
 setupiscsi(){
+	Role=`getmyrole`
 	TARGETIP=`getnodelist storage ip`
-	MYNUMBER=`getmynumber node`
+	MYNUMBER=`getmynumber $Role`
         /etc/init.d/iscsi start
         iscsiadm --mode discovery --type sendtargets -p ${TARGETIP}
         iscsiadm --mode node --targetname ${SCSI_TARGET_NAME} --login
@@ -600,17 +595,26 @@ setdhcp()
 setupdns ()
 {
 
-    NODELIST=`getnodelist node ip`
     echo "### scan entry ###" >> /etc/hosts
     getip 0 scan >> /etc/hosts
     echo "### public,vip entry###" >> /etc/hosts
-    NODECOUNT=1
-    for i in $NODELIST ;
+    
+    ALLCOUNT=1
+    for Role in "${Roles[@]}"
     do
-        echo "`getip 0 real $NODECOUNT` `getnodename node $NODECOUNT`.${NETWORK_NAME[0]} `getnodename node $NODECOUNT`" >> /etc/hosts
-        echo "`getip 0 vip $NODECOUNT` `getnodename node $NODECOUNT`-vip.${NETWORK_NAME[0]} `getnodename node $NODECOUNT`-vip" >> /etc/hosts
-        NODECOUNT=`expr $NODECOUNT + 1`
+        	PARAMS=($Role)
+        	RoleName=${PARAMS[0]}
+        	LIST=`getnodelist RoleName ip`
+        	NODECOUNT=1
+		for i in $LIST ;
+		do
+			echo "`getip 0 real $ALLCOUNT` `getnodename $RoleName $NODECOUNT`.${NETWORK_NAME[0]} `getnodename $RoleName $NODECOUNT`" >> /etc/hosts
+			echo "`getip 0 vip $ALLCOUNT` `getnodename $RoleName $NODECOUNT`-vip.${NETWORK_NAME[0]} `getnodename $RoleName $NODECOUNT`-vip" >> /etc/hosts
+			NODECOUNT=`expr $NODECOUNT + 1`
+			ALLCOUNT=`expr $ALLCOUNT + 1`
+		done
     done
+
     ###enable dnsmasq####
     chkconfig dnsmasq on
     /etc/init.d/dnsmasq start
@@ -628,6 +632,7 @@ Name = dummy
 Interface = tap0
 Mode = switch
 BindToAddress * 655
+MaxTimeout = 30
 
 EOF
   cat > $WORK_DIR/hosts/dummy<<EOF
@@ -655,7 +660,6 @@ createtincconf()
 	/etc/init.d/tinc stop
 	sleep 5
 	rm -rf /etc/tinc
-	createtinchosts
 	NODENAME=`getmyname`
 	for (( k = 0; k < ${#NETWORKS[@]}; ++k ))
 	do
@@ -668,18 +672,19 @@ createtincconf()
     		sed -i "s/^Name =.*/Name = $NODENAME/" /etc/tinc/$NETNAME/tinc.conf
     		sed -i "s/^Interface = .*/Interface = tap${k}/" /etc/tinc/$NETNAME/tinc.conf
     		sed -i "s/^BindToAddress.*/BindToAddress \* $PORT/" /etc/tinc/$NETNAME/tinc.conf
-		echo "MaxTimeout = 30" >> /etc/tinc/$NETNAME/tinc.conf
     		cp $WORK_DIR/rsa_key.priv /etc/tinc/$NETNAME/rsa_key.priv
     		
-    		
+    		##create ifconfig file
     		IP=`getip $k real $myNumber`
 		echo '#!/bin/sh' > /etc/tinc/$NETNAME/tinc-up
 		echo "ifconfig \$INTERFACE ${IP} netmask $SUBNET_MASK" >> /etc/tinc/$NETNAME/tinc-up
 		chmod 755 /etc/tinc/$NETNAME/tinc-up
+		
 		echo '#!/bin/sh' > /etc/tinc/$NETNAME/tinc-down
 		echo "ifconfig \$INTERFACE down" >> /etc/tinc/$NETNAME/tinc-down
 		chmod 755 /etc/tinc/$NETNAME/tinc-down
 
+		##create hostsfile
     		mkdir -p /etc/tinc/$NETNAME/hosts
 		for Role in "${Roles[@]}"
   		do
@@ -695,6 +700,26 @@ createtincconf()
 				NODECOUNT=`expr $NODECOUNT + 1`
 			done
     		done
+    		
+    		##create connect to###
+    		
+    		if [ "$myRole" = "tinc" ] ; then
+    			LIST=`getnodelist tinc ip`
+			NODECOUNT=1
+			for i in $LIST ;
+			do
+				NODENAME=`getnodename tinc $NODECOUNT`
+				echo "ConnectTo = $NODENAME" >> /etc/tinc/$NETNAME/tinc.conf
+				NODECOUNT=`expr $NODECOUNT + 1`
+			done
+		else
+			LIST=(`getnodelist tinc ip`)
+			NODECOUNT=`expr $myNumber % ${#LIST[@]}`
+			NODECOUNT=`expr $NODECOUNT + 1`
+			NODENAME=`getnodename tinc $NODECOUNT`
+			echo "ConnectTo = $NODENAME" >> /etc/tinc/$NETNAME/tinc.conf
+		fi
+    		
 		
 		PORT=`expr $PORT + 1`
 	done
@@ -703,7 +728,7 @@ createtincconf()
 
 	count=`grep checktinc /etc/rc.d/rc.local | wc -l`
 	if [ $count = 0 ] ; then
-		echo "sh `pwd`/$0 checktinc $1" >> /etc/rc.d/rc.local
+		echo "sh `pwd`/$0 checktinc" >> /etc/rc.d/rc.local
 	fi
 
 }
@@ -717,86 +742,10 @@ checktinc(){
   done
 
   if [ $multi = 0 ] ; then
-    createtincconf $1
-  fi
-
-}	
-}
-
-createtincconf()
-{
-  SERVER_AND_NODE="$SERVER $NODELIST"
-  rm -rf /var/run/tinc.*
-  /etc/init.d/tinc stop
-  sleep 5
-  rm -rf /etc/tinc
-PORT=655
-NODENAME=`getnodename $1 $2`
-for (( k = 0; k < ${#NETWORKS[@]}; ++k ))
-do
-    NETNAME=${NETWORK_NAME[$k]}     
-    mkdir -p /etc/tinc/$NETNAME/hosts
-    echo $NETNAME >> /etc/tinc/nets.boot
-    echo "tinc          ${PORT}/tcp             #TINC" >> /etc/services
-    echo "tinc          ${PORT}/udp             #TINC" >> /etc/services
-    cp $WORK_DIR/tinc.conf /etc/tinc/$NETNAME/tinc.conf
-    sed -i "s/^Name =.*/Name = $NODENAME/" /etc/tinc/$NETNAME/tinc.conf
-    sed -i "s/^Interface = .*/Interface = tap${k}/" /etc/tinc/$NETNAME/tinc.conf
-    sed -i "s/^BindToAddress.*/BindToAddress \* $PORT/" /etc/tinc/$NETNAME/tinc.conf
-    sed -i "s/^ConnectTo.*//" /etc/tinc/$NETNAME/tinc.conf
-    
-    echo "MaxTimeout = 30" >> /etc/tinc/$NETNAME/tinc.conf
-    
-
-    cp /root/dummy/rsa_key.priv /etc/tinc/$NETNAME/rsa_key.priv
-    
-    IP=`getip $k real $1`
-    cat > /etc/tinc/$NETNAME/tinc-up<<EOF
-#!/bin/sh
-ifconfig \$INTERFACE ${IP} netmask $SUBNET_MASK
-EOF
-
-    cat > /etc/tinc/$NETNAME/tinc-down<<EOF
-#!/bin/sh
-ifconfig \$INTERFACE down
-EOF
-
-    chmod 755 /etc/tinc/$NETNAME/tinc-up
-    chmod 755 /etc/tinc/$NETNAME/tinc-down
-    
-    NODECOUNT=0
-    for i in $SERVER_AND_NODE ;
-    do
-      NODENAME2=`getnodename $NODECOUNT`
-      cp /root/dummy/hosts/dummy /etc/tinc/$NETNAME/hosts/$NODENAME2
-      sed -i "s/^Address = .*/Address = $i $PORT/" /etc/tinc/$NETNAME/hosts/$NODENAME2
-      NODECOUNT=`expr $NODECOUNT + 1`
-    done
-    PORT=`expr $PORT + 1`
-done
-  chkconfig tinc on
-  /etc/init.d/tinc start
-
-  count=`grep checktinc /etc/rc.d/rc.local | wc -l`
-  if [ $count = 0 ] ; then
-    echo "sh `pwd`/$0 checktinc $1" >> /etc/rc.d/rc.local
+    createtincconf
   fi
 
 }
-
-checktinc(){
-  multi=1
-  for (( k = 0; k < ${#NETWORKS[@]}; ++k ))
-  do
-    tcount=`ifconfig | grep tap${k} | wc -l`
-    multi=`expr $tcount \* $multi`
-  done
-
-  if [ $multi = 0 ] ; then
-    createtincconf $1
-  fi
-
-}  
 
 creatersp()
 {
