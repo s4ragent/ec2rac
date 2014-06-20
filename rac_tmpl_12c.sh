@@ -7,7 +7,7 @@ PackageAmiId="ami-974234a7"
 SWAP_DEVICE="/dev/xvdb:ephemeral0"
 STORAGE_DEVICE="/dev/xvdb:ephemeral0"
 ORACLE_HOME_DEVICE="/dev/xvdc:15:$RACSnapshotId"
-WORK_DIR="`pwd`/work"
+WORK_DIR="/root/work"
 
 #SWAP_SIZE=8
 #RoleName,InstanceType,Instance-count,Price,amiid,device:size:snap-id,device:size:snap-id.....
