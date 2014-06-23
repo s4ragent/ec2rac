@@ -662,6 +662,7 @@ createtincconf()
 	rm -rf /etc/tinc
 	mkdir /etc/tinc/
 	NODENAME=`getmyname`
+	PORT=655
 	for (( k = 0; k < ${#NETWORKS[@]}; ++k ))
 	do
     		NETNAME=${NETWORK_NAME[$k]}
