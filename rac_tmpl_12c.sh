@@ -660,6 +660,7 @@ createtincconf()
 	/etc/init.d/tinc stop
 	sleep 5
 	rm -rf /etc/tinc
+	mkdir /etc/tinc/
 	NODENAME=`getmyname`
 	for (( k = 0; k < ${#NETWORKS[@]}; ++k ))
 	do
@@ -1134,7 +1135,7 @@ test(){
   	waitreboot
   	
   	#for node
-  	dsh tinc "sh $0 changehostname;sh $0 setdhcp;sh $0 createtincconf;sh $0 createtincconf;reboot"
+  	dsh tinc "sh $0 changehostname;sh $0 setdhcp;sh $0 createtincconf;reboot"
   
   changehostname $MyNumber
   setupdns $MyNumber
