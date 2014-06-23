@@ -691,7 +691,7 @@ createtincconf()
   		do
         		PARAMS=($Role)
         		RoleName=${PARAMS[0]}
-        		LIST=`getnodelist RoleName ip`
+        		LIST=`getnodelist $RoleName ip`
         		NODECOUNT=1
 			for i in $LIST ;
 			do
