@@ -1336,7 +1336,7 @@ copyfile()
   LIST=(`getnodelist $1 ip`)
   for i in $LIST ;
   do
-    scp $SSH_ARGS_APPEND -r $2 root@$i:/root
+    scp $SSH_ARGS_APPEND -r $2 root@$i:/root/
   done
 }
 
