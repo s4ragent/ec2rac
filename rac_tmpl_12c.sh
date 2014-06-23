@@ -604,7 +604,7 @@ setupdns ()
     do
         	PARAMS=($Role)
         	RoleName=${PARAMS[0]}
-        	LIST=`getnodelist RoleName ip`
+        	LIST=`getnodelist $RoleName ip`
         	NODECOUNT=1
 		for i in $LIST ;
 		do
@@ -1121,19 +1121,21 @@ test(){
 	#setnodelist
 	
 	
-	CMD="pdsh -R ssh -t 10 -w ^$WORK_DIR/all.ip -S date"
-	$CMD
-	RET=$?
-	while [ $RET != 0 ]
-	do
-		sleep 10
-		$CMD
-		RET=$?
-	done
+	#waitreboot
 	
 	copyfile all work
 	copyfile all $0
-        chkconfig xrdp on
+	#for storage
+  	dsh storage "sh $0 changehostname;sh $0 setupdns;sh $0 createtgtd;reboot"
+  	#for tinc
+  	dsh tinc "sh $0 changehostname;sh $0 createtincconf;reboot"
+  	sleep 30
+  	
+  	waitreboot
+  	
+  	#for node
+  	dsh tinc "sh $0 changehostname;sh $0 setdhcp;sh $0 createtincconf;sh $0 createtincconf;reboot"
+  
   changehostname $MyNumber
   setupdns $MyNumber
   createtincconf $MyNumber
@@ -1143,7 +1145,23 @@ test(){
   cleangridhome
   createclonepl
   creatersp $MyNumber
+  
+    "setdhcp" ) setdhcp;;
+  "createtgtd" ) createtgtd;;
   watch
+}
+
+waitreboot()
+{
+	CMD="pdsh -R ssh -t 10 -w ^$WORK_DIR/all.ip -S date"
+	$CMD
+	RET=$?
+	while [ $RET != 0 ]
+	do
+		sleep 10
+		$CMD
+		RET=$?
+	done
 }
 dsh()
 {
