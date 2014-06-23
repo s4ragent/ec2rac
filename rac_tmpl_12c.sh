@@ -1318,7 +1318,7 @@ setupall(){
 exessh()
 {
   LIST=(`getnodelist node ip`)
-  ssh $SSH_ARGS_APPEND root@${SLIST[$1]} $2 $3 $4 $5 $6
+  ssh $SSH_ARGS_APPEND root@${LIST[$1]} $2 $3 $4 $5 $6
 }
 
 catrootsh()
