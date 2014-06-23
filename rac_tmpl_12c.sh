@@ -1106,7 +1106,6 @@ setupnode()
   createoraclehome
 }
 test(){
-	requestspotinstances
 	instancecount=0
 	for Role in "${Roles[@]}"
 	
