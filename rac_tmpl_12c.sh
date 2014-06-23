@@ -858,6 +858,7 @@ createsshkey()
 {
 for user in oracle grid
 do
+	rm -rf /home/$user/.ssh
         mkdir /home/$user/.ssh
         cat /root/.ssh/authorized_keys >> /home/$user/.ssh/authorized_keys
         cp $KEY_PAIR /home/$user/.ssh/id_rsa
