@@ -1105,8 +1105,17 @@ setupnode()
   mountoraclehome $1
   createoraclehome
 }
-
 test(){
+	requestspotinstances
+	instancecount=0
+	for Role in "${Roles[@]}"
+	
+	do
+		PARAMS=($Role)
+		instancecount=`expr $instancecount + $PARAMS[2]`
+	done
+}
+test2(){
 	requestspotinstances
 	instancecount=0
 	for Role in "${Roles[@]}"
