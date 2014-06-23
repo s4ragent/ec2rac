@@ -1116,7 +1116,7 @@ test(){
 	#done
 	#setnodelist
 	
-	pdsh -R ssh -w ^$WORK_DIR/all.ip "sh $0 changehostname;reboot"
+	
 	CMD="pdsh -R ssh -t 10 -w ^$WORK_DIR/all.ip -S hostname"
 	$CMD
 	RET=$?
@@ -1126,6 +1126,8 @@ test(){
 		$CMD
 		RET=$?
 	done
+	
+	copyfile all work
 }
 dsh()
 {
