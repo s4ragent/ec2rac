@@ -1114,7 +1114,7 @@ test(){
 		sleep 10
  		requestcount=`aws ec2 describe-spot-instance-requests --region $Region --query 'SpotInstanceRequests[].Status[].Code' | grep "fulfilled" | wc -l`
 	done
-	getnodelist
+	setnodelist
 	CMD="pdsh -R ssh -t 10 -w ^$WORK_DIR/all.ip -S date"
 	$CMD
 	RET=$?
