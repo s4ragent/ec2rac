@@ -1131,12 +1131,6 @@ test(){
 	
 }
 
-testchangehost()
-{
-	
-}
-
-
 setupallforclone(){
   MEMORYTARGET=$5
   PARALLEL=$6
