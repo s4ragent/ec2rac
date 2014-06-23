@@ -1138,9 +1138,9 @@ test(){
   	waitreboot
   	
   	#for node
-  	dsh tinc "sh $0 changehostname;sh $0 createswap;sh $0 setdhcp;sh $0 createsshkey;"
-  	dsh tinc "sh $0 mountoraclehome;sh $0 cleangridhome;sh $0 setupiscsi;sh $0 createtincconf"
-  	dsh tinc "sh $0 creatersp;sh $0 createclonepl;reboot"
+  	dsh node "sh $0 changehostname;sh $0 createswap;sh $0 setdhcp;sh $0 createsshkey;"
+  	dsh node "sh $0 mountoraclehome;sh $0 cleangridhome;sh $0 setupiscsi;sh $0 createtincconf"
+  	dsh node "sh $0 creatersp;sh $0 createclonepl;reboot"
   
 
   
