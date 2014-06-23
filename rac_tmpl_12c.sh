@@ -1348,8 +1348,8 @@ setupall(){
 
 exessh()
 {
-  LIST=(`getnodelist node ip`)
-  ssh $SSH_ARGS_APPEND root@${LIST[$1]} $2 $3 $4 $5 $6
+  LIST=(`getnodelist $1 ip`)
+  ssh $SSH_ARGS_APPEND root@${LIST[$2]} $3 $4 $5 $6 $7
 }
 
 catrootsh()
@@ -1441,7 +1441,7 @@ case "$1" in
   "pretincconf" ) pretincconf ;;
   "createswap" ) createswap $2;;
   "setupiscsi" ) setupiscsi $2 $3;;
-  "exessh" ) exessh $2 $3 $4 $5 $6;;
+  "exessh" ) exessh $2 $3 $4 $5 $6 $7 $8;;
   "catrootsh" ) catrootsh $2;;
   "updatescript" ) updatescript;;
   "checktinc" ) checktinc $2;;
