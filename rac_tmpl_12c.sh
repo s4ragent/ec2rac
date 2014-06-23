@@ -60,8 +60,8 @@ ORACLE_PASSWORD="P@ssw0rd"
 
 ## scsi target name ###
 SCSI_TARGET_NAME="iqn.2014-05.org.jpoug:server.crs"
-SSH_ARGS_APPEND="-i $KEY_PAIR -tt -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null"
-export PDSH_SSH_ARGS_APPEND=$SSH_ARGS_APPEND
+SSH_ARGS_APPEND="-i $KEY_PAIR -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null"
+export PDSH_SSH_ARGS_APPEND="$SSH_ARGS_APPEND -tt"
 mac=`curl http://169.254.169.254/latest/meta-data/network/interfaces/macs/ -s`
 VpcId=`curl http://169.254.169.254/latest/meta-data/network/interfaces/macs/$mac/vpc-id -s`
 SubnetId=`curl http://169.254.169.254/latest/meta-data/network/interfaces/macs/$mac/subnet-id -s`
