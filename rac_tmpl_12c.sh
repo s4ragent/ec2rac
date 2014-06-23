@@ -1160,7 +1160,7 @@ waitreboot()
 }
 dsh()
 {
-	pdsh -R ssh -w ^$WORK_DIR/$1.ip $2 $3 $4 $5 $6
+	pdsh -R ssh -w ^$WORK_DIR/$1.ip $2 $3 $4 $5 $6 $7 $8
 }
 
 setupallforclone(){
@@ -1446,7 +1446,7 @@ case "$1" in
   "createdevicejson" ) createdevicejson $2;;
   "test" ) test;;
   "copyfile" ) copyfile $2 $3;;
-  "dsh" ) dsh $2 $3 $4 $5 $6;;
+  "dsh" ) dsh $2 $3 $4 $5 $6 $7 $8 $9;;
   "setdhcp" ) setdhcp;;
   "createtgtd" ) createtgtd;;
   "waitreboot" ) waitreboot;;
