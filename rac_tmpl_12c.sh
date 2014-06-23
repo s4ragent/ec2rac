@@ -12,9 +12,9 @@ WORK_DIR="/root/work"
 #SWAP_SIZE=8
 #RoleName,InstanceType,Instance-count,Price,amiid,device:size:snap-id,device:size:snap-id.....
 Roles=(
-"node m3.medium 2 0.05 $PackageAmiId $SWAP_DEVICE,$ORACLE_HOME_DEVICE"
-"tinc m3.medium 1 0.05 $PackageAmiId"
-"storage m3.medium 1 0.05 $PackageAmiId $STORAGE_DEVICE"
+"node m1.medium 2 0.05 $PackageAmiId $SWAP_DEVICE,$ORACLE_HOME_DEVICE"
+"tinc m1.medium 2 0.05 $PackageAmiId"
+"storage m1.medium 1 0.05 $PackageAmiId $STORAGE_DEVICE"
 )
 
 INSTALL_LANG=ja
@@ -1105,23 +1105,15 @@ setupnode()
   mountoraclehome $1
   createoraclehome
 }
+
 test(){
-	instancecount=0
-	for Role in "${Roles[@]}"
-	
-	do
-		PARAMS=($Role)
-		instancecount=`expr $instancecount + ${PARAMS[2]}`
-	done
-}
-test2(){
 	requestspotinstances
 	instancecount=0
 	for Role in "${Roles[@]}"
 	
 	do
 		PARAMS=($Role)
-		instancecount=`expr $instancecount + $PARAMS[2]`
+		instancecount=`expr $instancecount + ${PARAMS[2]}`
 	done
 	
 	requestcount=`aws ec2 describe-spot-instance-requests --region $Region --query 'SpotInstanceRequests[].Status[].Code' | grep "fulfilled" | wc -l`
