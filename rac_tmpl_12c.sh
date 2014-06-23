@@ -1333,7 +1333,9 @@ copyfile()
   done
 }
 
+
 #$1 RoleName $2 remotedir(getdir) $3 localdir
+getfile()
 {
   LIST=(`getnodelist $1 ip`)
   NODECOUNT=1
