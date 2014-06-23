@@ -851,6 +851,24 @@ HOSTNAME=${HOSTNAME}.${NETWORK_NAME[0]}
 EOF
 }
 
+createsshkey()
+{
+for user in oracle grid
+do
+        mkdir /home/$user/.ssh
+        cat /root/.ssh/authorized_keys >> /home/$user/.ssh/authorized_keys
+        cp $KEY_PAIR /home/$user/.ssh/id_rsa
+        cat >> /home/$user/.ssh/ <<'EOF'
+host *        
+StrictHostKeyChecking no
+UserKnownHostsFile=/dev/null
+EOF
+        chown -R ${user}.oinstall /home/$user/.ssh
+        chmod 700 /home/$user/.ssh
+        chmod 600 /home/$user/.ssh/*
+done
+	}
+
 
 createuser ()
 {
@@ -872,20 +890,6 @@ groupadd -g 1003 asmoper
 useradd -u 501 -m -g oinstall -G dba,oper,asmdba -d /home/oracle -s /bin/bash -c"Oracle Software Owner" oracle
 useradd -u 1001 -m -g oinstall -G asmadmin,asmdba,asmoper -d /home/grid -s /bin/bash -c "Grid Infrastructure Owner" grid
 
-for user in oracle grid
-do
-        mkdir /home/$user/.ssh
-        cat /root/.ssh/authorized_keys >> /home/$user/.ssh/authorized_keys
-        cp $KEY_PAIR /home/$user/.ssh/id_rsa
-        cat >> /home/$user/.ssh/ <<'EOF'
-host *        
-StrictHostKeyChecking no
-UserKnownHostsFile=/dev/null
-EOF
-        chown -R ${user}.oinstall /home/$user/.ssh
-        chmod 700 /home/$user/.ssh
-        chmod 600 /home/$user/.ssh/*
-done
 
 ##edit password ##
 echo "grid:$GRID_PASSWORD" | chpasswd
@@ -1026,7 +1030,7 @@ setupnodeforclone()
     NODECOUNT=`expr $NODECOUNT + 1`
   done
   
-  changelocale
+  
   chkconfig xrdp on
   changehostname $MyNumber
   setupdns $MyNumber
@@ -1117,7 +1121,7 @@ test(){
 	#setnodelist
 	
 	
-	CMD="pdsh -R ssh -t 10 -w ^$WORK_DIR/all.ip -S hostname"
+	CMD="pdsh -R ssh -t 10 -w ^$WORK_DIR/all.ip -S date"
 	$CMD
 	RET=$?
 	while [ $RET != 0 ]
@@ -1128,6 +1132,18 @@ test(){
 	done
 	
 	copyfile all work
+	copyfile all $0
+        chkconfig xrdp on
+  changehostname $MyNumber
+  setupdns $MyNumber
+  createtincconf $MyNumber
+  createswap $MyNumber
+  setupiscsi $MyNumber
+  mountoraclehome $MyNumber
+  cleangridhome
+  createclonepl
+  creatersp $MyNumber
+  watch
 }
 dsh()
 {
@@ -1418,5 +1434,7 @@ case "$1" in
   "test" ) test;;
   "copyfile" ) copyfile $2 $3;;
   "dsh" ) dsh $2 $3 $4 $5 $6;;
+  "setdhcp" ) setdhcp;;
+  "createtgtd" ) createtgtd;;
   * ) echo "Ex \"sh -x $0 setupallforclone c1.xlarge 1 m3.medium 10 2400 0\" 2400 means memorytarget, 0 means wait 0 seconds when grid root.sh" ;;
 esac
