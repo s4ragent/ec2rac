@@ -1146,9 +1146,6 @@ test(){
   createclonepl
   creatersp $MyNumber
   
-    "setdhcp" ) setdhcp;;
-  "createtgtd" ) createtgtd;;
-  watch
 }
 
 waitreboot()
