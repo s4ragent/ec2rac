@@ -861,7 +861,7 @@ do
         mkdir /home/$user/.ssh
         cat /root/.ssh/authorized_keys >> /home/$user/.ssh/authorized_keys
         cp $KEY_PAIR /home/$user/.ssh/id_rsa
-        cat >> /home/$user/.ssh/ <<'EOF'
+        cat >> /home/$user/.ssh/config <<'EOF'
 host *        
 StrictHostKeyChecking no
 UserKnownHostsFile=/dev/null
