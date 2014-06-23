@@ -61,7 +61,7 @@ ORACLE_PASSWORD="P@ssw0rd"
 ## scsi target name ###
 SCSI_TARGET_NAME="iqn.2014-05.org.jpoug:server.crs"
 SSH_ARGS_APPEND="-i $KEY_PAIR -tt -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null"
-
+export PDSH_SSH_ARGS_APPEND=$SSH_ARGS_APPEND
 mac=`curl http://169.254.169.254/latest/meta-data/network/interfaces/macs/ -s`
 VpcId=`curl http://169.254.169.254/latest/meta-data/network/interfaces/macs/$mac/vpc-id -s`
 SubnetId=`curl http://169.254.169.254/latest/meta-data/network/interfaces/macs/$mac/subnet-id -s`
@@ -1099,23 +1099,25 @@ setupnode()
 }
 
 test(){
-	requestspotinstances
-	instancecount=0
-	for Role in "${Roles[@]}"
+	#requestspotinstances
+	#instancecount=0
+	#for Role in "${Roles[@]}"
 	
-	do
-		PARAMS=($Role)
-		instancecount=`expr $instancecount + $PARAMS[2]`
-	done
+	#do
+	#	PARAMS=($Role)
+	#	instancecount=`expr $instancecount + $PARAMS[2]`
+	#done
 	
-	requestcount=`aws ec2 describe-spot-instance-requests --region $Region --query 'SpotInstanceRequests[].Status[].Code' | grep "fulfilled" | wc -l`
-	while [ $instancecount != $requestcount ]
-	do
-		sleep 10
- 		requestcount=`aws ec2 describe-spot-instance-requests --region $Region --query 'SpotInstanceRequests[].Status[].Code' | grep "fulfilled" | wc -l`
-	done
-	setnodelist
-	CMD="pdsh -R ssh -t 10 -w ^$WORK_DIR/all.ip -S date"
+	#requestcount=`aws ec2 describe-spot-instance-requests --region $Region --query 'SpotInstanceRequests[].Status[].Code' | grep "fulfilled" | wc -l`
+	#while [ $instancecount != $requestcount ]
+	#do
+	#	sleep 10
+ 	#	requestcount=`aws ec2 describe-spot-instance-requests --region $Region --query 'SpotInstanceRequests[].Status[].Code' | grep "fulfilled" | wc -l`
+	#done
+	#setnodelist
+	
+	pdsh -R ssh -w ^$WORK_DIR/all.ip "sh $0 changehostname;reboot"
+	CMD="pdsh -R ssh -t 10 -w ^$WORK_DIR/all.ip -S hostname"
 	$CMD
 	RET=$?
 	while [ $RET != 0 ]
@@ -1124,6 +1126,14 @@ test(){
 		$CMD
 		RET=$?
 	done
+	
+	
+	
+}
+
+testchangehost()
+{
+	
 }
 
 
