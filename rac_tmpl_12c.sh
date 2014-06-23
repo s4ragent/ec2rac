@@ -1098,6 +1098,35 @@ setupnode()
   createoraclehome
 }
 
+test(){
+	requestspotinstances
+	instancecount=0
+	for Role in "${Roles[@]}"
+	
+	do
+		PARAMS=($Role)
+		instancecount=`expr $instancecount + $PARAMS[2]`
+	done
+	
+	requestcount=`aws ec2 describe-spot-instance-requests --region $Region --query 'SpotInstanceRequests[].Status[].Code' | grep "fulfilled" | wc -l`
+	while [ $instancecount != $requestcount ]
+	do
+		sleep 10
+ 		requestcount=`aws ec2 describe-spot-instance-requests --region $Region --query 'SpotInstanceRequests[].Status[].Code' | grep "fulfilled" | wc -l`
+	done
+	getnodelist
+	CMD="pdsh -R ssh -t 10 -w ^$WORK_DIR/all.ip -S date"
+	$CMD
+	RET=$?
+	while [ $RET != 0 ]
+	do
+		sleep 10
+		$CMD
+		RET=$?
+	done
+}
+
+
 setupallforclone(){
   MEMORYTARGET=$5
   PARALLEL=$6
@@ -1377,5 +1406,6 @@ case "$1" in
   "updatescript" ) updatescript;;
   "checktinc" ) checktinc $2;;
   "createdevicejson" ) createdevicejson $2;;
+  "test" ) test;;
   * ) echo "Ex \"sh -x $0 setupallforclone c1.xlarge 1 m3.medium 10 2400 0\" 2400 means memorytarget, 0 means wait 0 seconds when grid root.sh" ;;
 esac
