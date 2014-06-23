@@ -1333,7 +1333,7 @@ updatescript()
 
 copyfile()
 {
-  LIST=(`getnodelist $1 ip`)
+  LIST=`getnodelist $1 ip`
   for i in $LIST ;
   do
     scp $SSH_ARGS_APPEND -r $2 root@$i:/root/
@@ -1344,7 +1344,7 @@ copyfile()
 #$1 RoleName $2 remotedir(getdir) $3 localdir
 getfile()
 {
-  LIST=(`getnodelist $1 ip`)
+  LIST=`getnodelist $1 ip`
   NODECOUNT=1
   for i in $LIST ;
   do
