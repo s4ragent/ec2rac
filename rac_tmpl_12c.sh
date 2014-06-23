@@ -670,6 +670,7 @@ createtincconf()
     		echo $NETNAME >> /etc/tinc/nets.boot
     		echo "tinc          ${PORT}/tcp             #TINC" >> /etc/services
     		echo "tinc          ${PORT}/udp             #TINC" >> /etc/services
+    		mkdir -p /etc/tinc/$NETNAME
     		cp $WORK_DIR/tinc.conf /etc/tinc/$NETNAME/tinc.conf
     		sed -i "s/^Name =.*/Name = $NODENAME/" /etc/tinc/$NETNAME/tinc.conf
     		sed -i "s/^Interface = .*/Interface = tap${k}/" /etc/tinc/$NETNAME/tinc.conf
