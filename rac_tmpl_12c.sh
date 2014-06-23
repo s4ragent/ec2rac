@@ -169,7 +169,7 @@ getmyrole()
 	do
         	PARAMS=($Role)
         	RoleName=${PARAMS[0]}
-        	LIST=`getnodelist RoleName id`
+        	LIST=`getnodelist $RoleName id`
 		for i in $LIST ;
   		do
         		if [ "$i" == "$MyInstanceId" ] ; then
