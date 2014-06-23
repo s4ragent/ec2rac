@@ -1111,7 +1111,7 @@ test(){
 	
 	do
 		PARAMS=($Role)
-		instancecount=`expr $instancecount + $PARAMS[2]`
+		instancecount=`expr $instancecount + ${PARAMS[2]}`
 	done
 }
 test2(){
