@@ -1106,30 +1106,31 @@ setupnode()
 }
 
 test(){
-	#requestspotinstances
-	#instancecount=0
-	#for Role in "${Roles[@]}"
+	requestspotinstances
+	instancecount=0
+	for Role in "${Roles[@]}"
 	
-	#do
-	#	PARAMS=($Role)
-	#	instancecount=`expr $instancecount + $PARAMS[2]`
-	#done
+	do
+		PARAMS=($Role)
+		instancecount=`expr $instancecount + $PARAMS[2]`
+	done
 	
-	#requestcount=`aws ec2 describe-spot-instance-requests --region $Region --query 'SpotInstanceRequests[].Status[].Code' | grep "fulfilled" | wc -l`
-	#while [ $instancecount != $requestcount ]
-	#do
-	#	sleep 10
- 	#	requestcount=`aws ec2 describe-spot-instance-requests --region $Region --query 'SpotInstanceRequests[].Status[].Code' | grep "fulfilled" | wc -l`
-	#done
-	#setnodelist
+	requestcount=`aws ec2 describe-spot-instance-requests --region $Region --query 'SpotInstanceRequests[].Status[].Code' | grep "fulfilled" | wc -l`
+	while [ $instancecount != $requestcount ]
+	do
+		sleep 10
+ 		requestcount=`aws ec2 describe-spot-instance-requests --region $Region --query 'SpotInstanceRequests[].Status[].Code' | grep "fulfilled" | wc -l`
+	done
+	setnodelist
 	
 	
-	#waitreboot
+	waitreboot
 	
 	copyfile all work
 	copyfile all $0
 	#for storage
   	dsh storage "sh $0 changehostname;sh $0 setupdns;sh $0 createtgtd;reboot"
+  	
   	#for tinc
   	dsh tinc "sh $0 changehostname;sh $0 createtincconf;reboot"
   	sleep 30
@@ -1137,17 +1138,11 @@ test(){
   	waitreboot
   	
   	#for node
-  	dsh tinc "sh $0 changehostname;sh $0 setdhcp;sh $0 createtincconf;reboot"
+  	dsh tinc "sh $0 changehostname;sh $0 createswap;sh $0 setdhcp;sh $0 createsshkey;"
+  	dsh tinc "sh $0 mountoraclehome;sh $0 cleangridhome;sh $0 setupiscsi;sh $0 createtincconf"
+  	dsh tinc "sh $0 creatersp;sh $0 createclonepl;reboot"
   
-  changehostname $MyNumber
-  setupdns $MyNumber
-  createtincconf $MyNumber
-  createswap $MyNumber
-  setupiscsi $MyNumber
-  mountoraclehome $MyNumber
-  cleangridhome
-  createclonepl
-  creatersp $MyNumber
+
   
 }
 
