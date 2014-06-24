@@ -252,7 +252,7 @@ createswap(){
             local IFS=':'
             local args=($device)
             
-            mount -f ${args[0]};mkswap -f ${args[0]};swapon ${args[0]}
+            umount -f ${args[0]};mkswap -f ${args[0]};swapon ${args[0]}
             sed -i 's/\(.*cloudconfig\)/#\1/' /etc/fstab
             echo "${args[0]} swap swap defaults 0 0 " >> /etc/fstab
        
