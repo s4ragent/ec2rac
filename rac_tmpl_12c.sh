@@ -6,6 +6,7 @@ RACSnapshotId="snap-99a6676b"
 PackageAmiId="ami-974234a7"
 SWAP_DEVICE="/dev/xvdb:ephemeral0"
 STORAGE_DEVICE="/dev/xvdb:ephemeral0"
+
 ORACLE_HOME_DEVICE="/dev/xvdc:15:$RACSnapshotId"
 WORK_DIR="/root/work"
 
@@ -984,16 +985,25 @@ fi
 
 fdiskoraclehome()
 {
-    sfdisk -uM ${ORACLE_HOME_DEVICE} <<EOF
+	SECOND_IFS=$IFS
+    local IFS=':'
+    local args=(${ORACLE_HOME_DEVICE})
+    local IFS=$SECOND_IFS
+    sfdisk -uM ${args[0]} <<EOF
 ,,83
 EOF
     sleep 15
-    mkfs.ext3 -F ${ORACLE_HOME_DEVICE}1
+    mkfs.ext3 -F ${args[0]}1
 }
 
 mountoraclehome()
 {
-    echo "${ORACLE_HOME_DEVICE}1               ${MOUNT_PATH}                    ext3    defaults        0 0" >> /etc/fstab
+    SECOND_IFS=$IFS
+    local IFS=':'
+    local args=(${ORACLE_HOME_DEVICE})
+    local IFS=$SECOND_IFS	
+	
+    echo "${args[0]}1               ${MOUNT_PATH}                    ext3    defaults        0 0" >> /etc/fstab
     mkdir ${MOUNT_PATH}
     mount ${MOUNT_PATH}
 }
