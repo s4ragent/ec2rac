@@ -60,8 +60,9 @@ ORACLE_PASSWORD="P@ssw0rd"
 
 ## scsi target name ###
 SCSI_TARGET_NAME="iqn.2014-05.org.jpoug:server.crs"
-SSH_ARGS_APPEND="-i $KEY_PAIR -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null"
-export PDSH_SSH_ARGS_APPEND="$SSH_ARGS_APPEND -tt"
+SCP_ARGS_APPEND="-i $KEY_PAIR -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null"
+SSH_ARGS_APPEND="$SCP_ARGS_APPEND -tt"
+export PDSH_SSH_ARGS_APPEND="$SSH_ARGS_APPEND"
 mac=`curl http://169.254.169.254/latest/meta-data/network/interfaces/macs/ -s`
 VpcId=`curl http://169.254.169.254/latest/meta-data/network/interfaces/macs/$mac/vpc-id -s`
 SubnetId=`curl http://169.254.169.254/latest/meta-data/network/interfaces/macs/$mac/subnet-id -s`
@@ -437,19 +438,30 @@ createsecuritygroup(){
 
 
 requestspotinstances(){
-  for Role in "${Roles[@]}"
-  do
-        SgId=`createsecuritygroup ${Role}`
-        DeviceJson=`createdevicejson ${Role}`
-        PARAMS=($Role)
-        if [ "$DeviceJson" != "" ]; then
-        	Json={\"ImageId\":\"${PARAMS[4]}\",\"KeyName\":\"${KEY_NAME}\",\"InstanceType\":\"${PARAMS[1]}\",\"BlockDeviceMappings\":$DeviceJson,\"SubnetId\":\"${SubnetId}\",\"SecurityGroupIds\":[\"${SgId}\"]}
-        else
-        	Json={\"ImageId\":\"${PARAMS[4]}\",\"KeyName\":\"${KEY_NAME}\",\"InstanceType\":\"${PARAMS[1]}\",\"SubnetId\":\"${SubnetId}\",\"SecurityGroupIds\":[\"${SgId}\"]}
-        fi
+	instancecount=0
+	for Role in "${Roles[@]}"
+	do
+        	SgId=`createsecuritygroup ${Role}`
+        	DeviceJson=`createdevicejson ${Role}`
+        	PARAMS=($Role)
+        	if [ "$DeviceJson" != "" ]; then
+        		Json={\"ImageId\":\"${PARAMS[4]}\",\"KeyName\":\"${KEY_NAME}\",\"InstanceType\":\"${PARAMS[1]}\",\"BlockDeviceMappings\":$DeviceJson,\"SubnetId\":\"${SubnetId}\",\"SecurityGroupIds\":[\"${SgId}\"]}
+        	else
+        		Json={\"ImageId\":\"${PARAMS[4]}\",\"KeyName\":\"${KEY_NAME}\",\"InstanceType\":\"${PARAMS[1]}\",\"SubnetId\":\"${SubnetId}\",\"SecurityGroupIds\":[\"${SgId}\"]}
+        	fi
         
-        aws ec2 request-spot-instances --spot-price ${PARAMS[3]} --region $Region --launch-group $LAUNCHGROUP --launch-specification $Json --instance-count ${PARAMS[2]} 
-  done
+        	aws ec2 request-spot-instances --spot-price ${PARAMS[3]} --region $Region --launch-group $LAUNCHGROUP --launch-specification $Json --instance-count ${PARAMS[2]} 
+		instancecount=`expr $instancecount + ${PARAMS[2]}`
+	done
+
+	requestcount=`aws ec2 describe-spot-instance-requests --region $Region --query 'SpotInstanceRequests[].Status[].Code' | grep "fulfilled" | wc -l`
+	while [ $instancecount != $requestcount ]
+	do
+		sleep 10
+ 		requestcount=`aws ec2 describe-spot-instance-requests --region $Region --query 'SpotInstanceRequests[].Status[].Code' | grep "fulfilled" | wc -l`
+	done
+	setnodelist
+	waitreboot
 	
 }
 
@@ -1108,25 +1120,7 @@ setupnode()
 
 test(){
 	requestspotinstances
-	instancecount=0
-	for Role in "${Roles[@]}"
-	
-	do
-		PARAMS=($Role)
-		instancecount=`expr $instancecount + ${PARAMS[2]}`
-	done
-	
-	requestcount=`aws ec2 describe-spot-instance-requests --region $Region --query 'SpotInstanceRequests[].Status[].Code' | grep "fulfilled" | wc -l`
-	while [ $instancecount != $requestcount ]
-	do
-		sleep 10
- 		requestcount=`aws ec2 describe-spot-instance-requests --region $Region --query 'SpotInstanceRequests[].Status[].Code' | grep "fulfilled" | wc -l`
-	done
-	setnodelist
-	
-	
-	waitreboot
-	
+
 	copyfile all work
 	copyfile all $0
 	#for storage
@@ -1164,6 +1158,7 @@ waitreboot()
 		RET=$?
 	done
 }
+
 dsh()
 {
 	pdsh -R ssh -w ^$WORK_DIR/$1.ip $2 $3 $4 $5 $6 $7 $8
@@ -1353,8 +1348,8 @@ setupall(){
 exessh()
 {
   LIST=(`getnodelist $1 ip`)
-  hostnumber=`expr $2 + 1`
-  ssh $SSH_ARGS_APPEND root@${LIST[$hostnumber]} $3 $4 $5 $6 $7
+  hostnumber=`expr $2 - 1`
+  ssh $SSH_ARGS_APPEND root@${LIST[$hostnumber]} $3 $4 $5 $6 $7 $8 $9
 }
 
 catrootsh()
@@ -1372,7 +1367,7 @@ copyfile()
   LIST=`getnodelist $1 ip`
   for i in $LIST ;
   do
-    scp $SSH_ARGS_APPEND -r $2 root@$i:/root/
+    scp $SCP_ARGS_APPEND -r $2 root@$i:/root/
   done
 }
 
@@ -1386,7 +1381,7 @@ getfile()
   do
   	localdir=$3/`getnodename $1 $NODECOUNT`/$2
         mkdir $localdir
-        scp $SSH_ARGS_APPEND -r root@$i:$2 $localdir
+        scp $SCP_ARGS_APPEND -r root@$i:$2 $localdir
         NODECOUNT=`expr $NODECOUNT + 1`
   done
 }
