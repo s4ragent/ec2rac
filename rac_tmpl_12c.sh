@@ -1142,7 +1142,12 @@ test(){
   	dsh node "sh $0 changehostname;sh $0 createswap;sh $0 setdhcp;sh $0 createsshkey;"
   	dsh node "sh $0 mountoraclehome;sh $0 cleangridhome;sh $0 setupiscsi;sh $0 createtincconf"
   	dsh node "sh $0 creatersp;sh $0 createclonepl;reboot"
-  
+
+	waitreboot
+	
+	dsh node "sudo -u grid /home/grid/start.sh;$ORAINVENTORY/orainstRoot.sh" | dshbak
+	exessh node 1 "sudo -u grid $GRID_ORACLE_HOME/crs/config/config.sh -silent -responseFile /home/grid/grid.rsp"
+	exessh node 1 exerootsh
 
   
 }
@@ -1348,7 +1353,8 @@ setupall(){
 exessh()
 {
   LIST=(`getnodelist $1 ip`)
-  ssh $SSH_ARGS_APPEND root@${LIST[$2]} $3 $4 $5 $6 $7
+  hostnumber=`expr $2 + 1`
+  ssh $SSH_ARGS_APPEND root@${LIST[$hostnumber]} $3 $4 $5 $6 $7
 }
 
 catrootsh()
