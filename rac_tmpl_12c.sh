@@ -13,9 +13,9 @@ WORK_DIR="/root/work"
 #SWAP_SIZE=8
 #RoleName,InstanceType,Instance-count,Price,amiid,device:size:snap-id,device:size:snap-id.....
 Roles=(
-"node m1.medium 2 0.05 $PackageAmiId $HOME_DEVICE,$SWAP_DEVICE,$ORACLE_HOME_DEVICE"
-"tinc m1.medium 2 0.05 $PackageAmiId $HOME_DEVICE"
-"storage m1.medium 1 0.05 $PackageAmiId $HOME_DEVICE,$STORAGE_DEVICE"
+"node m1.small 2 0.05 $PackageAmiId $HOME_DEVICE,$SWAP_DEVICE,$ORACLE_HOME_DEVICE"
+"tinc m1.small 2 0.05 $PackageAmiId $HOME_DEVICE"
+"storage m1.small 1 0.05 $PackageAmiId $HOME_DEVICE,$STORAGE_DEVICE"
 )
 
 INSTALL_LANG=ja
@@ -646,6 +646,8 @@ setupdns ()
 pretincconf()
 {
   rm -rf $WORK_DIR/hosts
+  rm -rf $WORK_DIR/rsa_key.priv
+  rm -rf $WORK_DIR/tinc.conf
   mkdir -p $WORK_DIR/hosts
   cat > $WORK_DIR/tinc.conf <<EOF
 Name = dummy
@@ -1152,7 +1154,7 @@ setupnode()
 
 test(){
 	requestspotinstances
-
+	pretincconf
 	copyfile all work
 	copyfile all $0
 	#for storage
@@ -1172,7 +1174,7 @@ test(){
 	
 	dsh node "sudo -u grid /home/grid/start.sh;$ORAINVENTORY/orainstRoot.sh" | dshbak
 	exessh node 1 "sudo -u grid $GRID_ORACLE_HOME/crs/config/config.sh -silent -responseFile /home/grid/grid.rsp"
-	exessh node 1 exerootsh
+	exessh node 1 "sh $0 exerootsh"
 
   
 }
