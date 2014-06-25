@@ -96,7 +96,7 @@ getnodename ()
   echo "$1"`printf "%.3d" $2`
 }
 
-getenodeip()
+getnodeip()
 {
 	LIST=(`getnodelist $1 ip`)
 	hostnumber=`expr $2 - 1`
