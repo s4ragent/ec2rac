@@ -200,7 +200,7 @@ getmyname()
 createclonepl()
 {
 	Role=`getmyrole`
-  $NODELIST=`getnodelist $Role ip`
+  NODELIST=`getnodelist $Role ip`
   CLUSTER_NODES="{"
   NODECOUNT=1
   for i in $NODELIST ;
