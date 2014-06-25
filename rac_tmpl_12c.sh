@@ -1376,6 +1376,7 @@ catrootsh()
 updatescript()
 {
   curl https://raw.githubusercontent.com/s4ragent/ec2rac/master/${0}?id=${RANDOM} -o ${0}
+  copyfile all $0
 }
 
 copyfile()
