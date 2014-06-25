@@ -6,16 +6,16 @@ RACSnapshotId="snap-99a6676b"
 PackageAmiId="ami-974234a7"
 SWAP_DEVICE="/dev/xvdb:ephemeral0"
 STORAGE_DEVICE="/dev/xvdb:ephemeral0"
-
+HOME_DEVICE="/dev/sda1:15"
 ORACLE_HOME_DEVICE="/dev/xvdc:15:$RACSnapshotId"
 WORK_DIR="/root/work"
 
 #SWAP_SIZE=8
 #RoleName,InstanceType,Instance-count,Price,amiid,device:size:snap-id,device:size:snap-id.....
 Roles=(
-"node m1.medium 2 0.05 $PackageAmiId $SWAP_DEVICE,$ORACLE_HOME_DEVICE"
-"tinc m1.medium 2 0.05 $PackageAmiId"
-"storage m1.medium 1 0.05 $PackageAmiId $STORAGE_DEVICE"
+"node m1.medium 2 0.05 $PackageAmiId $HOME_DEVICE,$SWAP_DEVICE,$ORACLE_HOME_DEVICE"
+"tinc m1.medium 2 0.05 $PackageAmiId $HOME_DEVICE"
+"storage m1.medium 1 0.05 $PackageAmiId $HOME_DEVICE,$STORAGE_DEVICE"
 )
 
 INSTALL_LANG=ja
@@ -94,6 +94,13 @@ getip ()
 getnodename ()
 {
   echo "$1"`printf "%.3d" $2`
+}
+
+getenodeip()
+{
+	LIST=(`getnodelist $1 ip`)
+	hostnumber=`expr $2 - 1`
+	echo ${LIST[$hostnumber]}
 }
 
 getsgname()
@@ -1357,9 +1364,8 @@ setupall(){
 
 exessh()
 {
-  LIST=(`getnodelist $1 ip`)
-  hostnumber=`expr $2 - 1`
-  ssh $SSH_ARGS_APPEND root@${LIST[$hostnumber]} $3 $4 $5 $6 $7 $8 $9
+	hostip=`getnodeip $1 $2`
+	ssh $SSH_ARGS_APPEND root@${hostip} $3 $4 $5 $6 $7 $8 $9
 }
 
 catrootsh()
