@@ -876,17 +876,32 @@ EOF
 
 createsshkey()
 {
+    ALLCOUNT=1
+    for Role in "${Roles[@]}"
+    do
+        	PARAMS=($Role)
+        	RoleName=${PARAMS[0]}
+        	LIST=`getnodelist $RoleName ip`
+        	NODECOUNT=1
+		for i in $LIST ;
+		do
+			echo "`getnodename $RoleName $NODECOUNT`,`getip 0 real $ALLCOUNT` `cat /etc/ssh/ssh_host_rsa_key.pub`" >> $WORK_DIR/known_hosts
+			NODECOUNT=`expr $NODECOUNT + 1`
+			ALLCOUNT=`expr $ALLCOUNT + 1`
+		done
+    done	
 for user in oracle grid
 do
 	rm -rf /home/$user/.ssh
         mkdir /home/$user/.ssh
         cat /root/.ssh/authorized_keys >> /home/$user/.ssh/authorized_keys
         cp $KEY_PAIR /home/$user/.ssh/id_rsa
-        cat >> /home/$user/.ssh/config <<'EOF'
-host *        
-StrictHostKeyChecking no
-UserKnownHostsFile=/dev/null
-EOF
+        cp $WORK_DIR/known_hosts /home/$user/.ssh/known_hosts
+#        cat >> /home/$user/.ssh/config <<'EOF'
+#host *        
+#StrictHostKeyChecking no
+#UserKnownHostsFile=/dev/null
+#EOF
         chown -R ${user}.oinstall /home/$user/.ssh
         chmod 700 /home/$user/.ssh
         chmod 600 /home/$user/.ssh/*
