@@ -1145,7 +1145,6 @@ test(){
   	
   	#for tinc
   	dsh tinc "sh $0 changehostname;sh $0 createtincconf;reboot"
-  	sleep 30
   	
   	waitreboot
   	
@@ -1165,6 +1164,7 @@ test(){
 
 waitreboot()
 {
+	sleep 30
 	CMD="pdsh -R ssh -t 10 -w ^$WORK_DIR/all.ip -S date"
 	$CMD
 	RET=$?
