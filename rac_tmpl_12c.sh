@@ -683,11 +683,12 @@ createtincconf()
 	sleep 5
 	rm -rf /etc/tinc
 	mkdir /etc/tinc/
-	NODENAME=`getmyname`
+	
 	PORT=655
 	for (( k = 0; k < ${#NETWORKS[@]}; ++k ))
 	do
     		NETNAME=${NETWORK_NAME[$k]}
+    		NODENAME=`getmyname`
     		
     		echo $NETNAME >> /etc/tinc/nets.boot
     		echo "tinc          ${PORT}/tcp             #TINC" >> /etc/services
