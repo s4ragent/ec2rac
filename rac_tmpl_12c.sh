@@ -13,9 +13,9 @@ WORK_DIR="/root/work"
 #SWAP_SIZE=8
 #RoleName,InstanceType,Instance-count,Price,amiid,device:size:snap-id,device:size:snap-id.....
 Roles=(
-"node m1.small 2 0.05 $PackageAmiId $HOME_DEVICE,$SWAP_DEVICE,$ORACLE_HOME_DEVICE"
-"tinc m1.small 2 0.05 $PackageAmiId $HOME_DEVICE"
-"storage m1.small 1 0.05 $PackageAmiId $HOME_DEVICE,$STORAGE_DEVICE"
+"node m1.medium 2 0.05 $PackageAmiId $HOME_DEVICE,$SWAP_DEVICE,$ORACLE_HOME_DEVICE"
+"tinc m1.medium 2 0.05 $PackageAmiId $HOME_DEVICE"
+"storage m1.medium 1 0.05 $PackageAmiId $HOME_DEVICE,$STORAGE_DEVICE"
 )
 
 INSTALL_LANG=ja
@@ -1180,6 +1180,9 @@ test(){
 	#dbca
 	dbcaoption=`createdbcaoption node`
 	exessh node 1 "sudo -u oracle $ORA_ORACLE_HOME/bin/dbca $dbcaoption"
+	
+	#gridstatus
+	exessh node 1 "sh $0 gridstatus"
   
 }
 
@@ -1205,15 +1208,15 @@ createdbcaoption(){
 
 gridstatus()
 {
-	;sqlplus "/as sysdba" @asmused.sql;crsctl status resource -t' >> $Master_dir/main.log
-	  cat >> /home/grid/asmused.sh <<'EOF'
-source .bash_profile
-export ORACLE_SID=+ASM1
+	source /home/grid/.bash_profile
+	export ORACLE_SID=+ASM1
+	sqlplus -s "/as sysdba"<<'EOF'
 select group_number, name, total_mb, free_mb,total_mb - free_mb
 from v$asm_diskgroup;
 exit;
-EOF
-	}
+EOF	
+	crsctl status resource -t
+}
 
 
 waitreboot()
@@ -1524,5 +1527,6 @@ case "$1" in
   "createtgtd" ) createtgtd;;
   "waitreboot" ) waitreboot;;
   "mountoraclehome" ) mountoraclehome;;
+  "gridstatus" ) gridstatus;;
   * ) echo "Ex \"sh -x $0 setupallforclone c1.xlarge 1 m3.medium 10 2400 0\" 2400 means memorytarget, 0 means wait 0 seconds when grid root.sh" ;;
 esac
