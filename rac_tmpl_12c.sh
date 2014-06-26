@@ -41,7 +41,7 @@ FRA=$DISKGROUPNAME
 ASMPASSWORD="oracle123"
 CHARSET="AL32UTF8"
 NCHAR="AL16UTF16"
-
+MEMORYTARGET=2400
 TEMPLATENAME="General_Purpose.dbc"
 DATABASETYPE="MULTIPURPOSE"
 
@@ -853,14 +853,8 @@ oracle.install.asm.useExistingDiskGroup=false
 [ConfigWizard]
 EOF
 
-  cat >> /home/grid/asmused.sql <<'EOF'
-select group_number, name, total_mb, free_mb,total_mb - free_mb
-from v$asm_diskgroup;
-exit;
-EOF
     chmod 777 /home/grid/grid.rsp
     chmod 777 /home/grid/asm.rsp
-    chmod 777 /home/grid/asmused.sql
   fi
 
 }
@@ -1158,27 +1152,69 @@ test(){
 	pretincconf
 	copyfile all work
 	copyfile all $0
+	
 	#for storage
   	dsh storage "sh $0 changehostname;sh $0 setupdns;sh $0 createtgtd;reboot"
-  	
   	#for tinc
   	dsh tinc "sh $0 changehostname;sh $0 createtincconf;reboot"
-  	
   	waitreboot
   	
   	#for node
-  	dsh node "sh $0 changehostname;sh $0 createswap;sh $0 setdhcp;sh $0 createsshkey;"
+  	dsh node "sh $0 changehostname;sh $0 createswap;sh $0 setdhcp;sh $0 createsshkey"
   	dsh node "sh $0 mountoraclehome;sh $0 cleangridhome;sh $0 setupiscsi;sh $0 createtincconf"
   	dsh node "sh $0 creatersp;sh $0 createclonepl;reboot"
-
 	waitreboot
 	
+	#install grid infrastructure
 	dsh node "sudo -u grid /home/grid/start.sh;$ORAINVENTORY/orainstRoot.sh" | dshbak
+	#config.sh
 	exessh node 1 "sudo -u grid $GRID_ORACLE_HOME/crs/config/config.sh -silent -responseFile /home/grid/grid.rsp"
+	#root.sh 1st node
 	exessh node 1 "sh $0 exerootsh"
-
+	#root.sh other node
+	dsh node -x `getnodeip node 1` "sh $0 exerootsh"
+	
+	#install oracle software
+	dsh node "sudo -u oracle /home/oracle/start.sh;$ORA_ORACLE_HOME/root.sh -silent" | dshbak
+	
+	#dbca
+	dbcaoption=`createdbcaoption node`
+	exessh node 1 "sudo -u oracle $ORA_ORACLE_HOME/bin/dbca $dbcaoption"
   
 }
+
+createdbcaoption(){
+	dbcaoption="-silent -createDatabase -templateName $TEMPLATENAME -gdbName $DBNAME -sid $SIDNAME" 
+	dbcaoption="$dbcaoption -SysPassword $SYSPASSWORD -SystemPassword $SYSTEMPASSWORD -emConfiguration NONE -redoLogFileSize $REDOFILESIZE"
+	dbcaoption="$dbcaoption -recoveryAreaDestination $FRA -storageType ASM -asmSysPassword $ASMPASSWORD -diskGroupName $DISKGROUPNAME"
+	dbcaoption="$dbcaoption -characterSet $CHARSET -nationalCharacterSet $NCHAR -totalMemory $MEMORYTARGET -databaseType $DATABASETYPE"
+
+  	local NODECOUNT=1
+  	local NODELIST=`getnodelist $1 ip`
+  	for i in $NODELIST ;
+	do
+		if [ $NODECOUNT = 1 ] ; then
+			dbcaoption="$dbcaoption -nodelist `getnodename $NODECOUNT`"
+		else
+			dbcaoption="$dbcaoption,`getnodename $NODECOUNT`"
+		fi
+			NODECOUNT=`expr $NODECOUNT + 1`
+	done
+	echo $dbcaoption
+}
+
+gridstatus()
+{
+	;sqlplus "/as sysdba" @asmused.sql;crsctl status resource -t' >> $Master_dir/main.log
+	  cat >> /home/grid/asmused.sh <<'EOF'
+source .bash_profile
+export ORACLE_SID=+ASM1
+select group_number, name, total_mb, free_mb,total_mb - free_mb
+from v$asm_diskgroup;
+exit;
+EOF
+	}
+
 
 waitreboot()
 {
