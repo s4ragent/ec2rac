@@ -1530,6 +1530,6 @@ case "$1" in
   "waitreboot" ) waitreboot;;
   "mountoraclehome" ) mountoraclehome;;
   "gridstatus" ) gridstatus;;
-  "createdbcaoption" ) createdbcaoption $1;;
+  "createdbcaoption" ) createdbcaoption $2;;
   * ) echo "Ex \"sh -x $0 setupallforclone c1.xlarge 1 m3.medium 10 2400 0\" 2400 means memorytarget, 0 means wait 0 seconds when grid root.sh" ;;
 esac
