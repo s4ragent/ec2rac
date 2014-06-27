@@ -1199,7 +1199,7 @@ createdbcaoption(){
 		if [ $NODECOUNT = 1 ] ; then
 			dbcaoption="$dbcaoption -nodelist `getnodename $1 $NODECOUNT`"
 		else
-			dbcaoption="$dbcaoption,`getnodename $NODECOUNT`"
+			dbcaoption="$dbcaoption,`getnodename $1 $NODECOUNT`"
 		fi
 			NODECOUNT=`expr $NODECOUNT + 1`
 	done
