@@ -18,6 +18,7 @@ Roles=(
 "storage m1.medium 1 0.05 $PackageAmiId $HOME_DEVICE,$STORAGE_DEVICE"
 )
 
+PARALLEL=10
 INSTALL_LANG=ja
 TMPL_NAME="RACTMPL"
 KEY_NAME="oregon"
@@ -853,8 +854,10 @@ oracle.install.asm.useExistingDiskGroup=false
 [ConfigWizard]
 EOF
 
-    chmod 777 /home/grid/grid.rsp
-    chmod 777 /home/grid/asm.rsp
+    chmod 755 /home/grid/grid.rsp
+    chmod 755 /home/grid/asm.rsp
+    chown grid.oinstall /home/grid/grid.rsp
+    chown grid.oinstall /home/grid/asm.rsp
   fi
 
 }
@@ -1172,7 +1175,7 @@ test(){
 	#root.sh 1st node
 	exessh node 1 "sh $0 exerootsh"
 	#root.sh other node
-	dsh node -x `getnodeip node 1` "sh $0 exerootsh"
+	dsh node -x `getnodeip node 1` -f $PARALLEL "sh $0 exerootsh"
 	
 	#install oracle software
 	dsh node "sudo -u oracle /home/oracle/start.sh;$ORA_ORACLE_HOME/root.sh -silent" | dshbak
