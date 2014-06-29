@@ -1210,7 +1210,7 @@ gridstatus()
 {
 	source /home/grid/.bash_profile
 	export ORACLE_SID=+ASM1
-	sqlplus -s "/as sysdba" << 'EOF'
+	sqlplus -s "/as sysdba" <<'EOF'
 	select group_number, name, total_mb, free_mb,total_mb - free_mb from v$asm_diskgroup;
 	exit;
 EOF	
