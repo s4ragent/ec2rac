@@ -13,9 +13,9 @@ WORK_DIR="/root/work"
 #SWAP_SIZE=8
 #RoleName,InstanceType,Instance-count,Price,amiid,device:size:snap-id,device:size:snap-id.....
 Roles=(
-"node m1.medium 2 0.05 $PackageAmiId $HOME_DEVICE,$SWAP_DEVICE,$ORACLE_HOME_DEVICE"
-"tinc m1.medium 2 0.05 $PackageAmiId $HOME_DEVICE"
-"storage m1.medium 1 0.05 $PackageAmiId $HOME_DEVICE,$STORAGE_DEVICE"
+"node m3.medium 5 0.05 $PackageAmiId $HOME_DEVICE,$SWAP_DEVICE,$ORACLE_HOME_DEVICE"
+"tinc m3.medium 2 0.05 $PackageAmiId $HOME_DEVICE"
+"storage m3.medium 1 0.05 $PackageAmiId $HOME_DEVICE,$STORAGE_DEVICE"
 )
 
 PARALLEL=10
