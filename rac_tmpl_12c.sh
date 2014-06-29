@@ -1185,7 +1185,9 @@ test(){
 	exessh node 1 "sudo -u oracle $ORA_ORACLE_HOME/bin/dbca $dbcaoption"
 	
 	#gridstatus
-	exessh node 1 "sh $0 gridstatus"
+	exessh node 1 "sh $0 gridstatus" > test.log
+	
+	terminate
   
 }
 
