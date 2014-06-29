@@ -1210,7 +1210,7 @@ gridstatus()
 {
 	source /home/grid/.bash_profile
 	export ORACLE_SID=+ASM1
-	sqlplus -s "/as sysdba" <<'EOF'
+	sqlplus -s "/as sysdba" <<EOF
 EOF	
 	crsctl status resource -t
 }
