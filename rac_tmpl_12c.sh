@@ -15,7 +15,7 @@ WORK_DIR="/root/work"
 Roles=(
 "node m3.medium 5 0.05 $PackageAmiId $HOME_DEVICE,$SWAP_DEVICE,$ORACLE_HOME_DEVICE"
 "tinc m3.medium 2 0.05 $PackageAmiId $HOME_DEVICE"
-"storage m3.large 1 0.05 $PackageAmiId $HOME_DEVICE,$STORAGE_DEVICE"
+"storage m1.large 1 0.05 $PackageAmiId $HOME_DEVICE,$STORAGE_DEVICE"
 )
 
 PARALLEL=10
@@ -1185,7 +1185,7 @@ test(){
 	exessh node 1 "sudo -u oracle $ORA_ORACLE_HOME/bin/dbca $dbcaoption"
 	
 	#gridstatus
-	exessh node 1 "sh $0 gridstatus" > test.log
+	exessh node 1 "cp $0 /home/grid/gridstatus.sh"
   
 }
 
@@ -1211,6 +1211,7 @@ createdbcaoption(){
 
 gridstatus()
 {
+	
 	source /home/grid/.bash_profile
 	export ORACLE_SID=+ASM1
 	sqlplus -s "/as sysdba" <<'EOF'
