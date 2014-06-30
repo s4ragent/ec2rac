@@ -15,7 +15,7 @@ WORK_DIR="/root/work"
 Roles=(
 "node m3.medium 5 0.05 $PackageAmiId $HOME_DEVICE,$SWAP_DEVICE,$ORACLE_HOME_DEVICE"
 "tinc m3.medium 2 0.05 $PackageAmiId $HOME_DEVICE"
-"storage m3.medium 1 0.05 $PackageAmiId $HOME_DEVICE,$STORAGE_DEVICE"
+"storage m3.large 1 0.05 $PackageAmiId $HOME_DEVICE,$STORAGE_DEVICE"
 )
 
 PARALLEL=10
