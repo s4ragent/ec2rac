@@ -1521,7 +1521,7 @@ case "$1" in
   "setupiscsi" ) setupiscsi $2 $3;;
   "exessh" ) exessh $2 $3 $4 $5 $6 $7 $8;;
   "catrootsh" ) catrootsh $2;;
-  "updatescript" ) updatescript;;
+  "updatescript" ) updatescript $2;;
   "checktinc" ) checktinc $2;;
   "createdevicejson" ) createdevicejson $2;;
   "test" ) test;;
