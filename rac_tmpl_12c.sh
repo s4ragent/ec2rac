@@ -1153,6 +1153,8 @@ setupnode()
 test(){
 	curtime=`date +"%Y-%m%d-%H%M"`
 	log_dir="./logs/${curtime}"
+	
+	"`date` request start">> $log_dir/main.log
 	requestspotinstances
 	pretincconf
 	copyfile all work
@@ -1170,24 +1172,25 @@ test(){
   	dsh node "sh $0 changesysstat;sh $0 creatersp;sh $0 createclonepl;reboot"
 	waitreboot
 	
-	#install grid infrastructure
+	"`date` install grid infrastructure" >> $log_dir/main.log
 	dsh node "sudo -u grid /home/grid/start.sh;$ORAINVENTORY/orainstRoot.sh" | dshbak
-	#config.sh
+	
+	"`date` config.sh"  >> $log_dir/main.log
 	exessh node 1 "sudo -u grid $GRID_ORACLE_HOME/crs/config/config.sh -silent -responseFile /home/grid/grid.rsp"
-	#root.sh 1st node
+	"`date` root.sh 1st node"  >> $log_dir/main.log
 	exessh node 1 "sh $0 exerootsh"
-	#root.sh other node
+	"`date` root.sh other node" >> $log_dir/main.log
 	dsh node -x `getnodeip node 1` -f $PARALLEL "sh $0 exerootsh"
 	
-	#install oracle software
+	"`date` install oracle software" >> $log_dir/main.log
 	dsh node "sudo -u oracle /home/oracle/start.sh;$ORA_ORACLE_HOME/root.sh -silent" | dshbak
 	
-	#dbca
+	"`date` dbca" >> $log_dir/main.log
 	dbcaoption=`createdbcaoption node`
 	exessh node 1 "sudo -u oracle $ORA_ORACLE_HOME/bin/dbca $dbcaoption"
 	
-	#gridstatus
-	exessh node 1 "sh $0 gridstatus" > test.log
+	"`date` end of state " >> $log_dir/main.log
+	exessh node 1 "sh $0 gridstatus" >> $log_dir/main.log
 	
 
 	getlogs $log_dir
@@ -1232,6 +1235,7 @@ EOL
 EOF
 	chmod 755 /home/grid/asmused.sh
 	chown grid.oinstall /home/grid/asmused.sh
+	sudo -u grid sh /home/grid/asmused.sh
 }
 
 
