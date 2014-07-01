@@ -1154,7 +1154,7 @@ test(){
 	curtime=`date +"%Y-%m%d-%H%M"`
 	log_dir="./logs/${curtime}"
 	mkdir -p $log_dir
-	echo "`date` request start">> $log_dir/main.log
+	echo "`date` request start" >> $log_dir/main.log
 	requestspotinstances
 	pretincconf
 	copyfile all work
