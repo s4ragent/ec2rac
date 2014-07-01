@@ -1185,7 +1185,7 @@ test(){
 	exessh node 1 "sudo -u oracle $ORA_ORACLE_HOME/bin/dbca $dbcaoption"
 	
 	#gridstatus
-	exessh node 1 "cp $0 /home/grid/gridstatus.sh"
+	exessh node 1 "sh $0 gridstatus" > test.log
   
 }
 
@@ -1212,12 +1212,14 @@ createdbcaoption(){
 gridstatus()
 {
 	
-	source /home/grid/.bash_profile
-	export ORACLE_SID=+ASM1
-	sqlplus -s "/as sysdba" <<'EOF'
+	cat > /home/grid/asmused.sql <<'EOF'
 	select group_number, name, total_mb, free_mb,total_mb - free_mb from v$asm_diskgroup;
 	exit;
 EOF
+	chmod 755 /home/grid/asmused.sql
+	chown grid.oinstall /home/grid/asmused.sql
+	
+	sudo -u grid "source /home/grid/.bash_profile;export ORACLE_SID=+ASM1;sqlplus -s / as sysdba @/home/grid/asmused.sql"
 	crsctl status resource -t
 }
 
