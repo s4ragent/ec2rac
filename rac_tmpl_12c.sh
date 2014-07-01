@@ -1472,7 +1472,7 @@ getfile()
   for i in $LIST ;
   do
   	localdir=$3/`getnodename $1 $NODECOUNT`/$2
-        mkdir $localdir
+        mkdir -p $localdir
         scp $SCP_ARGS_APPEND -r root@$i:$2 $localdir
         NODECOUNT=`expr $NODECOUNT + 1`
   done
