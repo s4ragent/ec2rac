@@ -13,8 +13,8 @@ WORK_DIR="/root/work"
 #SWAP_SIZE=8
 #RoleName,InstanceType,Instance-count,Price,amiid,device:size:snap-id,device:size:snap-id.....
 Roles=(
-"node m3.medium 30 0.05 $PackageAmiId $HOME_DEVICE,$SWAP_DEVICE,$ORACLE_HOME_DEVICE"
-"tinc c3.large 2 0.05 $PackageAmiId $HOME_DEVICE"
+"node m3.medium 3 0.05 $PackageAmiId $HOME_DEVICE,$SWAP_DEVICE,$ORACLE_HOME_DEVICE"
+"tinc c3.large 1 0.05 $PackageAmiId $HOME_DEVICE"
 "storage m1.large 1 0.05 $PackageAmiId $HOME_DEVICE,$STORAGE_DEVICE"
 )
 
@@ -1154,7 +1154,7 @@ test(){
 	curtime=`date +"%Y-%m%d-%H%M"`
 	log_dir="./logs/${curtime}"
 	mkdir -p $log_dir
-	"`date` request start">> $log_dir/main.log
+	echo "`date` request start">> $log_dir/main.log
 	requestspotinstances
 	pretincconf
 	copyfile all work
@@ -1172,24 +1172,24 @@ test(){
   	dsh node "sh $0 changesysstat;sh $0 creatersp;sh $0 createclonepl;reboot"
 	waitreboot
 	
-	"`date` install grid infrastructure" >> $log_dir/main.log
+	echo "`date` install grid infrastructure" >> $log_dir/main.log
 	dsh node "sudo -u grid /home/grid/start.sh;$ORAINVENTORY/orainstRoot.sh" | dshbak
 	
-	"`date` config.sh"  >> $log_dir/main.log
+	echo "`date` config.sh"  >> $log_dir/main.log
 	exessh node 1 "sudo -u grid $GRID_ORACLE_HOME/crs/config/config.sh -silent -responseFile /home/grid/grid.rsp"
-	"`date` root.sh 1st node"  >> $log_dir/main.log
+	echo "`date` root.sh 1st node"  >> $log_dir/main.log
 	exessh node 1 "sh $0 exerootsh"
-	"`date` root.sh other node" >> $log_dir/main.log
+	echo "`date` root.sh other node" >> $log_dir/main.log
 	dsh node -x `getnodeip node 1` -f $PARALLEL "sh $0 exerootsh"
 	
-	"`date` install oracle software" >> $log_dir/main.log
+	echo "`date` install oracle software" >> $log_dir/main.log
 	dsh node "sudo -u oracle /home/oracle/start.sh;$ORA_ORACLE_HOME/root.sh -silent" | dshbak
 	
-	"`date` dbca" >> $log_dir/main.log
+	echo "`date` dbca" >> $log_dir/main.log
 	dbcaoption=`createdbcaoption node`
 	exessh node 1 "sudo -u oracle $ORA_ORACLE_HOME/bin/dbca $dbcaoption"
 	
-	"`date` end of state " >> $log_dir/main.log
+	echo "`date` end of state " >> $log_dir/main.log
 	exessh node 1 "sh $0 gridstatus" >> $log_dir/main.log
 	
 
