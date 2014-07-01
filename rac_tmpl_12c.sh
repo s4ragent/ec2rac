@@ -18,7 +18,7 @@ Roles=(
 "storage m1.large 1 0.05 $PackageAmiId $HOME_DEVICE,$STORAGE_DEVICE"
 )
 
-PARALLEL=10
+PARALLEL=5
 INSTALL_LANG=ja
 TMPL_NAME="RACTMPL"
 KEY_NAME="oregon"
