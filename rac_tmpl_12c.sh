@@ -1,4 +1,4 @@
-#/bin/bash
+#!/bin/bash
 export LANG=C
 
 LAUNCHGROUP="RACCLONE"
@@ -1151,21 +1151,23 @@ setupnode()
 }
 
 test(){
+	curtime=`date +"%Y-%m%d-%H%M"`
+	log_dir="./logs/${curtime}"
 	requestspotinstances
 	pretincconf
 	copyfile all work
 	copyfile all $0
 	
 	#for storage
-  	dsh storage "sh $0 changehostname;sh $0 setupdns;sh $0 createtgtd;reboot"
+  	dsh storage "sh $0 changesysstat;sh $0 changehostname;sh $0 setupdns;sh $0 createtgtd;reboot"
   	#for tinc
-  	dsh tinc "sh $0 changehostname;sh $0 createtincconf;reboot"
+  	dsh tinc "sh $0 changesysstat;sh $0 changehostname;sh $0 createtincconf;reboot"
   	waitreboot
   	
   	#for node
   	dsh node "sh $0 changehostname;sh $0 createswap;sh $0 setdhcp;sh $0 createsshkey"
   	dsh node "sh $0 mountoraclehome;sh $0 cleangridhome;sh $0 setupiscsi;sh $0 createtincconf"
-  	dsh node "sh $0 creatersp;sh $0 createclonepl;reboot"
+  	dsh node "sh $0 changesysstat;sh $0 creatersp;sh $0 createclonepl;reboot"
 	waitreboot
 	
 	#install grid infrastructure
@@ -1186,6 +1188,9 @@ test(){
 	
 	#gridstatus
 	exessh node 1 "sh $0 gridstatus" > test.log
+	
+
+	getlogs $log_dir
 	
 	#end of this test
 	terminate
@@ -1215,16 +1220,18 @@ createdbcaoption(){
 gridstatus()
 {
 	
-	cat > /home/grid/asmused.sql <<'EOF'
+	cat > /home/grid/asmused.sh <<'EOF'
+#!/bin/bash
+export ORACLE_SID=+ASM1
+source /home/grid/.bash_profile
+crsctl status resource -t
+sqlplus -s / as sysdba << EOL
 	select group_number, name, total_mb, free_mb,total_mb - free_mb from v$asm_diskgroup;
 	exit;
+EOL
 EOF
-	chmod 755 /home/grid/asmused.sql
-	chown grid.oinstall /home/grid/asmused.sql
-	
-	sudo -u grid "source /home/grid/.bash_profile;export ORACLE_SID=+ASM1;sqlplus -s / as sysdba @/home/grid/asmused.sql"
-	source /home/grid/.bash_profile
-	crsctl status resource -t
+	chmod 755 /home/grid/asmused.sh
+	chown grid.oinstall /home/grid/asmused.sh
 }
 
 
@@ -1473,11 +1480,12 @@ getfile()
 
 getlogs()
 {
-  getfile /root/watch $1
-  getfile $GRID_ORACLE_HOME/log $1
-  getfile $GRID_ORACLE_HOME/install/root* $1
-  getfile /var/log/tinc.log $1
-  getfile $ORAINVENTORY/logs $1
+  getfile node $GRID_ORACLE_HOME/log $1
+  getfile node $GRID_ORACLE_HOME/install/root* $1
+  getfile all /var/log/tinc.log $1
+  getfile node $ORAINVENTORY/logs $1
+  dsh all "sar -u > sar.log;sar -b >> sar.log"
+  getfile all /root/sar.log $1
 }
 
 exerootsh()
@@ -1490,7 +1498,13 @@ exerootsh()
   fi
 }
 
+changesysstat()
+{
+	sed -i 's/sa1 1 1/sa1 1 599/' /etc/cron.d/sysstat
+}
+
 case "$1" in
+  "changesysstat" changesysstat;;
   "exerootsh" ) exerootsh;;
   "getlogs" ) getlogs $2 $3;;
   "getfile" ) getfile $2 $3;;
