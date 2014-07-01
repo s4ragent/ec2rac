@@ -13,7 +13,7 @@ WORK_DIR="/root/work"
 #SWAP_SIZE=8
 #RoleName,InstanceType,Instance-count,Price,amiid,device:size:snap-id,device:size:snap-id.....
 Roles=(
-"node m3.medium 5 0.05 $PackageAmiId $HOME_DEVICE,$SWAP_DEVICE,$ORACLE_HOME_DEVICE"
+"node m3.medium 30 0.05 $PackageAmiId $HOME_DEVICE,$SWAP_DEVICE,$ORACLE_HOME_DEVICE"
 "tinc m3.medium 2 0.05 $PackageAmiId $HOME_DEVICE"
 "storage m1.large 1 0.05 $PackageAmiId $HOME_DEVICE,$STORAGE_DEVICE"
 )
@@ -1220,6 +1220,7 @@ EOF
 	chown grid.oinstall /home/grid/asmused.sql
 	
 	sudo -u grid "source /home/grid/.bash_profile;export ORACLE_SID=+ASM1;sqlplus -s / as sysdba @/home/grid/asmused.sql"
+	source /home/grid/.bash_profile
 	crsctl status resource -t
 }
 
