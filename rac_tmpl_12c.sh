@@ -1504,7 +1504,7 @@ changesysstat()
 }
 
 case "$1" in
-  "changesysstat" changesysstat;;
+  "changesysstat" ) changesysstat;;
   "exerootsh" ) exerootsh;;
   "getlogs" ) getlogs $2 $3;;
   "getfile" ) getfile $2 $3;;
