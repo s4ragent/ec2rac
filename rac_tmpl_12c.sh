@@ -1482,10 +1482,13 @@ getlogs()
 {
   getfile node $GRID_ORACLE_HOME/log $1
   getfile node $GRID_ORACLE_HOME/install/root* $1
-  getfile all /var/log/tinc.log $1
+  getfile node /var/log/tinc.log $1
+  getfile tinc /var/log/tinc.log $1
   getfile node $ORAINVENTORY/logs $1
   dsh all "sar -u > sar.log;sar -b >> sar.log"
-  getfile all /root/sar.log $1
+  getfile node /root/sar.log $1
+  getfile tinc /root/sar.log $1
+  getfile storage /root/sar.log $1
 }
 
 exerootsh()
