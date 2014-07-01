@@ -1186,6 +1186,9 @@ test(){
 	
 	#gridstatus
 	exessh node 1 "sh $0 gridstatus" > test.log
+	
+	#end of this test
+	terminate
   
 }
 
