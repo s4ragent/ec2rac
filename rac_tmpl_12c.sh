@@ -1153,7 +1153,7 @@ setupnode()
 test(){
 	curtime=`date +"%Y-%m%d-%H%M"`
 	log_dir="./logs/${curtime}"
-	
+	mkdir -p $log_dir
 	"`date` request start">> $log_dir/main.log
 	requestspotinstances
 	pretincconf
