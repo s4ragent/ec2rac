@@ -453,13 +453,7 @@ requestspotinstances(){
         	SgId=`createsecuritygroup ${Role}`
         	DeviceJson=`createdevicejson ${Role}`
         	PARAMS=($Role)
-        	if [ "$DeviceJson" != "" ]; then
-        		Json={\"ImageId\":\"${PARAMS[4]}\",\"KeyName\":\"${KEY_NAME}\",\"InstanceType\":\"${PARAMS[1]}\",\"BlockDeviceMappings\":$DeviceJson,\"SubnetId\":\"${SubnetId}\",\"SecurityGroupIds\":[\"${SgId}\"]}
-        	else
-        		Json={\"ImageId\":\"${PARAMS[4]}\",\"KeyName\":\"${KEY_NAME}\",\"InstanceType\":\"${PARAMS[1]}\",\"SubnetId\":\"${SubnetId}\",\"SecurityGroupIds\":[\"${SgId}\"]}
-        	fi
-        
-        	aws ec2 request-spot-instances --spot-price ${PARAMS[3]} --region $Region --launch-group $LAUNCHGROUP --launch-specification $Json --instance-count ${PARAMS[2]} 
+		addspotinstances ${PARAMS[0]} ${PARAMS[2]}
 		instancecount=`expr $instancecount + ${PARAMS[2]}`
 	done
 
@@ -472,6 +466,30 @@ requestspotinstances(){
 	setnodelist
 	waitreboot
 	
+}
+
+#$1 Role $2 add instance count
+addspotinstances()
+{
+
+	for Role in "${Roles[@]}"
+	do
+		PARAMS=($Role)
+		if [ "$1" = "${PARAMS[0]}" ]; then
+			SgName=`getsgname ${PARAMS[0]}`
+			SgId=`getsgid $SgName`
+    
+	        	DeviceJson=`createdevicejson ${Role}`
+
+        		if [ "$DeviceJson" != "" ]; then
+        			Json={\"ImageId\":\"${PARAMS[4]}\",\"KeyName\":\"${KEY_NAME}\",\"InstanceType\":\"${PARAMS[1]}\",\"BlockDeviceMappings\":$DeviceJson,\"SubnetId\":\"${SubnetId}\",\"SecurityGroupIds\":[\"${SgId}\"]}
+        		else
+        			Json={\"ImageId\":\"${PARAMS[4]}\",\"KeyName\":\"${KEY_NAME}\",\"InstanceType\":\"${PARAMS[1]}\",\"SubnetId\":\"${SubnetId}\",\"SecurityGroupIds\":[\"${SgId}\"]}
+        		fi
+        
+        		aws ec2 request-spot-instances --spot-price ${PARAMS[3]} --region $Region --launch-group $LAUNCHGROUP --launch-specification $Json --instance-count ${2} 
+        	fi
+	done
 }
 
 createdevicejson()
@@ -1537,6 +1555,7 @@ case "$1" in
   "clone" ) clone $2;;
   "startinstances" ) startinstances $2 $3;;
   "requestspotinstances" ) requestspotinstances $2 $3 $4 $5;;
+   "addspotinstances" ) addspotinstances $2 $3 $4 $5;;
   "stopinstances" ) stopinstances ;;
   "terminate" ) terminate ;;
   "setupnodeforclone" ) setupnodeforclone $2;;
