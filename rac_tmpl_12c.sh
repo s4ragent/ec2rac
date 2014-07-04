@@ -130,7 +130,7 @@ setnodelist()
 	SgName=`getsgname ${PARAMS[0]}`
 	SgId=`getsgid $SgName`
 	  
-	NODEOBJ=`aws ec2 describe-instances --region $Region --filter "Name=instance.group-id,Values=$SgId" --query 'Reservations[].Instances[].[InstanceId,[NetworkInterfaces[].PrivateIpAddress]]' --output text`
+	NODEOBJ=`aws ec2 describe-instances --region $Region --filters "Name=instance.group-id,Values=$SgId" --query 'Reservations[].Instances[].[InstanceId,[NetworkInterfaces[].PrivateIpAddress]]' --output text`
 	NODEOBJ=`echo $NODEOBJ`
 	
 	  
@@ -431,7 +431,7 @@ listami()
 
 createsecuritygroup(){
   SgName=`getsgname ${1} ${VpcId}`
-  SgId=`getsgid $SgName $Region`
+  SgId=`getsgid $SgName`
 
   if [ "$SgId" != "" ] ; then
  	aws ec2 delete-security-group --group-id $SgId --region $Region > /dev/null
@@ -447,22 +447,32 @@ createsecuritygroup(){
 
 
 requestspotinstances(){
-	instancecount=0
 	for Role in "${Roles[@]}"
 	do
         	SgId=`createsecuritygroup ${Role}`
         	DeviceJson=`createdevicejson ${Role}`
         	PARAMS=($Role)
+		#${PARAMS[0]} RoleName ${PARAMS[2]} instance count
 		addspotinstances ${PARAMS[0]} ${PARAMS[2]}
-		instancecount=`expr $instancecount + ${PARAMS[2]}`
 	done
 
-	requestcount=`aws ec2 describe-spot-instance-requests --region $Region --query 'SpotInstanceRequests[].Status[].Code' | grep "fulfilled" | wc -l`
-	while [ $instancecount != $requestcount ]
+	for Role in "${Roles[@]}"
 	do
-		sleep 10
- 		requestcount=`aws ec2 describe-spot-instance-requests --region $Region --query 'SpotInstanceRequests[].Status[].Code' | grep "fulfilled" | wc -l`
+        	PARAMS=($Role)
+        	SgName=`getsgname ${PARAMS[0]}`
+		SgId=`getsgid $SgName`
+		#${PARAMS[0]} RoleName ${PARAMS[2]} instance count
+		instancecount=${PARAMS[2]}
+		
+		requestcount=`aws ec2 describe-spot-instance-requests --region $Region --filters "Name=launch.group-id,Values=$SgId" --query 'SpotInstanceRequests[].Status[].Code' | grep "fulfilled" | wc -l`
+		while [ $instancecount != $requestcount ]
+		do
+			sleep 10
+ 			requestcount=`aws ec2 describe-spot-instance-requests --region $Region --filters "Name=launch.group-id,Values=$SgId" --query 'SpotInstanceRequests[].Status[].Code' | grep "fulfilled" | wc -l`
+		done
 	done
+
+
 	setnodelist
 	waitreboot
 	
@@ -471,10 +481,10 @@ requestspotinstances(){
 #$1 Role $2 add instance count
 addspotinstances()
 {
-
+	local Role
 	for Role in "${Roles[@]}"
 	do
-		PARAMS=($Role)
+		local PARAMS=($Role)
 		if [ "$1" = "${PARAMS[0]}" ]; then
 			SgName=`getsgname ${PARAMS[0]}`
 			SgId=`getsgid $SgName`
@@ -1247,7 +1257,7 @@ export ORACLE_SID=+ASM1
 source /home/grid/.bash_profile
 crsctl status resource -t
 sqlplus -s / as sysdba << EOL
-	select group_number, name, total_mb, free_mb,total_mb - free_mb from v$asm_diskgroup;
+	select group_number, name, total_mb, free_mb,total_mb - free_mb from v\$asm_diskgroup;
 	exit;
 EOL
 EOF
