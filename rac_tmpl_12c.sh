@@ -1533,9 +1533,16 @@ exerootsh()
   fi
 }
 
-createtopic()
+gettopic()
 {
-	aws sns create-topic --region $Region --name $1  --output text	
+	LOCAL CNT=`aws sns list-topics --region $Region --output text | grep  $1  | wc -l`
+	if [ $CNT != 0 ]; then
+            	TOPICARN=`aws sns list-topics --region $Region --output text | grep  $1 | awk '{split ($0,a); print a[2]}'
+        else
+        	TOPICARN=`aws sns create-topic --region $Region --name $1  --output text`
+        fi
+        echo $TOPICARN
+		
 }
 
 changesysstat()
@@ -1595,6 +1602,6 @@ case "$1" in
   "mountoraclehome" ) mountoraclehome;;
   "gridstatus" ) gridstatus;;
   "createdbcaoption" ) createdbcaoption $2;;
-  "createtopic" ) createtopic $2;;
+  "gettopic" ) gettopic $2;;
   * ) echo "Ex \"sh -x $0 setupallforclone c1.xlarge 1 m3.medium 10 2400 0\" 2400 means memorytarget, 0 means wait 0 seconds when grid root.sh" ;;
 esac
