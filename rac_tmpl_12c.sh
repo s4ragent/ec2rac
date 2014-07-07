@@ -1533,6 +1533,11 @@ exerootsh()
   fi
 }
 
+createtopic()
+{
+	aws sns create-topic --name $1	
+}
+
 changesysstat()
 {
 	sed -i 's/sa1 1 1/sa1 1 599/' /etc/cron.d/sysstat
@@ -1590,5 +1595,6 @@ case "$1" in
   "mountoraclehome" ) mountoraclehome;;
   "gridstatus" ) gridstatus;;
   "createdbcaoption" ) createdbcaoption $2;;
+  "createtopic" ) createtopic $2;;
   * ) echo "Ex \"sh -x $0 setupallforclone c1.xlarge 1 m3.medium 10 2400 0\" 2400 means memorytarget, 0 means wait 0 seconds when grid root.sh" ;;
 esac
