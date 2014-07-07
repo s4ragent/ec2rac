@@ -1535,7 +1535,7 @@ exerootsh()
 
 gettopic()
 {
-	LOCAL CNT=`aws sns list-topics --region $Region --output text | grep  $1  | wc -l`
+	local CNT=`aws sns list-topics --region $Region --output text | grep  $1  | wc -l`
 	if [ $CNT != 0 ]; then
             	TOPICARN=`aws sns list-topics --region $Region --output text | grep  $1 | awk '{split ($0,a); print a[2]}'`
         else
