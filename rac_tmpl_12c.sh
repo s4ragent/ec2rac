@@ -1535,7 +1535,7 @@ exerootsh()
 
 createtopic()
 {
-	aws sns create-topic --name $1	
+	aws sns create-topic --region $Region --name $1 --query 'TopicArn[]' --output text	
 }
 
 changesysstat()
