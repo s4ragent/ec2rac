@@ -1540,6 +1540,9 @@ gettopic()
             	TOPICARN=`aws sns list-topics --region $Region --output text | grep  $1 | awk '{split ($0,a); print a[2]}'`
         else
         	TOPICARN=`aws sns create-topic --region $Region --name $1  --output text`
+        	echo "input email"
+        	read EMAILADDR
+        	aws sns subscribe --topic-arn $TOPICARN --protocol email --notification-endpoint $EMAILADDR
         fi
         echo $TOPICARN
 		
