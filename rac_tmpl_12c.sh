@@ -1548,6 +1548,12 @@ gettopic()
 		
 }
 
+publishtopic()
+{
+	gettopic
+}
+
+
 changesysstat()
 {
 	sed -i 's/sa1 1 1/sa1 1 599/' /etc/cron.d/sysstat
