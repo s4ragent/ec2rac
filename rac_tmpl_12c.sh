@@ -1542,7 +1542,7 @@ gettopic()
         	TOPICARN=`aws sns create-topic --region $Region --name $1  --output text`
         	echo "input email"
         	read EMAILADDR
-        	aws sns subscribe --topic-arn $TOPICARN --protocol email --notification-endpoint $EMAILADDR
+        	aws sns subscribe --region $Region --topic-arn $TOPICARN --protocol email --notification-endpoint $EMAILADDR
         fi
         echo $TOPICARN
 		
