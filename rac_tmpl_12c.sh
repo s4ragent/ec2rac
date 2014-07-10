@@ -1554,6 +1554,11 @@ publishtopic()
 	aws sns publish --region $Region --topic-arn $1 --message $2
 }
 
+testtopic()
+{
+	TOPICARN=`gettopic $2`
+	publishtopic $TOPICARN $3
+}
 
 changesysstat()
 {
@@ -1614,5 +1619,6 @@ case "$1" in
   "createdbcaoption" ) createdbcaoption $2;;
   "gettopic" ) gettopic $2;;
   "publishtopic" ) publishtopic $2 $3;;
+  "testtopic" ) testtopic $2 $3;;
   * ) echo "Ex \"sh -x $0 setupallforclone c1.xlarge 1 m3.medium 10 2400 0\" 2400 means memorytarget, 0 means wait 0 seconds when grid root.sh" ;;
 esac
