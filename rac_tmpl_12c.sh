@@ -1556,8 +1556,8 @@ publishtopic()
 
 testtopic()
 {
-	TOPICARN=`gettopic $2`
-	publishtopic $TOPICARN "$3 $4 $5 $6 $7 $8 $9"
+	TOPICARN=`gettopic $1`
+	publishtopic $TOPICARN "$2 $3 $4 $5 $6 $7 $8 $9"
 }
 
 changesysstat()
