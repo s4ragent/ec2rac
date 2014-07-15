@@ -19,6 +19,7 @@ Roles=(
 )
 
 PARALLEL=5
+MAXREQUESTWAIT=1200
 INSTALL_LANG=ja
 TMPL_NAME="RACTMPL"
 KEY_NAME="oregon"
@@ -456,27 +457,41 @@ requestspotinstances(){
 		addspotinstances ${PARAMS[0]} ${PARAMS[2]}
 	done
 
+
+	setnodelist
+	waitreboot
+	
+}
+
+waitrequest(){
+	local Role
+	local waittime=0
 	for Role in "${Roles[@]}"
 	do
+		
         	PARAMS=($Role)
         	SgName=`getsgname ${PARAMS[0]}`
 		SgId=`getsgid $SgName`
+		isSend=0
 		#${PARAMS[0]} RoleName ${PARAMS[2]} instance count
 		instancecount=${PARAMS[2]}
-		
 		requestcount=`aws ec2 describe-spot-instance-requests --region $Region --filters "Name=launch.group-id,Values=$SgId" --query 'SpotInstanceRequests[].Status[].Code' | grep "fulfilled" | wc -l`
 		while [ $instancecount != $requestcount ]
 		do
 			sleep 10
+			waittime=`expr $waittime + 10`
+			if [ "$waittime" >= "$MAXREQUESTWAIT" ]; then
+				if [ "$isSend" != 1 ]; then
+					TOPICARN=`gettopic $LAUNCHGROUP`
+					publishtopic $TOPICARN "${PARAMS[0]} is requested  $instancecount now $requestcount"
+					isSend=1
+				fi				
+			fi
  			requestcount=`aws ec2 describe-spot-instance-requests --region $Region --filters "Name=launch.group-id,Values=$SgId" --query 'SpotInstanceRequests[].Status[].Code' | grep "fulfilled" | wc -l`
 		done
 	done
 
-#	TOPICARN=`gettopic $1`
-#	publishtopic $TOPICARN "$2 $3 $4 $5 $6 $7 $8 $9"
-	setnodelist
-	waitreboot
-	
+
 }
 
 #$1 Role $2 add instance count
