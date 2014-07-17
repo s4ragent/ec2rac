@@ -457,7 +457,7 @@ requestspotinstances(){
 		addspotinstances ${PARAMS[0]} ${PARAMS[2]}
 	done
 
-
+	waitrequest
 	setnodelist
 	waitreboot
 	
