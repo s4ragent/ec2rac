@@ -480,7 +480,7 @@ waitrequest(){
 		do
 			sleep 10
 			waittime=`expr $waittime + 10`
-			if [ "$waittime" >= "$MAXREQUESTWAIT" ]; then
+			if [ "$waittime" -ge "$MAXREQUESTWAIT" ]; then
 				if [ "$isSend" != 1 ]; then
 					TOPICARN=`gettopic $LAUNCHGROUP`
 					publishtopic $TOPICARN "${PARAMS[0]} is requested  $instancecount now $requestcount"
