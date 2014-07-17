@@ -1642,5 +1642,6 @@ case "$1" in
   "gettopic" ) gettopic $2;;
   "publishtopic" ) publishtopic $2 $3 $4 $5 $6 $7 $8 $9;;
   "testtopic" ) testtopic $2 $3 $4 $5 $6 $7 $8 $9;;
+  "waitrequest" ) waitrequest;;
   * ) echo "Ex \"sh -x $0 setupallforclone c1.xlarge 1 m3.medium 10 2400 0\" 2400 means memorytarget, 0 means wait 0 seconds when grid root.sh" ;;
 esac
