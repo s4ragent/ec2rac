@@ -655,8 +655,9 @@ rm /var/run/ntpd.pid
 
 setdhcp()
 {
-	SERVER=`getnodelist storage ip`
-	echo "supersede domain-name-servers ${SERVER};" >> /etc/dhcp/dhclient-eth0.conf
+	#SERVER=`getnodelist storage ip`
+	#echo "supersede domain-name-servers ${SERVER};" >> /etc/dhcp/dhclient-eth0.conf
+	echo "supersede domain-name-servers 127.0.0.1;" >> /etc/dhcp/dhclient-eth0.conf
 }
 
 setupdns ()
@@ -683,6 +684,12 @@ setupdns ()
     done
 
     ###enable dnsmasq####
+      cat > /etc/dnsmasq.conf <<EOF
+domain-needed
+bogus-priv
+expand-hosts
+domain=${NETWORK_NAME[0]}
+EOF
     chkconfig dnsmasq on
     /etc/init.d/dnsmasq start
 
@@ -1207,13 +1214,13 @@ test(){
 	copyfile all $0
 	
 	#for storage
-  	dsh storage "sh $0 changesysstat;sh $0 changehostname;sh $0 setupdns;sh $0 createtgtd;reboot"
+  	dsh storage "sh $0 changesysstat;sh $0 changehostname;sh $0 createtgtd;reboot"
   	#for tinc
   	dsh tinc "sh $0 changesysstat;sh $0 changehostname;sh $0 createtincconf;reboot"
   	waitreboot
   	
   	#for node
-  	dsh node "sh $0 changehostname;sh $0 createswap;sh $0 setdhcp;sh $0 createsshkey"
+  	dsh node "sh $0 changehostname;sh $0 createswap;sh $0 setupdns;sh $0 setdhcp;sh $0 createsshkey"
   	dsh node "sh $0 mountoraclehome;sh $0 cleangridhome;sh $0 setupiscsi;sh $0 createtincconf"
   	dsh node "sh $0 changesysstat;sh $0 creatersp;sh $0 createclonepl;reboot"
 	waitreboot
