@@ -13,7 +13,7 @@ WORK_DIR="/root/work"
 #SWAP_SIZE=8
 #RoleName,InstanceType,Instance-count,Price,amiid,device:size:snap-id,device:size:snap-id.....
 Roles=(
-"node m3.medium 3 0.05 $PackageAmiId $HOME_DEVICE,$SWAP_DEVICE,$ORACLE_HOME_DEVICE"
+"node m3.medium 30 0.05 $PackageAmiId $HOME_DEVICE,$SWAP_DEVICE,$ORACLE_HOME_DEVICE"
 "tinc c3.large 1 0.05 $PackageAmiId $HOME_DEVICE"
 "storage m1.large 1 0.05 $PackageAmiId $HOME_DEVICE,$STORAGE_DEVICE"
 )
@@ -436,8 +436,10 @@ createsecuritygroup(){
 
   if [ "$SgId" != "" ] ; then
  	aws ec2 delete-security-group --group-id $SgId --region $Region > /dev/null
+ 	sleep 20
   fi
   SgId=`aws ec2 create-security-group --group-name $SgName --description "$SgName"  --vpc-id $VpcId --region $Region --query 'GroupId' --output text`
+  sleep 20
   aws ec2 authorize-security-group-ingress --group-id $SgId --cidr $MyNetwork/16 --protocol -1 --port -1 --region $Region > /dev/null
 
 
