@@ -1547,7 +1547,9 @@ exerootsh()
   $GRID_ORACLE_HOME/root.sh -silent >& /dev/null
   RET=$?
   if [ $RET != 0 ] ; then
-	echo `hostname -s`
+  	TOPICARN=`gettopic $LAUNCHGROUP`
+	publishtopic $TOPICARN "root.sh `hostname -s` fail " > /dev/null
+	#echo `hostname -s`
   fi
 }
 
