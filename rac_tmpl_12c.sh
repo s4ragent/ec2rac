@@ -388,7 +388,13 @@ clone()
 {
   #deviceJson=[{\"DeviceName\":\"/dev/sda1\",\"Ebs\":{\"VolumeSize\":25,\"DeleteOnTermination\":true,\"VolumeType\":\"standard\"}},{\"DeviceName\":\"/dev/sdb\",\"VirtualName\":\"ephemeral0\"}]
   #InstanceId=`curl -s http://169.254.169.254/latest/meta-data/instance-id`
-  InstanceId=$1
+  if [ "$1" = "self" ] ; then
+	InstanceId=$MyInstanceId
+  else
+	InstanceId=$1 	
+  fi
+  
+
   DATE=`date "+%Y%m%d%H%M"`
   #AmiId=`aws ec2 create-image --instance-id $InstanceId --name $TMPL_NAME-$DATE --no-reboot --region $Region --block-device-mappings $deviceJson --output text`
   AmiId=`aws ec2 create-image --instance-id $InstanceId --name "$1-$DATE" --no-reboot --region $Region --query 'ImageId' --output text`
