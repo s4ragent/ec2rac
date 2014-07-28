@@ -1218,7 +1218,7 @@ test(){
 	pretincconf
 	copyfile all work
 	copyfile all $0
-	copyfile all oswbb730.tar
+	copyfile all oswbb*.tar
 	
 	#for storage
   	dsh storage "sh $0 changesysstat;sh $0 changehostname;sh $0 createtgtd;reboot"
@@ -1231,6 +1231,8 @@ test(){
   	dsh node "sh $0 mountoraclehome;sh $0 cleangridhome;sh $0 setupiscsi;sh $0 createtincconf"
   	dsh node "sh $0 changesysstat;sh $0 creatersp;sh $0 createclonepl;reboot"
 	waitreboot
+	
+	dsh all "sh $0 exeoswatcher"
 	
 	echo "`date` install grid infrastructure" >> $log_dir/main.log
 	dsh node "sudo -u grid /home/grid/start.sh;$ORAINVENTORY/orainstRoot.sh" | dshbak
@@ -1542,33 +1544,35 @@ getfile()
   done
 }
 
-setuposwatcher(){
+exeoswatcher(){
+	local myRole=`getmyrole`
 	tar xvf oswbb*.tar
-	echo 'echo "zzz ***"`date`' > oswbb/private.net
-	
-	local LIST=`getnodelist node ip`
-	local NODECOUNT=1
-	for i in $LIST ;
-	do
-		echo "traceroute -r -F `getip 1 real $NODECOUNT`" >> oswbb/private.net
-		NODECOUNT=`expr $NODECOUNT + 1`
-	done
-	echo "rm locks/lock.file" >> oswbb/private.net
-	echo "`pwd`/oswbb/OSWatcher.sh 5 10 &" >>/etc/rc.d/rc.local
+	if [ "$myRole" = "node" ] ; then
+		local LIST=`getnodelist node ip`
+		local NODECOUNT=1
+		echo 'echo "zzz ***"`date`' > oswbb/private.net
+		for i in $LIST ;
+		do
+			echo "traceroute -r -F `getip 1 real $NODECOUNT`" >> oswbb/private.net
+			NODECOUNT=`expr $NODECOUNT + 1`
+		done
+		echo "rm locks/lock.file" >> oswbb/private.net
+	fi
+	cd oswbb
+	./startOSWbb.sh 5 10 &
 }
-
 
 getlogs()
 {
+  getfile all /var/log/messages $1
   getfile node $GRID_ORACLE_HOME/log $1
   getfile node $GRID_ORACLE_HOME/install/root* $1
+  getfile node $ORAINVENTORY/logs $1
   getfile node /var/log/tinc.log $1
   getfile tinc /var/log/tinc.log $1
-  getfile node $ORAINVENTORY/logs $1
-  dsh all "sar -u > sar.log;sar -b >> sar.log"
-  getfile node /root/sar.log $1
-  getfile tinc /root/sar.log $1
-  getfile storage /root/sar.log $1
+  getfile all /root/archive $1
+  getfile all /root/analysis $1
+
 }
 
 exerootsh()
@@ -1677,6 +1681,6 @@ case "$1" in
   "publishtopic" ) publishtopic $2 $3 $4 $5 $6 $7 $8 $9;;
   "testtopic" ) testtopic $2 $3 $4 $5 $6 $7 $8 $9;;
   "waitrequest" ) waitrequest;;
-  "setuposwatcher" ) setuposwatcher;;
+  "exeoswatcher" ) exeuposwatcher;;
   * ) echo "Ex \"sh -x $0 setupallforclone c1.xlarge 1 m3.medium 10 2400 0\" 2400 means memorytarget, 0 means wait 0 seconds when grid root.sh" ;;
 esac
