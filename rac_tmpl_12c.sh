@@ -1561,7 +1561,7 @@ exeoswatcher(){
 		chmod 755 oswbb/private.net
 	fi
 	cd oswbb
-	./startOSWbb.sh 5 10 &
+	./startOSWbb.sh 5 10  >/dev/null &
 }
 
 getlogs()
