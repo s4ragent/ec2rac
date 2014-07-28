@@ -1554,7 +1554,7 @@ setuposwatcher(){
 		NODECOUNT=`expr $NODECOUNT + 1`
 	done
 	echo "rm locks/lock.file" >> oswbb/private.net
-	echo "`pwd`/oswbb/startOSwbb.sh 5 10 &" >>/etc/rc.d/rc.local
+	echo "`pwd`/oswbb/OSWatcher.sh 5 10 &" >>/etc/rc.d/rc.local
 }
 
 
