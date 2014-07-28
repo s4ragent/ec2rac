@@ -1546,6 +1546,7 @@ getfile()
 
 exeoswatcher(){
 	local myRole=`getmyrole`
+	rm -rf oswbb
 	tar xvf oswbb*.tar
 	if [ "$myRole" = "node" ] ; then
 		local LIST=`getnodelist node ip`
@@ -1557,6 +1558,7 @@ exeoswatcher(){
 			NODECOUNT=`expr $NODECOUNT + 1`
 		done
 		echo "rm locks/lock.file" >> oswbb/private.net
+		chmod 755 oswbb/private.net
 	fi
 	cd oswbb
 	./startOSWbb.sh 5 10 &
@@ -1570,8 +1572,8 @@ getlogs()
   getfile node $ORAINVENTORY/logs $1
   getfile node /var/log/tinc.log $1
   getfile tinc /var/log/tinc.log $1
-  getfile all /root/archive $1
-  getfile all /root/analysis $1
+  getfile all /root/oswbb/archive $1
+  getfile all /root/oswbb/analysis $1
 
 }
 
