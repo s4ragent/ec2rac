@@ -1218,6 +1218,7 @@ test(){
 	pretincconf
 	copyfile all work
 	copyfile all $0
+	copyfile all oswbb730.tar
 	
 	#for storage
   	dsh storage "sh $0 changesysstat;sh $0 changehostname;sh $0 createtgtd;reboot"
@@ -1540,6 +1541,22 @@ getfile()
         NODECOUNT=`expr $NODECOUNT + 1`
   done
 }
+
+setuposwatcher(){
+	tar xvf oswbb*.tar
+	echo 'echo "zzz ***"`date`' > oswbb/private.net
+	
+	local LIST=`getnodelist node ip`
+	local NODECOUNT=1
+	for i in $LIST ;
+	do
+		echo "traceroute -r -F `getip 1 real $NODECOUNT`" >> oswbb/private.net
+		NODECOUNT=`expr $NODECOUNT + 1`
+	done
+	echo "rm locks/lock.file" >> oswbb/private.net
+	echo "`pwd`/oswbb/startOSwbb.sh 5 10 &" >>/etc/rc.d/rc.local
+}
+
 
 getlogs()
 {
