@@ -345,7 +345,7 @@ installpackage ()
   rpm -ivh $RPMFORGE_URL
   rpm -ivh $EPEL_URL
   yum -y groupinstall "Desktop" "X Window System" "Japanese Support"
-  yum -y install pdsh unzip oracle-rdbms-server-12cR1-preinstall tigervnc-server screen nfs-utils dnsmasq scsi-target-utils iscsi-initiator-utils firefox.x86_64 xrdp expect tinc patch
+  yum -y install traceroute pdsh unzip oracle-rdbms-server-12cR1-preinstall tigervnc-server screen nfs-utils dnsmasq scsi-target-utils iscsi-initiator-utils firefox.x86_64 xrdp expect tinc patch
   curl -L http://www.mail-archive.com/xrdp-devel@lists.sourceforge.net/msg00263/km-e0010411.ini -o ./km-e0010411.ini
   cp ./km-e0010411.ini /etc/xrdp/km-e0010411.ini
   cp /etc/xrdp/km-e0010411.ini /etc/xrdp/km-0411.ini
