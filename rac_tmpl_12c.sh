@@ -714,7 +714,7 @@ Name = dummy
 Interface = tap0
 Mode = switch
 BindToAddress * 655
-MaxTimeout = 10
+MaxTimeout = 5
 
 EOF
   cat > $WORK_DIR/hosts/dummy<<EOF
