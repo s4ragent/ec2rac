@@ -1562,6 +1562,7 @@ exeoswatcher(){
 	fi
 	cd oswbb
 	nohup ./startOSWbb.sh 5 10  &
+	sleep 10
 }
 
 getlogs()
