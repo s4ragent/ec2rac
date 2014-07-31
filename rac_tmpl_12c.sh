@@ -1566,7 +1566,9 @@ exeoswatcher(){
 
 getlogs()
 {
-  getfile all /var/log/messages $1
+  getfile node /var/log/messages $1
+  getfile tinc /var/log/messages $1
+  getfile storage /var/log/messages $1
   getfile node $GRID_ORACLE_HOME/log $1
   getfile node $GRID_ORACLE_HOME/install/root* $1
   getfile node $ORAINVENTORY/logs $1
