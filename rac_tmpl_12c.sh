@@ -3,7 +3,7 @@ export LANG=C
 
 LAUNCHGROUP="RACCLONE"
 RACSnapshotId="snap-99a6676b"
-PackageAmiId="ami-974234a7"
+PackageAmiId="ami-3fa7dc0f"
 SWAP_DEVICE="/dev/xvdb:ephemeral0"
 STORAGE_DEVICE="/dev/xvdb:ephemeral0"
 HOME_DEVICE="/dev/sda1:15"
@@ -714,7 +714,7 @@ Name = dummy
 Interface = tap0
 Mode = switch
 BindToAddress * 655
-MaxTimeout = 30
+MaxTimeout = 10
 
 EOF
   cat > $WORK_DIR/hosts/dummy<<EOF
@@ -804,6 +804,13 @@ createtincconf()
 			NODECOUNT=`expr $NODECOUNT + 1`
 			NODENAME=`getnodename tinc $NODECOUNT`
 			echo "ConnectTo = $NODENAME" >> /etc/tinc/$NETNAME/tinc.conf
+			
+			mynumber2=`expr $myNumber + 1`
+			NODECOUNT2=`expr $myNumber2 % ${#LIST[@]}`
+			NODECOUNT2=`expr $NODECOUNT2 + 1`
+			NODENAME2=`getnodename tinc $NODECOUNT2`
+			echo "ConnectTo = $NODENAME2" >> /etc/tinc/$NETNAME/tinc.conf
+			
 		fi
     		
 		
