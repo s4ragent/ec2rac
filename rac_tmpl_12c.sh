@@ -1232,7 +1232,7 @@ test(){
   	dsh node "sh $0 changesysstat;sh $0 creatersp;sh $0 createclonepl;reboot"
 	waitreboot
 	
-	dsh all "sh $0 exeoswatcher"
+	dsh all "sh -x $0 exeoswatcher"
 	
 	echo "`date` install grid infrastructure" >> $log_dir/main.log
 	dsh node "sudo -u grid /home/grid/start.sh;$ORAINVENTORY/orainstRoot.sh" | dshbak
