@@ -1572,9 +1572,12 @@ getlogs()
   getfile node $ORAINVENTORY/logs $1
   getfile node /var/log/tinc.log $1
   getfile tinc /var/log/tinc.log $1
-  getfile all /root/oswbb/archive $1
-  getfile all /root/oswbb/analysis $1
-
+  getfile node /root/oswbb/archive $1
+  getfile node /root/oswbb/analysis $1
+  getfile tinc /root/oswbb/archive $1
+  getfile tinc /root/oswbb/analysis $1
+  getfile storage /root/oswbb/archive $1
+  getfile storage /root/oswbb/analysis $1
 }
 
 exerootsh()
