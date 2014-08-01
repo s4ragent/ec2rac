@@ -13,8 +13,8 @@ WORK_DIR="/root/work"
 #SWAP_SIZE=8
 #RoleName,InstanceType,Instance-count,Price,amiid,device:size:snap-id,device:size:snap-id.....
 Roles=(
-"node m3.medium 30 0.05 $PackageAmiId $HOME_DEVICE,$SWAP_DEVICE,$ORACLE_HOME_DEVICE"
-"tinc c3.large 1 0.05 $PackageAmiId $HOME_DEVICE"
+"node m3.medium 40 0.05 $PackageAmiId $HOME_DEVICE,$SWAP_DEVICE,$ORACLE_HOME_DEVICE"
+"tinc c3.large 4 0.05 $PackageAmiId $HOME_DEVICE"
 "storage m1.large 1 0.05 $PackageAmiId $HOME_DEVICE,$STORAGE_DEVICE"
 )
 
@@ -37,13 +37,13 @@ DBNAME="ORCL"
 SIDNAME="ORCL" 
 SYSPASSWORD="oracle123"
 SYSTEMPASSWORD="oracle123"
-REDOFILESIZE=500
+REDOFILESIZE=10
 DISKGROUPNAME="CRS"
 FRA=$DISKGROUPNAME
 ASMPASSWORD="oracle123"
 CHARSET="AL32UTF8"
 NCHAR="AL16UTF16"
-MEMORYTARGET=2400
+MEMORYTARGET=4800
 TEMPLATENAME="General_Purpose.dbc"
 DATABASETYPE="MULTIPURPOSE"
 
