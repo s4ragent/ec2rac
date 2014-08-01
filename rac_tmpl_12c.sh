@@ -804,8 +804,8 @@ createtincconf()
 			NODECOUNT=`expr $NODECOUNT + 1`
 			NODENAME=`getnodename tinc $NODECOUNT`
 			echo "ConnectTo = $NODENAME" >> /etc/tinc/$NETNAME/tinc.conf
-			
-			mynumber2=`expr $myNumber + 1`
+			#
+			myNumber2=`expr $myNumber + 1`
 			NODECOUNT2=`expr $myNumber2 % ${#LIST[@]}`
 			NODECOUNT2=`expr $NODECOUNT2 + 1`
 			NODENAME2=`getnodename tinc $NODECOUNT2`
