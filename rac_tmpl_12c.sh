@@ -14,7 +14,7 @@ WORK_DIR="/root/work"
 #RoleName,InstanceType,Instance-count,Price,amiid,device:size:snap-id,device:size:snap-id.....
 Roles=(
 "node m3.large 40 0.05 $PackageAmiId $HOME_DEVICE,$SWAP_DEVICE,$ORACLE_HOME_DEVICE"
-"tinc c3.large 4 0.05 $PackageAmiId $HOME_DEVICE"
+"tinc c3.large 2 0.05 $PackageAmiId $HOME_DEVICE"
 "storage m1.large 1 0.05 $PackageAmiId $HOME_DEVICE,$STORAGE_DEVICE"
 )
 
@@ -805,11 +805,11 @@ createtincconf()
 			NODENAME=`getnodename tinc $NODECOUNT`
 			echo "ConnectTo = $NODENAME" >> /etc/tinc/$NETNAME/tinc.conf
 			#
-			myNumber2=`expr $myNumber + 1`
-			NODECOUNT2=`expr $myNumber2 % ${#LIST[@]}`
-			NODECOUNT2=`expr $NODECOUNT2 + 1`
-			NODENAME2=`getnodename tinc $NODECOUNT2`
-			echo "ConnectTo = $NODENAME2" >> /etc/tinc/$NETNAME/tinc.conf
+			#myNumber2=`expr $myNumber + 1`
+			#NODECOUNT2=`expr $myNumber2 % ${#LIST[@]}`
+			#NODECOUNT2=`expr $NODECOUNT2 + 1`
+			#NODENAME2=`getnodename tinc $NODECOUNT2`
+			#echo "ConnectTo = $NODENAME2" >> /etc/tinc/$NETNAME/tinc.conf
 			
 		fi
     		
