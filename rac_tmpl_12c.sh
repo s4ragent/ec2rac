@@ -1229,6 +1229,8 @@ test(){
 	echo "`date` root.sh other node" >> $log_dir/main.log
 	exeotherrootsh
 	
+	exessh node 1 "sh $0 exeasmca"
+	
 	echo "`date` install oracle software" >> $log_dir/main.log
 	installoraclesoftware
 	
@@ -1446,6 +1448,13 @@ execonfigsh()
 	echo $RET
 }
 
+exeasmca()
+{
+	sudo -u grid $GRID_ORACLE_HOME/cfgtoollogs/configToolAllCommands RESPONSE_FILE=/home/grid/asm.rsp &> /dev/null
+	local RET=$?
+	echo $RET
+}
+
 exe1strootsh(){
 	exessh node 1 "sh $0 exerootsh"
 }
@@ -1584,6 +1593,7 @@ case "$1" in
   "exe1strootsh" ) exe1strootsh;;
   "exeotherrootsh" ) exeotherrootsh;;
   "exedbca" ) exedbca;;
+  "exeasmca" ) exeasmca;;
   "getgridstatus" ) getgridstatus;;
   * ) echo "Ex \"sh -x $0 setupallforclone c1.xlarge 1 m3.medium 10 2400 0\" 2400 means memorytarget, 0 means wait 0 seconds when grid root.sh" ;;
 esac
