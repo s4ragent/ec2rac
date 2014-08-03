@@ -1451,7 +1451,23 @@ exe1strootsh(){
 
 exeotherrootsh()
 {
-	dsh node -x `getnodeip node 1` -f $PARALLEL "sh $0 exerootsh"
+	#create hosts file
+	cp -f /etc/hosts $WORK_DIR/hosts.back
+	echo "127.0.0.1   localhost localhost.localdomain localhost4 localhost4.localdomain4 `hostname -s`" >/etc/hosts
+	echo "::1         localhost localhost.localdomain localhost6 localhost6.localdomain6" >> /etc/hosts
+	  
+	LIST=`getnodelist node ip`
+	NODECOUNT=1
+	cat "" > $WORK_DIR/rootsh.list
+	for i in $LIST ;
+	do
+	    echo `getnodename node $NODECOUNT` >> $WORK_DIR/rootsh.list
+	    echo "$i `getnodename $NODECOUNT`" >> /etc/hosts
+	    NODECOUNT=`expr $NODECOUNT + 1`
+	done
+	pdsh -R ssh -w ^$WORK_DIR/rootsh.list -x `getnodename node 1` -f $PARALLEL "sh $0 exerootsh"
+	
+	cp -f $WORK_DIR/hosts.back /etc/hosts
 }
 
 exerootsh()
