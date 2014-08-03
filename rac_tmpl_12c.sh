@@ -1254,19 +1254,18 @@ test(){
 	fi
 	
 	echo "`date` root.sh 1st node"  >> $log_dir/main.log
-	exessh node 1 "sh $0 exerootsh"
+	exe1strootsh
 	echo "`date` root.sh other node" >> $log_dir/main.log
-	dsh node -x `getnodeip node 1` -f $PARALLEL "sh $0 exerootsh"
+	exeotherrootsh
 	
 	echo "`date` install oracle software" >> $log_dir/main.log
 	installoraclesoftware
 	
 	echo "`date` dbca" >> $log_dir/main.log
-	dbcaoption=`createdbcaoption node`
-	exessh node 1 "sudo -u oracle $ORA_ORACLE_HOME/bin/dbca $dbcaoption"
+	exedbca
 	
 	echo "`date` end of state " >> $log_dir/main.log
-	exessh node 1 "sh $0 gridstatus" >> $log_dir/main.log
+	getgridstatus >> $log_dir/main.log
 	
 
 	getlogs $log_dir
@@ -1276,14 +1275,14 @@ test(){
   
 }
 
-createdbcaoption(){
+exedbca(){
 	dbcaoption="-silent -createDatabase -templateName $TEMPLATENAME -gdbName $DBNAME -sid $SIDNAME" 
 	dbcaoption="$dbcaoption -SysPassword $SYSPASSWORD -SystemPassword $SYSTEMPASSWORD -emConfiguration NONE -redoLogFileSize $REDOFILESIZE"
 	dbcaoption="$dbcaoption -recoveryAreaDestination $FRA -storageType ASM -asmSysPassword $ASMPASSWORD -diskGroupName $DISKGROUPNAME"
 	dbcaoption="$dbcaoption -characterSet $CHARSET -nationalCharacterSet $NCHAR -totalMemory $MEMORYTARGET -databaseType $DATABASETYPE"
 
   	local NODECOUNT=1
-  	local NODELIST=`getnodelist $1 ip`
+  	local NODELIST=`getnodelist node ip`
   	for i in $NODELIST ;
 	do
 		if [ $NODECOUNT = 1 ] ; then
@@ -1293,9 +1292,13 @@ createdbcaoption(){
 		fi
 			NODECOUNT=`expr $NODECOUNT + 1`
 	done
-	echo $dbcaoption
+	exessh node 1 "sudo -u oracle $ORA_ORACLE_HOME/bin/dbca $dbcaoption"
 }
 
+getgridstatus()
+{
+	exessh node 1 "sh $0 gridstatus"
+}
 gridstatus()
 {
 	
@@ -1634,6 +1637,15 @@ execonfigsh()
 	echo $RET
 }
 
+exe1strootsh(){
+	exessh node 1 "sh $0 exerootsh"
+}
+
+exeotherrootsh()
+{
+	dsh node -x `getnodeip node 1` -f $PARALLEL "sh $0 exerootsh"
+}
+
 exerootsh()
 {
   $GRID_ORACLE_HOME/crs/install/rootcrs.pl -deconfig -force -verbose &> /dev/null
@@ -1641,7 +1653,7 @@ exerootsh()
   RET=$?
   if [ $RET != 0 ] ; then
   	TOPICARN=`gettopic $LAUNCHGROUP`
-	publishtopic $TOPICARN "root.sh `hostname -s` fail " > /dev/null
+	publishtopic $TOPICARN "root.sh `hostname -s` fail " &> /dev/null
 	#echo `hostname -s`
   fi
 }
@@ -1744,5 +1756,9 @@ case "$1" in
   "installgridsoftware" ) installgridsoftware;;
   "installoraclesoftware" ) installoraclesoftware;;
   "execonfigsh" ) execonfigsh;;
+  "exe1strootsh" ) exe1strootsh;;
+  "exeotherrootsh" ) exeotherrootsh;;
+  "exedbca" ) exedbca;;
+  "getgridstatus" ) getgridstatus;;
   * ) echo "Ex \"sh -x $0 setupallforclone c1.xlarge 1 m3.medium 10 2400 0\" 2400 means memorytarget, 0 means wait 0 seconds when grid root.sh" ;;
 esac
