@@ -1463,7 +1463,7 @@ exeotherrootsh()
 	for i in $LIST ;
 	do
 	    echo `getnodename node $NODECOUNT` >> $WORK_DIR/rootsh.list
-	    echo "$i `getnodename $NODECOUNT`" >> /etc/hosts
+	    echo "$i `getnodename node $NODECOUNT`" >> /etc/hosts
 	    NODECOUNT=`expr $NODECOUNT + 1`
 	done
 	pdsh -R ssh -w ^$WORK_DIR/rootsh.list -x `getnodename node 1` -f $PARALLEL "sh $0 exerootsh"
