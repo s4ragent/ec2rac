@@ -1129,36 +1129,6 @@ createclonebase()
   sed -i "s/^RACSnapshotId=.*/RACSnapshotId=\"$SnapShotId\"/" $0
 }
 
-setupnodeforclone()
-{
-
-  MyIp=`ifconfig eth0 | grep 'inet addr' | awk -F '[: ]' '{print $13}'`
-  SERVER_AND_NODE="$SERVER $NODELIST"
-  NODECOUNT=0
-  for i in $SERVER_AND_NODE ;
-  do
-    if [ "$i" = "$MyIp" ] ; then
-      MyNumber=$NODECOUNT
-      break
-    fi
-    NODECOUNT=`expr $NODECOUNT + 1`
-  done
-  
-  
-  chkconfig xrdp on
-  changehostname $MyNumber
-  setupdns $MyNumber
-  createtincconf $MyNumber
-  createswap $MyNumber
-  setupiscsi $MyNumber
-  mountoraclehome $MyNumber
-  cleangridhome
-  createclonepl
-  creatersp $MyNumber
-  watch
-}
-
-
 cleangridhome()
 {
   OLD_IFS=$IFS
@@ -1338,33 +1308,7 @@ dsh()
 }
 
 setupallforclone(){
-  MEMORYTARGET=$5
-  PARALLEL=$6
-  export PDSH_SSH_ARGS_APPEND=$PDSH_SSH_ARGS_APPEND
-  
-  curtime=`date +"%Y-%m%d-%H%M"`
-  Master_dir="./logs/${curtime}"
-  mkdir -p $Master_dir
-  echo "$1_$2_$3_$4_$5_$6" > $Master_dir/main.log
-  echo "start of clone `date`" >> $Master_dir/main.log
-  echo "*********************" >> $Master_dir/main.log
-  echo "start of request spot instance startup  `date`" >> $Master_dir/main.log
-  Region=`curl http://169.254.169.254/latest/meta-data/placement/availability-zone -s | perl -pe chop`
-  #server-instance-type sever-count node-instance-type node-count
-  requestspotinstances $1 $2 $3 $4
-  instancecount=`expr $2 + $4`
-  requestcount=`aws ec2 describe-spot-instance-requests --region $Region --query 'SpotInstanceRequests[].Status[].Code' | grep "fulfilled" | wc -l`
-  while [ $instancecount != $requestcount ]
-  do
-    sleep 10
-    requestcount=`aws ec2 describe-spot-instance-requests --region $Region --query 'SpotInstanceRequests[].Status[].Code' | grep "fulfilled" | wc -l`
-  done
-  echo "end of request(request is fulfilled)  `date`" >> $Master_dir/main.log
-  
-  setupnodelist
-  sed -i "s/^NODELIST=.*/NODELIST=\"$NODELIST\"/" $0
-  sed -i "s/^NODEids=.*/NODEids=\"$NODEids\"/" $0
-  sed -i "s/^SERVER=.*/SERVER=\"$SERVER\"/" $0
+
   
   #create hosts file
   echo "127.0.0.1   localhost localhost.localdomain localhost4 localhost4.localdomain4 `hostname -s`" >/etc/hosts
@@ -1380,143 +1324,7 @@ setupallforclone(){
     NODECOUNT=`expr $NODECOUNT + 1`
   done  
   
-  #check server_and_node is alive
-  CMD="pdsh -R ssh -t 10 -w ^hostlist -S date"
-  $CMD
-  RET=$?
-  while [ $RET != 0 ]
-  do
-    sleep 10
-    $CMD
-    RET=$?
-  done
-  
-  copyfile $0
-  
-  
-  echo "end of request spot instance startup and copyfile `date`" >> $Master_dir/main.log 
-
-  echo "*********************" >> $Master_dir/main.log
-  echo "start of server dns&iscsi  `date`" >> $Master_dir/main.log
-  ssh $PDSH_SSH_ARGS_APPEND root@`getnodename 0` "sleep 10;sh -x $0 setupnodeforclone;reboot" > $Master_dir/dns_iscsi.log
-
-  #prevent connect before reboot
-  sleep 60
-  CMD="ssh $PDSH_SSH_ARGS_APPEND root@`getnodename 0` date"
-  $CMD
-  RET=$?
-  while [ $RET != 0 ]
-  do
-    sleep 10
-    $CMD
-    RET=$?
-  done
-  
-  echo "end of server dns&iscsi  `date`" >> $Master_dir/main.log
-  echo "*********************" >> $Master_dir/main.log
-  
-  echo "start of node dns&iscsi  `date`" >> $Master.log
-  echo "start of node dns&iscsi  `date`"
-  pdsh -R ssh -f 200 -w ^hostlist -x `getnodename 0` "hostname;date;sh -x $0 setupnodeforclone;date" | dshbak >>$Master_dir/dns_iscsi.log
-  pdsh -R ssh -f 200 -u 120 -w ^hostlist -x `getnodename 0` reboot
-  sleep 120
-  #check node is alive
-  CMD="pdsh -R ssh -f 200 -w ^hostlist -x `getnodename 0` -S date"
-  $CMD
-  RET=$?
-  while [ $RET != 0 ]
-  do
-    sleep 10
-    $CMD
-    RET=$?
-  done
-  
-  sleep 10
-  echo "end of node dns&iscsi  `date`" >> $Master_dir/main.log
-  echo "*********************" >> $Master_dir/main.log
-  echo "start of grid software install  `date`" >> $Master_dir/main.log
-  echo "start of grid software install  `date`" >> $Master_dir/grid_install.log
-  pdsh -R ssh -f 200 -w ^hostlist -x `getnodename 0` "hostname;date;sudo -u grid /home/grid/start.sh;$ORAINVENTORY/orainstRoot.sh" | dshbak >> $Master_dir/grid_install.log
-  
-  echo "end of grid software install  `date`" >> $Master_dir/main.log
-  echo "*********************" >> $Master_dir/main.log
-  
-  echo "start of config.sh `date`" >> $Master_dir/main.log
-  echo "start of config.sh `date`" >> $Master_dir/config_sh.log
-  ssh $PDSH_SSH_ARGS_APPEND root@`getnodename 1` "sudo -u grid $GRID_ORACLE_HOME/crs/config/config.sh -silent -responseFile /home/grid/grid.rsp" >> $Master_dir/config_sh.log
-  echo "end of config.sh `date`" >> $Master_dir/main.log
-  
-
-  
-  echo "start of first node of root.sh `date`" >>  $Master_dir/main.log
-  ssh $PDSH_SSH_ARGS_APPEND root@`getnodename 1` "sh $0 exerootsh" >> $Master_dir/failhost
-  echo "end of first node of root.sh `date`" >> $Master_dir/main.log
-  echo "start of second node to last node of root.sh `date`" >> $Master_dir/main.log
-  pdsh -R ssh -f $PARALLEL -w ^hostlist -x `getnodename 0`,`getnodename 1` "sh $0 exerootsh"  >> $Master_dir/failhost
-  echo "end of second node to last node of root.sh `date`" >> $Master_dir/main.log
-  
-  echo "start of first node of configToolAllCommands `date`" >> $Master_dir/main.log
-  ssh $PDSH_SSH_ARGS_APPEND root@`getnodename 1`  "sudo -u grid $GRID_ORACLE_HOME/cfgtoollogs/configToolAllCommands RESPONSE_FILE=/home/grid/asm.rsp" >> $Master_dir/config_sh.log
-  echo "*********************" >> $Master_dir/main.log
-  echo "start of oracle install  `date`" >>$Master_dir/main.log
-  pdsh -R ssh -f 200 -w ^hostlist -x `getnodename 0`  "hostname;date;sudo -u oracle /home/oracle/start.sh;$ORA_ORACLE_HOME/root.sh -silent" | dshbak >> $Master_dir/oracle_install.log
-  echo "end of oracle install  `date`" >> $Master_dir/main.log
-  echo "*********************" >> $Master_dir/main.log
-  echo "start of dbca `date`" >> $Master_dir/main.log
-
-  dbcaoption="-silent -createDatabase -templateName $TEMPLATENAME -gdbName $DBNAME -sid $SIDNAME" 
-  dbcaoption="$dbcaoption -SysPassword $SYSPASSWORD -SystemPassword $SYSTEMPASSWORD -emConfiguration NONE -redoLogFileSize $REDOFILESIZE"
-  dbcaoption="$dbcaoption -recoveryAreaDestination $FRA -storageType ASM -asmSysPassword $ASMPASSWORD -diskGroupName $DISKGROUPNAME"
-  dbcaoption="$dbcaoption -characterSet $CHARSET -nationalCharacterSet $NCHAR -totalMemory $MEMORYTARGET -databaseType $DATABASETYPE"
-
-  NODECOUNT=1
-  for i in $NODELIST ;
-  do
-    if [ $NODECOUNT = 1 ] ; then
-      dbcaoption="$dbcaoption -nodelist `getnodename $NODECOUNT`"
-    else
-      dbcaoption="$dbcaoption,`getnodename $NODECOUNT`"
-    fi
-    NODECOUNT=`expr $NODECOUNT + 1`
-  done
-
-  ssh $PDSH_SSH_ARGS_APPEND root@`getnodename 1`  "sudo -u oracle $ORA_ORACLE_HOME/bin/dbca $dbcaoption"  >> $Master_dir/dbca.log
-
-  echo "end of dbca `date`" >> $Master_dir/main.log
-  echo "*********************" >> $Master_dir/main.log
-  echo "end of clone `date`" >> $Master_dir/main.log
-  
-  echo "result `date`" >> $Master_dir/main.log
-  ssh -i ./id_rsa -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null grid@`getnodename 1` 'source .bash_profile;export ORACLE_SID=+ASM1;sqlplus "/as sysdba" @asmused.sql;crsctl status resource -t' >> $Master_dir/main.log
-  
-  pdsh -R ssh -f 200 -w ^hostlist "hostname;date;sar -u;sar -b" | dshbak >> $Master_dir/sar.log
-  getlogs $Master_dir
-  
 }
-
-setupall(){
-  #startupinnstance
-  setupnodelist
-  sed -i "s/^NODELIST=.*/NODELIST=\"$NODELIST\"/" $0
-  sed -i "s/^NODEids=.*/NODEids=\"$NODEids\"/" $0
-  sed -i "s/^SERVER=.*/SERVER=\"$SERVER\"/" $0
-  copyfile $0
-  SERVER_AND_NODE="$SERVER $NODELIST"
-  NODECOUNT=0
-  for i in $SERVER_AND_NODE ;
-  do
-        ssh -i $KEY_PAIR -o "StrictHostKeyChecking no" root@$i "sh $0 setupnode $NODECOUNT"
-        NODECOUNT=`expr $NODECOUNT + 1`
-  done
-  NODECOUNT=0
-  for i in $SERVER_AND_NODE ;
-  do
-        ssh -i $KEY_PAIR -o "StrictHostKeyChecking no" root@$i "reboot"
-        NODECOUNT=`expr $NODECOUNT + 1`
-  done
-  
-}
-
 
 exessh()
 {
