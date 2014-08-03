@@ -1217,8 +1217,7 @@ test(){
 	
 	echo "`date` config.sh"  >> $log_dir/main.log
 	local RETCODE=`exessh node 1 "sh $0 execonfigsh"`
-	RETCODE=`echo $RETCODE`
-	if [ $RETCODE != 0 ] ; then
+	if [ $RETCODE != "0\r" ] ; then
 		local TOPICARN=`gettopic $LAUNCHGROUP`
 		publishtopic $TOPICARN "config.sh failed" &> /dev/null
 		exit
@@ -1229,6 +1228,7 @@ test(){
 	echo "`date` root.sh other node" >> $log_dir/main.log
 	exeotherrootsh
 	
+	echo "`date` asmca" >> $log_dir/main.log
 	exessh node 1 "sh $0 exeasmca"
 	
 	echo "`date` install oracle software" >> $log_dir/main.log
