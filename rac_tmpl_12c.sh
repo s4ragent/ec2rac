@@ -805,11 +805,11 @@ createtincconf()
 			NODENAME=`getnodename tinc $NODECOUNT`
 			echo "ConnectTo = $NODENAME" >> /etc/tinc/$NETNAME/tinc.conf
 			#
-			#myNumber2=`expr $myNumber + 1`
-			#NODECOUNT2=`expr $myNumber2 % ${#LIST[@]}`
-			#NODECOUNT2=`expr $NODECOUNT2 + 1`
-			#NODENAME2=`getnodename tinc $NODECOUNT2`
-			#echo "ConnectTo = $NODENAME2" >> /etc/tinc/$NETNAME/tinc.conf
+			myNumber2=`expr $myNumber + 1`
+			NODECOUNT2=`expr $myNumber2 % ${#LIST[@]}`
+			NODECOUNT2=`expr $NODECOUNT2 + 1`
+			NODENAME2=`getnodename tinc $NODECOUNT2`
+			echo "ConnectTo = $NODENAME2" >> /etc/tinc/$NETNAME/tinc.conf
 			
 		fi
     		
