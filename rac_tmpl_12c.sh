@@ -1240,9 +1240,9 @@ exedbca(){
   	for i in $NODELIST ;
 	do
 		if [ $NODECOUNT = 1 ] ; then
-			dbcaoption="$dbcaoption -nodelist `getnodename $1 $NODECOUNT`"
+			dbcaoption="$dbcaoption -nodelist `getnodename node $NODECOUNT`"
 		else
-			dbcaoption="$dbcaoption,`getnodename $1 $NODECOUNT`"
+			dbcaoption="$dbcaoption,`getnodename node $NODECOUNT`"
 		fi
 			NODECOUNT=`expr $NODECOUNT + 1`
 	done
