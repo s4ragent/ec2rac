@@ -1424,7 +1424,7 @@ execonfigsh(){
 
 exeasmca()
 {
-	local RETCODE=`exessh node 1 "sh $0 localacmca"`
+	local RETCODE=`exessh node 1 "sh $0 localasmca"`
 	RETCODE=`echo ${RETCODE} | cut -d = -f2`
 	RETCODE=`echo ${RETCODE} | sed -e 's/[^0-9]//g'`
 	if [ ${RETCODE} != "0" ] ; then
