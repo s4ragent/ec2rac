@@ -1217,6 +1217,7 @@ setupnode()
 }
 
 test(){
+	local RETCODE=0
 	curtime=`date +"%Y-%m%d-%H%M"`
 	log_dir="./logs/${curtime}"
 	mkdir -p $log_dir
@@ -1242,17 +1243,23 @@ test(){
 	dsh all "sh $0 exeoswatcher"
 	
 	echo "`date` install grid infrastructure" >> $log_dir/main.log
-	dsh node "sudo -u grid /home/grid/start.sh;$ORAINVENTORY/orainstRoot.sh" | dshbak
+	installgridsoftware
 	
 	echo "`date` config.sh"  >> $log_dir/main.log
-	exessh node 1 "sudo -u grid $GRID_ORACLE_HOME/crs/config/config.sh -silent -responseFile /home/grid/grid.rsp"
+	local RETCODE=`exessh node 1 "sh $0 execonfigsh"`
+	if [ $RETCODE != 0 ] ; then
+		local TOPICARN=`gettopic $LAUNCHGROUP`
+		publishtopic $TOPICARN "config.sh failed" &> /dev/null
+		exit
+	fi
+	
 	echo "`date` root.sh 1st node"  >> $log_dir/main.log
 	exessh node 1 "sh $0 exerootsh"
 	echo "`date` root.sh other node" >> $log_dir/main.log
 	dsh node -x `getnodeip node 1` -f $PARALLEL "sh $0 exerootsh"
 	
 	echo "`date` install oracle software" >> $log_dir/main.log
-	dsh node "sudo -u oracle /home/oracle/start.sh;$ORA_ORACLE_HOME/root.sh -silent" | dshbak
+	installoraclesoftware
 	
 	echo "`date` dbca" >> $log_dir/main.log
 	dbcaoption=`createdbcaoption node`
@@ -1516,7 +1523,7 @@ exessh()
 
 catrootsh()
 {
-  exessh $1 "ls $GRID_ORACLE_HOME/install/root* | sort -r | head -n 1 | xargs cat"
+  exessh $1 $2 "ls $GRID_ORACLE_HOME/install/root* | sort -r | head -n 1 | xargs cat"
 }
 
 updatescript()
@@ -1590,10 +1597,47 @@ getlogs()
   #getfile storage /root/oswbb/analysis $1
 }
 
+installgridsoftware()
+{
+	dsh node -u 900 "sudo -u grid /home/grid/start.sh;$ORAINVENTORY/orainstRoot.sh"
+	local RET=$?
+	if [ $RET != 0 ] ; then
+		dsh node dsh node -u 900 "sudo -u grid /home/grid/start.sh;$ORAINVENTORY/orainstRoot.sh"
+	fi
+	local RET=$?
+	if [ $RET != 0 ] ; then
+		TOPICARN=`gettopic $LAUNCHGROUP`
+		publishtopic $TOPICARN "/home/grid/start.sh not finished" &> /dev/null
+	fi
+
+}
+
+installoraclesoftware()
+{
+	dsh node -u 900 "sudo -u oracle /home/oracle/start.sh;$ORA_ORACLE_HOME/root.sh -silent"
+	local RET=$?
+	if [ $RET != 0 ] ; then
+		dsh node dsh node -u 900 "sudo -u oracle /home/oracle/start.sh;$ORA_ORACLE_HOME/root.sh -silent"
+	fi
+	local RET=$?
+	if [ $RET != 0 ] ; then
+		TOPICARN=`gettopic $LAUNCHGROUP`
+		publishtopic $TOPICARN "/home/oracle/start.sh not finished" &> /dev/null
+	fi
+
+}
+
+execonfigsh()
+{
+	sudo -u grid $GRID_ORACLE_HOME/crs/config/config.sh -silent -responseFile /home/grid/grid.rsp &> /dev/null
+	local RET=$?
+	echo $RET
+}
+
 exerootsh()
 {
-  $GRID_ORACLE_HOME/crs/install/rootcrs.pl -deconfig -force -verbose >& /dev/null
-  $GRID_ORACLE_HOME/root.sh -silent >& /dev/null
+  $GRID_ORACLE_HOME/crs/install/rootcrs.pl -deconfig -force -verbose &> /dev/null
+  $GRID_ORACLE_HOME/root.sh -silent &> /dev/null
   RET=$?
   if [ $RET != 0 ] ; then
   	TOPICARN=`gettopic $LAUNCHGROUP`
@@ -1642,7 +1686,7 @@ EOF
 
 case "$1" in
   "changesysstat" ) changesysstat;;
-  "exerootsh" ) exerootsh;;
+  "exerootsh" ) exerootsh $1 $2;;
   "getlogs" ) getlogs $2 $3;;
   "getfile" ) getfile $2 $3;;
   "watch" ) watch;;
@@ -1697,5 +1741,8 @@ case "$1" in
   "testtopic" ) testtopic $2 $3 $4 $5 $6 $7 $8 $9;;
   "waitrequest" ) waitrequest;;
   "exeoswatcher" ) exeoswatcher;;
+  "installgridsoftware" ) installgridsoftware;;
+  "installoraclesoftware" ) installoraclesoftware;;
+  "execonfigsh" ) execonfigsh;;
   * ) echo "Ex \"sh -x $0 setupallforclone c1.xlarge 1 m3.medium 10 2400 0\" 2400 means memorytarget, 0 means wait 0 seconds when grid root.sh" ;;
 esac
