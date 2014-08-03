@@ -1217,6 +1217,7 @@ test(){
 	
 	echo "`date` config.sh"  >> $log_dir/main.log
 	local RETCODE=`exessh node 1 "sh $0 execonfigsh"`
+	RETCODE=`echo $RETCODE`
 	if [ $RETCODE != 0 ] ; then
 		local TOPICARN=`gettopic $LAUNCHGROUP`
 		publishtopic $TOPICARN "config.sh failed" &> /dev/null
@@ -1441,7 +1442,7 @@ installoraclesoftware()
 execonfigsh()
 {
 	sudo -u grid $GRID_ORACLE_HOME/crs/config/config.sh -silent -responseFile /home/grid/grid.rsp &> /dev/null
-	local RET=`echo $?`
+	local RET=$?
 	echo $RET
 }
 
