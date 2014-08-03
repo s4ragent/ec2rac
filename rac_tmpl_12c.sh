@@ -1172,22 +1172,7 @@ cleangridhome()
   rm -rf inventory/backup/*
 }
 
-setupnode()
-{
-  changelocale
-  chkconfig xrdp on
-  changehostname $1
-  setupdns $1
-  createtincconf $1
-  createswap $1
-  setupiscsi $1
-  fdiskoraclehome $1
-  mountoraclehome $1
-  createoraclehome
-}
-
 test(){
-	local RETCODE=0
 	curtime=`date +"%Y-%m%d-%H%M"`
 	log_dir="./logs/${curtime}"
 	mkdir -p $log_dir
@@ -1216,20 +1201,16 @@ test(){
 	installgridsoftware
 	
 	echo "`date` config.sh"  >> $log_dir/main.log
-	local RETCODE=`exessh node 1 "sh $0 execonfigsh"`
-	if [ $RETCODE != "0\r" ] ; then
-		local TOPICARN=`gettopic $LAUNCHGROUP`
-		publishtopic $TOPICARN "config.sh failed" &> /dev/null
-		exit
-	fi
+	execonfigsh
 	
 	echo "`date` root.sh 1st node"  >> $log_dir/main.log
 	exe1strootsh
+	
 	echo "`date` root.sh other node" >> $log_dir/main.log
 	exeotherrootsh
 	
 	echo "`date` asmca" >> $log_dir/main.log
-	exessh node 1 "sh $0 exeasmca"
+	exeasmca
 	
 	echo "`date` install oracle software" >> $log_dir/main.log
 	installoraclesoftware
@@ -1310,24 +1291,6 @@ dsh()
 	pdsh -R ssh -w ^$WORK_DIR/$1.ip $2 $3 $4 $5 $6 $7 $8
 }
 
-setupallforclone(){
-
-  
-  #create hosts file
-  echo "127.0.0.1   localhost localhost.localdomain localhost4 localhost4.localdomain4 `hostname -s`" >/etc/hosts
-  echo "::1         localhost localhost.localdomain localhost6 localhost6.localdomain6" >> /etc/hosts
-  
-  NODECOUNT=0
-  SERVER_AND_NODE="$SERVER $NODELIST"
-  cat "" > ./hostlist 
-  for i in $SERVER_AND_NODE ;
-  do
-    echo `getnodename $NODECOUNT` >> ./hostlist
-    echo "$i `getnodename $NODECOUNT`" >> /etc/hosts
-    NODECOUNT=`expr $NODECOUNT + 1`
-  done  
-  
-}
 
 exessh()
 {
@@ -1441,14 +1404,37 @@ installoraclesoftware()
 
 }
 
-execonfigsh()
+localconfigsh()
 {
 	sudo -u grid $GRID_ORACLE_HOME/crs/config/config.sh -silent -responseFile /home/grid/grid.rsp &> /dev/null
 	local RET=$?
 	echo $RET
 }
 
+execonfigsh(){
+	local RETCODE=`exessh node 1 "sh $0 localconfigsh"`
+	RETCODE=`echo ${RETCODE} | cut -d = -f2`
+	RETCODE=`echo ${RETCODE} | sed -e 's/[^0-9]//g'`
+	if [ ${RETCODE} != "0" ] ; then
+		local TOPICARN=`gettopic $LAUNCHGROUP`
+		publishtopic $TOPICARN "config.sh failed" &> /dev/null
+		exit
+	fi
+}
+
 exeasmca()
+{
+	local RETCODE=`exessh node 1 "sh $0 localacmca"`
+	RETCODE=`echo ${RETCODE} | cut -d = -f2`
+	RETCODE=`echo ${RETCODE} | sed -e 's/[^0-9]//g'`
+	if [ ${RETCODE} != "0" ] ; then
+		local TOPICARN=`gettopic $LAUNCHGROUP`
+		publishtopic $TOPICARN "asmca failed" &> /dev/null
+		exit
+	fi
+}
+
+localasmca()
 {
 	sudo -u grid $GRID_ORACLE_HOME/cfgtoollogs/configToolAllCommands RESPONSE_FILE=/home/grid/asm.rsp &> /dev/null
 	local RET=$?
@@ -1590,10 +1576,12 @@ case "$1" in
   "installgridsoftware" ) installgridsoftware;;
   "installoraclesoftware" ) installoraclesoftware;;
   "execonfigsh" ) execonfigsh;;
+  "localconfigsh" ) localconfigsh;;
   "exe1strootsh" ) exe1strootsh;;
   "exeotherrootsh" ) exeotherrootsh;;
   "exedbca" ) exedbca;;
   "exeasmca" ) exeasmca;;
+  "localasmca" ) localasmca;;
   "getgridstatus" ) getgridstatus;;
   * ) echo "Ex \"sh -x $0 setupallforclone c1.xlarge 1 m3.medium 10 2400 0\" 2400 means memorytarget, 0 means wait 0 seconds when grid root.sh" ;;
 esac
