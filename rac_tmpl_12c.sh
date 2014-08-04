@@ -1184,18 +1184,19 @@ test(){
 	copyfile all oswbb*.tar
 	
 	#for storage
-  	dsh storage "sh $0 changesysstat;sh $0 changehostname;sh $0 createtgtd;reboot"
+	callpreinstallsetup storage
   	#for tinc
-  	dsh tinc "sh $0 changesysstat;sh $0 changehostname;sh $0 createtincconf;reboot"
+  	callpreinstallsetup tinc
   	waitreboot
   	
   	#for node
-  	dsh node "sh $0 changehostname;sh $0 createswap;sh $0 setupdns;sh $0 setdhcp;sh $0 createsshkey"
-  	dsh node "sh $0 mountoraclehome;sh $0 cleangridhome;sh $0 setupiscsi;sh $0 createtincconf"
-  	dsh node "sh $0 changesysstat;sh $0 creatersp;sh $0 createclonepl;reboot"
+	callpreinstallsetup node
 	waitreboot
 	
-	dsh all "sh $0 exeoswatcher"
+	#dsh all "sh $0 exeoswatcher"
+	exessh node 1 "sh $0 exeoswatcher"
+	exessh storage 1 "sh $0 exeoswatcher"
+	exessh tinc 1 "sh $0 exeoswatcher"
 	
 	echo "`date` install grid infrastructure" >> $log_dir/main.log
 	installgridsoftware
@@ -1227,6 +1228,47 @@ test(){
 	#end of this test
 	terminate
   
+}
+
+callpreinstallsetup(){
+	dsh $1 -u 900 "sh $0 localpreinstallsetup $1"
+	local RET=$?
+	if [ $RET != 0 ] ; then
+		dsh $1 -u 900 "sh $0 localpreinstallsetup $1"
+	fi
+	local RET=$?
+	if [ $RET != 0 ] ; then
+		TOPICARN=`gettopic $LAUNCHGROUP`
+		publishtopic $TOPICARN "callpreinstallsetup $1 not finished" &> /dev/null
+	fi
+}
+
+
+
+localpreinstallsetup(){
+	if [ $1 = "storage" ] ; then
+		changehostname
+		createtgtd
+		reboot
+	elif [ $1 = "tinc" ] ; then
+		changehostname
+		createtincconf
+		reboot
+	elif [ $1 = "node" ] ; then
+		changehostname
+  		createswap
+  		setupdns
+  		setdhcp
+  		createsshkey
+  		mountoraclehome
+  		cleangridhome
+  		setupiscsi
+  		createtincconf
+  		creatersp
+  		createclonepl
+  		reboot
+	fi
+
 }
 
 exedbca(){
@@ -1335,6 +1377,15 @@ getfile()
   done
 }
 
+#$1 RoleName $2 nodenumber $3 remotedir(getdir) $4 localdir
+getfilesingle()
+{
+	hostip=`getnodeip $1 $2`
+	localdir=$4/`getnodename $1 $2`$3
+	mkdir -p $localdir
+	scp $SCP_ARGS_APPEND -r root@$hostip:$3 $localdir
+}
+
 exeoswatcher(){
 	local myRole=`getmyrole`
 	rm -rf oswbb
@@ -1358,20 +1409,31 @@ exeoswatcher(){
 
 getlogs()
 {
-  getfile node /var/log/messages $1
-  getfile tinc /var/log/messages $1
-  getfile storage /var/log/messages $1
-  getfile node $GRID_ORACLE_HOME/log $1
-  getfile node $GRID_ORACLE_HOME/install/root* $1
-  getfile node $ORAINVENTORY/logs $1
-  getfile node /var/log/tinc.log $1
-  getfile tinc /var/log/tinc.log $1
+  #getfile node /var/log/messages $1
+  #getfile tinc /var/log/messages $1
+  #getfile storage /var/log/messages $1
+  #getfile node $GRID_ORACLE_HOME/log $1
+  #getfile node $GRID_ORACLE_HOME/install/root* $1
+  #getfile node $ORAINVENTORY/logs $1
+  #getfile node /var/log/tinc.log $1
+  #getfile tinc /var/log/tinc.log $1
   #getfile node /root/oswbb/archive $1
   #getfile node /root/oswbb/analysis $1
   #getfile tinc /root/oswbb/archive $1
   #getfile tinc /root/oswbb/analysis $1
   #getfile storage /root/oswbb/archive $1
   #getfile storage /root/oswbb/analysis $1
+  getfilesingle node 1 /var/log/messages $1
+  getfilesingle tinc 1 /var/log/messages $1
+  getfilesingle storage 1 /var/log/messages $1
+  getfilesingle node 1 $GRID_ORACLE_HOME/log $1
+  getfilesingle node 1 $GRID_ORACLE_HOME/install/root* $1
+  getfilesingle node 1 $ORAINVENTORY/logs $1
+  getfilesingle node 1 /var/log/tinc.log $1
+  getfilesingle tinc 1 /var/log/tinc.log $1
+  getfilesingle node 1 /root/oswbb/archive $1
+  getfilesingle tinc 1 /root/oswbb/archive $1
+  getfilesingle storage 1 /root/oswbb/archive $1
 }
 
 installgridsoftware()
@@ -1406,8 +1468,8 @@ installoraclesoftware()
 
 localconfigsh()
 {
-	sudo -u grid $GRID_ORACLE_HOME/crs/config/config.sh -silent -responseFile /home/grid/grid.rsp &> /dev/null
-	local RET=`cat  $ORAINVENTORY/logs/config*.logs | grep FATAL | wc- l`
+	sudo -u grid $GRID_ORACLE_HOME/crs/config/config.sh -silent -responseFile /home/grid/grid.rsp &> $WORK_DIR/configsh.log
+	local RET=`cat $WORK_DIR/configsh.log | grep FATAL | wc- l`
 	echo $RET
 }
 
@@ -1436,7 +1498,7 @@ exeasmca()
 
 localasmca()
 {
-	sudo -u grid $GRID_ORACLE_HOME/cfgtoollogs/configToolAllCommands RESPONSE_FILE=/home/grid/asm.rsp &> /dev/null
+	sudo -u grid $GRID_ORACLE_HOME/cfgtoollogs/configToolAllCommands RESPONSE_FILE=/home/grid/asm.rsp &> $WORK_DIR/asmca.log
 	local RET=$?
 	echo $RET
 }
@@ -1583,5 +1645,7 @@ case "$1" in
   "exeasmca" ) exeasmca;;
   "localasmca" ) localasmca;;
   "getgridstatus" ) getgridstatus;;
+  "callpreinstallsetup" ) callpreinstallsetup $2;;
+  "localpreinstallsetup" ) localpreinstallsetup $2;;
   * ) echo "Ex \"sh -x $0 setupallforclone c1.xlarge 1 m3.medium 10 2400 0\" 2400 means memorytarget, 0 means wait 0 seconds when grid root.sh" ;;
 esac
