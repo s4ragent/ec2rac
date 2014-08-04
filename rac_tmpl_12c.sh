@@ -1407,7 +1407,7 @@ installoraclesoftware()
 localconfigsh()
 {
 	sudo -u grid $GRID_ORACLE_HOME/crs/config/config.sh -silent -responseFile /home/grid/grid.rsp &> /dev/null
-	local RET=$?
+	local RET=`cat  $ORAINVENTORY/logs/config*.logs | grep FATAL | wc- l`
 	echo $RET
 }
 
