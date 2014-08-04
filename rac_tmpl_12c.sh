@@ -1469,7 +1469,7 @@ installoraclesoftware()
 localconfigsh()
 {
 	sudo -u grid $GRID_ORACLE_HOME/crs/config/config.sh -silent -responseFile /home/grid/grid.rsp &> $WORK_DIR/configsh.log
-	local RET=`cat $WORK_DIR/configsh.log | grep FATAL | wc- l`
+	local RET=`cat $WORK_DIR/configsh.log | grep FATAL | wc -l`
 	echo $RET
 }
 
