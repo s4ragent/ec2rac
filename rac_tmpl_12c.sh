@@ -1454,7 +1454,7 @@ exeotherrootsh()
 	  
 	LIST=`getnodelist node ip`
 	NODECOUNT=1
-	cat "" > $WORK_DIR/rootsh.list
+	echo "" > $WORK_DIR/rootsh.list
 	for i in $LIST ;
 	do
 	    echo `getnodename node $NODECOUNT` >> $WORK_DIR/rootsh.list
