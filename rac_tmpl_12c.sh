@@ -1333,6 +1333,26 @@ dsh()
 	pdsh -R ssh -w ^$WORK_DIR/$1.ip $2 $3 $4 $5 $6 $7 $8
 }
 
+#-g group ,-p parallel count ,-f foreground,-t timeout ,-c connection timeout,-r retry 
+dsh2()
+{
+	while getopts g:w: OPT
+        do
+                case $OPT in
+                        g) group=$OPTARG
+                                ;;
+                        f) parallel=$OPTARG
+                                ;;
+                        \?) echo ""
+                                ;;
+                esac
+        done    
+        shift $((OPTIND - 1))
+        echo $group
+        echo $parallel
+        echo $*
+
+}
 
 exessh()
 {
@@ -1534,9 +1554,9 @@ exerootsh()
   $GRID_ORACLE_HOME/root.sh -silent &> /dev/null
   RET=$?
   if [ $RET != 0 ] ; then
-  	TOPICARN=`gettopic $LAUNCHGROUP`
-	publishtopic $TOPICARN "root.sh `hostname -s` fail " &> /dev/null
-	#echo `hostname -s`
+  	#TOPICARN=`gettopic $LAUNCHGROUP`
+	#publishtopic $TOPICARN "root.sh `hostname -s` fail " &> /dev/null
+	echo `hostname -s`
   fi
 }
 
