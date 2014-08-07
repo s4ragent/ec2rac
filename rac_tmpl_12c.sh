@@ -1336,21 +1336,30 @@ dsh()
 #-g group ,-p parallel count ,-f foreground,-t timeout ,-c connection timeout,-r retry 
 dsh2()
 {
-	while getopts g:w: OPT
+	parallel=200
+	while getopts  g:x:t:c:r:m:p: OPT
         do
                 case $OPT in
                         g) group=$OPTARG
                                 ;;
-                        f) parallel=$OPTARG
+                        x) exnode=$OPTARG
                                 ;;
+                        p) parallel=$OPTARG
+                        	;;
+                        t) timeout=$OPTARG
+                        	;;
+                        c) connectiontimeout=$OPTARG
+                        	;;
+                        r) retry=$OPTARG
+                        	;;
+                        m) module=$OPTARG
+                        	;;
                         \?) echo ""
                                 ;;
                 esac
         done    
         shift $((OPTIND - 1))
-        echo $group
-        echo $parallel
-        echo $*
+
 
 }
 
