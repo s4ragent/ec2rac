@@ -351,43 +351,7 @@ installpackage ()
   cp /etc/xrdp/km-e0010411.ini /etc/xrdp/km-0411.ini
   cp /etc/xrdp/km-e0010411.ini /etc/xrdp/km-e0200411.ini 
   cp /etc/xrdp/km-e0010411.ini /etc/xrdp/km-e0210411.ini
-  curl -L https://bugzilla.redhat.com/attachment.cgi?id=483052 -o ./tinc.init
-  patch -p0 <<EOF
---- tinc.init.orig      2011-08-18 17:02:44.000000000 -0700
-+++ tinc.init   2011-08-18 17:02:59.000000000 -0700
-@@ -43,12 +43,9 @@
- #############################################################################
- # configuration & sanity checks
- 
--#TINCD=/usr/sbin/tincd
--TINCD=/usr/local/sbin/tincd
--#TCONF=/etc/tinc
--TCONF=/usr/local/etc/tinc
--#TPIDS=/var/run
--TPIDS=/usr/local/var/run
-+TINCD=/usr/sbin/tincd
-+TCONF=/etc/tinc
-+TPIDS=/var/run
- #DEBUG=-dddd
- #DEBUG=
- #DEBUG=--debug=5
-@@ -215,6 +212,15 @@
-     # start tincd
-     $TINCD $DETACH $DEBUG --net="$1" $LOGFILE || \
-        { MSG="could not start daemon for network $1"; return 3; }
-+    
-+    CFG="$TCONF/$1/tinc.conf"
-+    DEV="/dev/$(grep -i -e '^[[:space:]]*Interface' $CFG | sed 's/[[:space:]]//g; s/^.*=//g')"
-+
-+    if [ -z "$DEV" ]; then
-+       sleep 1
-+       $TINCD $DETACH $DEBUG --net="$1" $LOGFILE || \
-+       { MSG="could not start daemon for network $1"; return 3; }
-+    fi
- 
-     # setup custom static routes
-     #/etc/sysconfig/network-scripts/ifup-routes $TAP
-EOF
+  curl -L https://raw.githubusercontent.com/s4ragent/ec2rac/master/tinc.init -o ./tinc.init
   install -o root -g root -m 755 tinc.init /etc/init.d/tinc
   rm tinc.init
   rm km-e0010411.ini
