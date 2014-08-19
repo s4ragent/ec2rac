@@ -799,10 +799,10 @@ createtincconf()
 	chkconfig tinc on
 	/etc/init.d/tinc start
 
-	count=`grep checktinc /etc/rc.d/rc.local | wc -l`
-	if [ $count = 0 ] ; then
-		echo "sh `pwd`/$0 checktinc" >> /etc/rc.d/rc.local
-	fi
+	#count=`grep checktinc /etc/rc.d/rc.local | wc -l`
+	#if [ $count = 0 ] ; then
+	#	echo "sh `pwd`/$0 checktinc" >> /etc/rc.d/rc.local
+	#fi
 
 }
 
