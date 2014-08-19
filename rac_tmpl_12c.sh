@@ -1598,6 +1598,10 @@ cat >/etc/cron.d/sysstat <<EOF
 53 23 * * * root /usr/lib64/sa/sa2 -A
 EOF
 }
+date()
+{
+	date
+}
 
 case "$1" in
   "changesysstat" ) shift;changesysstat;;
@@ -1665,5 +1669,6 @@ case "$1" in
   "callpreinstallsetup" ) shift;callpreinstallsetup $*;;
   "localpreinstallsetup" ) shift;localpreinstallsetup $*;;
   "dsh2" ) shift;dsh2 $*;;
+  "date" ) shift;date $*;;
   * ) echo "Ex \"sh -x $0 setupallforclone c1.xlarge 1 m3.medium 10 2400 0\" 2400 means memorytarget, 0 means wait 0 seconds when grid root.sh" ;;
 esac
