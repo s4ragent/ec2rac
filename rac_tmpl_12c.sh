@@ -1313,12 +1313,12 @@ dsh()
 	pdsh -R ssh -w ^$WORK_DIR/$1.ip $2 $3 $4 $5 $6 $7 $8
 }
 
-#-g group ,-p parallel count ,-f foreground,-t timeout ,-c connection timeout,-r retry 
+#-g group ,-p parallel count ,-f foreground,-t timeout ,-r retry 
 dsh2()
 {
 	local parallel=200
 	local cmd=""
-	while getopts  g:x:t:c:r:m:p: OPT
+	while getopts  g:x:t:r:m:p: OPT
         do
                 case $OPT in
                         g) group=$OPTARG
@@ -1328,8 +1328,6 @@ dsh2()
                         p) parallel=$OPTARG
                         	;;
                         t) timeout=$OPTARG
-                        	;;
-                        c) connectiontimeout=$OPTARG
                         	;;
                         r) retry=$OPTARG
                         	;;
@@ -1344,13 +1342,19 @@ dsh2()
 		cmd=$*
 	fi
 	
+	local cmdcount=0
 	local LIST=`getnodelist $group ip`
 	for hostip in $LIST ;
 	do
-		if [ "$hostip" != "exip" ] ; then
+		while [ $cmdcount -lt $parallel ]
+		do
+			cmdcount=`ps aux | grep "$cmd" | grep -v grep | wc -l`
+			sleep 10
+		done
+		
+		if [ "$hostip" != "$exip" ] ; then
 			ssh -f $SSH_ARGS_APPEND root@${hostip} $cmd
 		fi
-		
 	done
 
 }
@@ -1602,6 +1606,8 @@ date2()
 {
 	date
 }
+
+
 
 case "$1" in
   "changesysstat" ) shift;changesysstat;;
