@@ -358,7 +358,7 @@ installpackage ()
 @@ -43,12 +43,9 @@
  #############################################################################
  # configuration & sanity checks
-
+ 
 -#TINCD=/usr/sbin/tincd
 -TINCD=/usr/local/sbin/tincd
 -#TCONF=/etc/tinc
@@ -371,6 +371,22 @@ installpackage ()
  #DEBUG=-dddd
  #DEBUG=
  #DEBUG=--debug=5
+@@ -215,6 +212,15 @@
+     # start tincd
+     $TINCD $DETACH $DEBUG --net="$1" $LOGFILE || \
+        { MSG="could not start daemon for network $1"; return 3; }
++    
++    CFG="$TCONF/$1/tinc.conf"
++    DEV="/dev/$(grep -i -e '^[[:space:]]*Interface' $CFG | sed 's/[[:space:]]//g; s/^.*=//g')"
++
++    if [ -z "$DEV" ]; then
++       sleep 1
++       $TINCD $DETACH $DEBUG --net="$1" $LOGFILE || \
++       { MSG="could not start daemon for network $1"; return 3; }
++    fi
+ 
+     # setup custom static routes
+     #/etc/sysconfig/network-scripts/ifup-routes $TAP
 EOF
   install -o root -g root -m 755 tinc.init /etc/init.d/tinc
   rm tinc.init
