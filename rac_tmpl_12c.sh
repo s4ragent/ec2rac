@@ -13,8 +13,8 @@ WORK_DIR="/root/work"
 #SWAP_SIZE=8
 #RoleName,InstanceType,Instance-count,Price,amiid,device:size:snap-id,device:size:snap-id.....
 Roles=(
-"node m3.large 40 0.05 $PackageAmiId $HOME_DEVICE,$SWAP_DEVICE,$ORACLE_HOME_DEVICE"
-"tinc c3.large 2 0.05 $PackageAmiId $HOME_DEVICE"
+"node m3.large 2 0.05 $PackageAmiId $HOME_DEVICE,$SWAP_DEVICE,$ORACLE_HOME_DEVICE"
+"tinc c3.large 1 0.05 $PackageAmiId $HOME_DEVICE"
 "storage m1.large 1 0.05 $PackageAmiId $HOME_DEVICE,$STORAGE_DEVICE"
 )
 
@@ -1316,13 +1316,14 @@ dsh()
 #-g group ,-p parallel count ,-f foreground,-t timeout ,-c connection timeout,-r retry 
 dsh2()
 {
-	parallel=200
+	local parallel=200
+	local cmd=""
 	while getopts  g:x:t:c:r:m:p: OPT
         do
                 case $OPT in
                         g) group=$OPTARG
                                 ;;
-                        x) exnode=$OPTARG
+                        x) exnode=$OPTARG;exip=`getnodeip $group $exnode`
                                 ;;
                         p) parallel=$OPTARG
                         	;;
@@ -1332,14 +1333,25 @@ dsh2()
                         	;;
                         r) retry=$OPTARG
                         	;;
-                        m) module=$OPTARG
+                        m) module=$OPTARG;cmd="sh $0 $module"
                         	;;
                         \?) echo ""
                                 ;;
                 esac
         done    
         shift $((OPTIND - 1))
-
+	if [ "$cmd" = "" ] ; then
+		cmd=$*
+	fi
+	
+	local LIST=`getnodelist $group ip`
+	for hostip in $LIST ;
+	do
+		if [ "$hostip" != "exip" ] ; then
+			ssh -f $SSH_ARGS_APPEND root@${hostip} $cmd
+		fi
+		
+	done
 
 }
 
