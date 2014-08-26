@@ -501,13 +501,13 @@ addspotinstances()
 	        	DeviceJson=`createdevicejson ${Role}`
 
         		if [ "$DeviceJson" != "" ]; then
-				if [$PLACEMENT = "true" ];  then
+				if [ "$PLACEMENT" = "true" ];  then
         				Json={\"Placement\":{\"AvailabilityZone\":\"${Az}\",\"GroupName\":\"${LAUNCHGROUP}\"},\"ImageId\":\"${PARAMS[4]}\",\"KeyName\":\"${KEY_NAME}\",\"InstanceType\":\"${PARAMS[1]}\",\"BlockDeviceMappings\":$DeviceJson,\"SubnetId\":\"${SubnetId}\",\"SecurityGroupIds\":[\"${SgId}\"]}
         			else
      					Json={\"ImageId\":\"${PARAMS[4]}\",\"KeyName\":\"${KEY_NAME}\",\"InstanceType\":\"${PARAMS[1]}\",\"BlockDeviceMappings\":$DeviceJson,\"SubnetId\":\"${SubnetId}\",\"SecurityGroupIds\":[\"${SgId}\"]}
         			fi
         		else
- 				if [$PLACEMENT = "true" ];  then
+ 				if [ "$PLACEMENT" = "true" ];  then
 	        			Json={\"Placement\":{\"AvailabilityZone\":\"${Az}\",\"GroupName\":\"${LAUNCHGROUP}\"},\"ImageId\":\"${PARAMS[4]}\",\"KeyName\":\"${KEY_NAME}\",\"InstanceType\":\"${PARAMS[1]}\",\"SubnetId\":\"${SubnetId}\",\"SecurityGroupIds\":[\"${SgId}\"]}
         			else
  	        			Json={\"ImageId\":\"${PARAMS[4]}\",\"KeyName\":\"${KEY_NAME}\",\"InstanceType\":\"${PARAMS[1]}\",\"SubnetId\":\"${SubnetId}\",\"SecurityGroupIds\":[\"${SgId}\"]}
@@ -1223,6 +1223,30 @@ test(){
   
 }
 
+testiperf(){
+	requestspotinstances
+	pretincconf
+	copyfile all work
+	copyfile all $0
+	copyfile all oswbb*.tar
+	
+	#for storage
+	callpreinstallsetup storage
+  	#for tinc
+  	callpreinstallsetup tinc
+  	waitreboot
+  	
+  	#for node
+	callpreinstallsetup node
+	waitreboot
+	
+	exeiperf
+	
+	#end of this test
+	terminate
+  
+}
+
 callpreinstallsetup(){
 	dsh $1 -u 900 "sh $0 localpreinstallsetup $1"
 	local RET=$?
@@ -1737,5 +1761,6 @@ case "$1" in
   "dsh2" ) shift;dsh2 $*;;
   "date2" ) shift;date2 $*;;
   "exeiperf" ) exeiperf;;
+  "testiperf" ) testiperf;;
   * ) echo "Ex \"sh -x $0 setupallforclone c1.xlarge 1 m3.medium 10 2400 0\" 2400 means memorytarget, 0 means wait 0 seconds when grid root.sh" ;;
 esac
