@@ -13,9 +13,9 @@ WORK_DIR="/root/work"
 #SWAP_SIZE=8
 #RoleName,InstanceType,Instance-count,Price,amiid,device:size:snap-id,device:size:snap-id.....
 Roles=(
-"node m3.large 2 0.05 $PackageAmiId $HOME_DEVICE,$SWAP_DEVICE,$ORACLE_HOME_DEVICE"
-"tinc c3.large 1 0.05 $PackageAmiId $HOME_DEVICE"
-"storage m1.large 1 0.05 $PackageAmiId $HOME_DEVICE,$STORAGE_DEVICE"
+"node m3.medium 2 0.05 $PackageAmiId $HOME_DEVICE,$SWAP_DEVICE,$ORACLE_HOME_DEVICE"
+"tinc m3.medium 1 0.05 $PackageAmiId $HOME_DEVICE"
+"storage m3.medium 1 0.05 $PackageAmiId $HOME_DEVICE,$STORAGE_DEVICE"
 )
 
 PARALLEL=5
@@ -69,6 +69,7 @@ export PDSH_SSH_ARGS_APPEND="$SSH_ARGS_APPEND"
 mac=`curl http://169.254.169.254/latest/meta-data/network/interfaces/macs/ -s`
 VpcId=`curl http://169.254.169.254/latest/meta-data/network/interfaces/macs/$mac/vpc-id -s`
 SubnetId=`curl http://169.254.169.254/latest/meta-data/network/interfaces/macs/$mac/subnet-id -s`
+Az=`curl http://169.254.169.254/latest/meta-data/placement/availability-zone -s`
 Region=`curl http://169.254.169.254/latest/meta-data/placement/availability-zone -s | perl -pe chop`
 MyInstanceId=`curl -s http://169.254.169.254/latest/meta-data/instance-id`
 MyIp=`ifconfig eth0 | grep 'inet addr' | awk -F '[: ]' '{print $13}'`
@@ -436,6 +437,9 @@ createsecuritygroup(){
 
 
 requestspotinstances(){
+	
+	aws ec2 create-placement-group --region $Region  --group-name ${LAUNCHGROUP}
+	
 	for Role in "${Roles[@]}"
 	do
         	SgId=`createsecuritygroup ${Role}`
@@ -496,10 +500,12 @@ addspotinstances()
 	        	DeviceJson=`createdevicejson ${Role}`
 
         		if [ "$DeviceJson" != "" ]; then
-        			Json={\"ImageId\":\"${PARAMS[4]}\",\"KeyName\":\"${KEY_NAME}\",\"InstanceType\":\"${PARAMS[1]}\",\"BlockDeviceMappings\":$DeviceJson,\"SubnetId\":\"${SubnetId}\",\"SecurityGroupIds\":[\"${SgId}\"]}
+        			Json={\"Placement\":{\"AvailabilityZone\":\"${Az}\",\"GroupName\":\"${LAUNCHGROUP}\"},\"ImageId\":\"${PARAMS[4]}\",\"KeyName\":\"${KEY_NAME}\",\"InstanceType\":\"${PARAMS[1]}\",\"BlockDeviceMappings\":$DeviceJson,\"SubnetId\":\"${SubnetId}\",\"SecurityGroupIds\":[\"${SgId}\"]}
         		else
-        			Json={\"ImageId\":\"${PARAMS[4]}\",\"KeyName\":\"${KEY_NAME}\",\"InstanceType\":\"${PARAMS[1]}\",\"SubnetId\":\"${SubnetId}\",\"SecurityGroupIds\":[\"${SgId}\"]}
+        			Json={\"Placement\":{\"AvailabilityZone\":\"${Az}\",\"GroupName\":\"${LAUNCHGROUP}\"},\"ImageId\":\"${PARAMS[4]}\",\"KeyName\":\"${KEY_NAME}\",\"InstanceType\":\"${PARAMS[1]}\",\"SubnetId\":\"${SubnetId}\",\"SecurityGroupIds\":[\"${SgId}\"]}
         		fi
+        
+          
         
         		aws ec2 request-spot-instances --spot-price ${PARAMS[3]} --region $Region --launch-group $LAUNCHGROUP --launch-specification $Json --instance-count ${2} 
         	fi
