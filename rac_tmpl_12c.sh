@@ -1411,6 +1411,12 @@ exessh()
 	ssh $SSH_ARGS_APPEND root@${hostip} $3 $4 $5 $6 $7 $8 $9
 }
 
+exesshf()
+{
+	hostip=`getnodeip $1 $2`
+	ssh $SSH_ARGS_APPEND root@${hostip} -f $3 $4 $5 $6 $7 $8 $9
+}
+
 catrootsh()
 {
   exessh $1 $2 "ls $GRID_ORACLE_HOME/install/root* | sort -r | head -n 1 | xargs cat"
@@ -1628,7 +1634,7 @@ gettopic()
 
 exeiperf()
 {
-	exessh node 1 "nohup iperf -s"
+	
 	exessh node 2 "iperf -c `getnodeip node 1`"
 	exessh node 2 "iperf -c `getip 0 real 1`"
 }
@@ -1697,6 +1703,7 @@ case "$1" in
   "createswap" ) shift;createswap $*;;
   "setupiscsi" ) shift;setupiscsi $*;;
   "exessh" ) shift;exessh $*;;
+  "exesshf" ) shift;exesshf $*;;
   "catrootsh" ) shift;catrootsh $*;;
   "updatescript" ) shift;updatescript $*;;
   "checktinc" ) shift;checktinc $*;;
