@@ -1316,48 +1316,81 @@ dsh()
 #-g group ,-p parallel count ,-f foreground,-t timeout ,-r retry 
 dsh2()
 {
-	local parallel=200
-	local cmd=""
-	while getopts  g:x:t:r:m:p: OPT
+        local parallel=200
+        local connectiontimeout=120
+        local cmd=""
+        local user="root"
+        while getopts  g:x:t:r:m:p:c:l: OPT
         do
                 case $OPT in
                         g) group=$OPTARG
                                 ;;
+                        c) connectiontimeout=$OPTARG
+                                ;;
                         x) exnode=$OPTARG;exip=`getnodeip $group $exnode`
                                 ;;
                         p) parallel=$OPTARG
-                        	;;
+                                ;;
+                        l) user=$OPTARG
+                                ;;
                         t) timeout=$OPTARG
-                        	;;
+                                ;;
                         r) retry=$OPTARG
-                        	;;
+                                ;;
                         m) module=$OPTARG;cmd="sh $0 $module"
-                        	;;
+                                ;;
                         \?) echo ""
                                 ;;
                 esac
         done    
         shift $((OPTIND - 1))
-	if [ "$cmd" = "" ] ; then
-		cmd=$*
-	fi
-	
-	local cmdcount=0
-	local LIST=`getnodelist $group ip`
-	for hostip in $LIST ;
-	do
-		while [ $cmdcount -lt $parallel ]
-		do
-			cmdcount=`ps aux | grep "$cmd" | grep -v grep | wc -l`
-			sleep 10
-		done
-		
-		if [ "$hostip" != "$exip" ] ; then
-			ssh -f $SSH_ARGS_APPEND root@${hostip} $cmd
-		fi
-	done
+        if [ "$cmd" = "" ] ; then
+                cmd=$*
+        fi
+        
+        local cmdcount=0
+        local LIST=`getnodelist $group ip`
+        for hostip in $LIST ;
+        do
+                
+                killlongtimecmd $parallel $timeout $retry $connectiontimeout $user $cmd
+                
+                if [ "$hostip" != "$exip" ] ; then
+                        ssh -f -o ConnectTimeout=$connectiontimeout -l $user $SSH_ARGS_APPEND ${hostip} "$cmd"
+                fi
+        done
+        
+        killlongtimecmd 1 $timeout $retry $connectiontimeout $user $cmd
+}
+
+killlongtimecmd()
+{
+        
+        local parallel=$1
+        local timeout=$2        
+        local retry=$3
+        local connectiontimeout=$4
+        local user=$5
+        shift 5
+        local cmd=$*
+        
+        # http://d.hatena.ne.jp/ichikaway/20110603/1307074768           
+        cmdcount=`ps aux | grep "$cmd" | grep ssh | grep -v grep | wc -l`
+        while [ $cmdcount -ge $parallel ]
+        do
+                cmdcount=`ps aux | grep "$cmd" | grep ssh | grep -v grep | wc -l`
+                for p in `ps axo pid,etime,args | grep "$cmd" | grep ssh | grep -v grep | gawk '{print $1 "_" $2 "_" $16}'  | sed 's/://'`
+                do
+                        local pid=`echo $p | cut -f1 -d'_'`
+                        local timenum=`echo $p | cut -f2 -d'_'`
+                        local host=`echo $p | cut -f3 -d'_'`
+                        echo "$pid $timenum $host"
+                done
+                sleep 10
+        done
 
 }
+
 
 exessh()
 {
