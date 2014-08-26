@@ -3,7 +3,7 @@ export LANG=C
 
 LAUNCHGROUP="RACCLONE"
 RACSnapshotId="snap-99a6676b"
-PackageAmiId="ami-891551b9"
+PackageAmiId="ami-e7d195d7"
 SWAP_DEVICE="/dev/xvdb:ephemeral0"
 STORAGE_DEVICE="/dev/xvdb:ephemeral0"
 HOME_DEVICE="/dev/sda1:15"
