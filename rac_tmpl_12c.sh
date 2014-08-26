@@ -438,7 +438,7 @@ createsecuritygroup(){
 
 requestspotinstances(){
 	
-	aws ec2 create-placement-group --region $Region  --group-name ${LAUNCHGROUP}
+	aws ec2 create-placement-group --region $Region  --group-name ${LAUNCHGROUP} --strategy cluster
 	
 	for Role in "${Roles[@]}"
 	do
