@@ -1729,5 +1729,6 @@ case "$1" in
   "localpreinstallsetup" ) shift;localpreinstallsetup $*;;
   "dsh2" ) shift;dsh2 $*;;
   "date2" ) shift;date2 $*;;
+  "exeiperf" ) exeiperf;;
   * ) echo "Ex \"sh -x $0 setupallforclone c1.xlarge 1 m3.medium 10 2400 0\" 2400 means memorytarget, 0 means wait 0 seconds when grid root.sh" ;;
 esac
