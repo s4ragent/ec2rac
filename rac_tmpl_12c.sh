@@ -18,9 +18,10 @@ Roles=(
 "storage m3.medium 1 0.05 $PackageAmiId $HOME_DEVICE,$STORAGE_DEVICE"
 )
 
+PLACEMENT="true"
 PARALLEL=5
 MAXREQUESTWAIT=1200
-INSTALL_LANG=ja
+INSTALL_LANG="ja"
 TMPL_NAME="RACTMPL"
 KEY_NAME="oregon"
 KEY_PAIR="/root/work/${KEY_NAME}.pem"
@@ -500,12 +501,18 @@ addspotinstances()
 	        	DeviceJson=`createdevicejson ${Role}`
 
         		if [ "$DeviceJson" != "" ]; then
-        			Json={\"Placement\":{\"AvailabilityZone\":\"${Az}\",\"GroupName\":\"${LAUNCHGROUP}\"},\"ImageId\":\"${PARAMS[4]}\",\"KeyName\":\"${KEY_NAME}\",\"InstanceType\":\"${PARAMS[1]}\",\"BlockDeviceMappings\":$DeviceJson,\"SubnetId\":\"${SubnetId}\",\"SecurityGroupIds\":[\"${SgId}\"]}
+				if [$PLACEMENT = "true" ];  then
+        				Json={\"Placement\":{\"AvailabilityZone\":\"${Az}\",\"GroupName\":\"${LAUNCHGROUP}\"},\"ImageId\":\"${PARAMS[4]}\",\"KeyName\":\"${KEY_NAME}\",\"InstanceType\":\"${PARAMS[1]}\",\"BlockDeviceMappings\":$DeviceJson,\"SubnetId\":\"${SubnetId}\",\"SecurityGroupIds\":[\"${SgId}\"]}
+        			else
+     					Json={\"ImageId\":\"${PARAMS[4]}\",\"KeyName\":\"${KEY_NAME}\",\"InstanceType\":\"${PARAMS[1]}\",\"BlockDeviceMappings\":$DeviceJson,\"SubnetId\":\"${SubnetId}\",\"SecurityGroupIds\":[\"${SgId}\"]}
+        			fi
         		else
-        			Json={\"Placement\":{\"AvailabilityZone\":\"${Az}\",\"GroupName\":\"${LAUNCHGROUP}\"},\"ImageId\":\"${PARAMS[4]}\",\"KeyName\":\"${KEY_NAME}\",\"InstanceType\":\"${PARAMS[1]}\",\"SubnetId\":\"${SubnetId}\",\"SecurityGroupIds\":[\"${SgId}\"]}
+ 				if [$PLACEMENT = "true" ];  then
+	        			Json={\"Placement\":{\"AvailabilityZone\":\"${Az}\",\"GroupName\":\"${LAUNCHGROUP}\"},\"ImageId\":\"${PARAMS[4]}\",\"KeyName\":\"${KEY_NAME}\",\"InstanceType\":\"${PARAMS[1]}\",\"SubnetId\":\"${SubnetId}\",\"SecurityGroupIds\":[\"${SgId}\"]}
+        			else
+ 	        			Json={\"ImageId\":\"${PARAMS[4]}\",\"KeyName\":\"${KEY_NAME}\",\"InstanceType\":\"${PARAMS[1]}\",\"SubnetId\":\"${SubnetId}\",\"SecurityGroupIds\":[\"${SgId}\"]}
+        			fi
         		fi
-        
-          
         
         		aws ec2 request-spot-instances --spot-price ${PARAMS[3]} --region $Region --launch-group $LAUNCHGROUP --launch-specification $Json --instance-count ${2} 
         	fi
