@@ -1309,7 +1309,7 @@ EOF
 
 waitreboot()
 {
-	sleep 30
+	sleep 150
 	CMD="pdsh -R ssh -t 10 -w ^$WORK_DIR/all.ip -S date"
 	$CMD
 	RET=$?
