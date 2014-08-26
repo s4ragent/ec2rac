@@ -1626,6 +1626,13 @@ gettopic()
 		
 }
 
+exeiperf()
+{
+	exessh node 1 "iperf -s"
+	exessh node 2 "iperf -c `getnodeip node 1`"
+	exessh node 2 "iperf -c `getip 0 real 1`"
+}
+
 #$1 TOPICARN $2 messages
 publishtopic()
 {
