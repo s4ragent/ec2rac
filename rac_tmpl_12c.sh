@@ -74,7 +74,8 @@ SubnetId=`curl http://169.254.169.254/latest/meta-data/network/interfaces/macs/$
 Az=`curl http://169.254.169.254/latest/meta-data/placement/availability-zone -s`
 Region=`curl http://169.254.169.254/latest/meta-data/placement/availability-zone -s | perl -pe chop`
 MyInstanceId=`curl -s http://169.254.169.254/latest/meta-data/instance-id`
-MyIp=`ifconfig eth0 | grep 'inet addr' | awk -F '[: ]' '{print $13}'`
+MyIp=`curl http://169.254.169.254/latest/meta-data/network/interfaces/macs/$mac/local-ipv4s -s`
+#MyIp=`ifconfig eth0 | grep 'inet addr' | awk -F '[: ]' '{print $13}'`
 MyNetwork=`echo $MyIp | perl -ne ' if (/([\d]+\.[\d]+\.)/){ print $1}'`
 MyNetwork="${MyNetwork}0.0"
 
