@@ -1,0 +1,90 @@
+#!/bin/sh
+LANG=C
+RDO="https://repos.fedorapeople.org/repos/openstack/openstack-icehouse/rdo-release-icehouse-4.noarch.rpm"
+DefaultMTU=1500
+
+MyInstanceId=`curl -s http://169.254.169.254/latest/meta-data/instance-id`
+
+Az=`curl -s http://169.254.169.254/latest/meta-data/placement/availability-zone`
+Region=`curl -s http://169.254.169.254/latest/meta-data/placement/availability-zone | perl -pe chop`
+
+#get eth0 Mac addr
+#MyMAC=`ifconfig eth0 | grep 'Link encap' | awk '{print $5}'`
+MyMAC=`curl -s http://169.254.169.254/latest/meta-data/mac/`
+
+#MyIp=`ifconfig eth0 | grep 'inet addr' | awk -F '[: ]' '{print $13}'`
+#MyIp=`curl -s http://169.254.169.254/latest/meta-data/network/interfaces/macs/$MyMAC/local-ipv4s`
+MyIp=`curl -s http://169.254.169.254/latest/meta-data/local-ipv4`
+
+VpcId=`curl -s http://169.254.169.254/latest/meta-data/network/interfaces/macs/$MyMAC/vpc-id`
+SubnetId=`curl -s http://169.254.169.254/latest/meta-data/network/interfaces/macs/$MyMAC/subnet-id`
+
+#MyNETMASK=`ifconfig eth0 | grep 'inet addr' | awk -F '[: ]' '{print $19}'`
+#return xxx.xxx.xxx.xxx/xx
+MyCIDR=`curl -s http://169.254.169.254/latest/meta-data/network/interfaces/macs/$MyMAC/subnet-ipv4-cidr-block`
+#return NETMASK=XXX.XXX.XXX.XXXX
+MyNETMASKVal=`ipcalc --netmask $MyCIDR`
+MyNETMASK=${MyNETMASKVal##NETMASK=}
+#return NETWORK=xxx.xxx.xxx.xxx
+MyNETWORKVal=`ipcalc --network $MyCIDR`
+MyNETWORK=${MyNETWORKVal##NETWORK=}
+#return xxx.xxx.xxx.  +"1"
+MyGATEWAY=`echo $MyNETWORK |  perl -ne ' if (/([\d]+\.[\d]+\.[\d]+\.)/){ print $1."1"}'`
+
+ovsinstall(){
+#CentOS or Redhat
+yum -y install $RDO
+yum -y install openvswitch
+}
+
+ovsinit()
+{
+service openvswitch start
+chkconfig openvswitch on
+
+ovs-vsctl add-br br0
+
+cat > /etc/sysconfig/network-scripts/ifcfg-br0 <<EOF
+DEVICE=br0
+TYPE=Ethernet
+ONBOOT=yes
+BOOTPROTO=static
+IPADDR=$MyIp
+NETMASK=$MyNETMASK
+GATEWAY=$MyGATEWAY
+EOF
+
+echo "169.254.0.0/16 dev br0  scope link  metric 10" > /etc/sysconfig/network-scripts/route-br0
+
+sed -i 's/BOOTPROTO/#BOOTPROTO/'  /etc/sysconfig/network-scripts/ifcfg-eth0
+echo "MTU=$MTU" >> /etc/sysconfig/network-scripts/ifcfg-eth0
+
+ovs-vsctl set bridge br0 other-config:hwaddr=$MyMAC
+ovs-vsctl add-port br0 eth0 && service network restart
+}
+
+
+#$1 devicename $2 ipaddr $3 prefix $4 MACADDR
+ovscreateint(){
+cat > /etc/sysconfig/network-scripts/ifcfg-$1 <<EOF
+DEVICE=$1
+TYPE=Ethernet
+ONBOOT=yes
+BOOTPROTO=none
+IPADDR=$2
+PREFIX=$3
+MACADDR=$4
+EOF
+
+
+ovs-vsctl --if-exists del-port br0 $1
+ovs-vsctl add-port br1 $1 -- set Interface $1 type=internal
+ip addr add $2/$3 dev $1
+ip link set $1 address $4
+}
+
+case "$1" in
+"ovsinstall" ) shift;ovsinstall $*;;
+"ovsinit" ) shift;ovsinit $*;;
+"ovscreateint" ) shift;ovscreateint $*;;
+esac
