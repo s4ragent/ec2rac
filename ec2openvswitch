@@ -78,7 +78,7 @@ EOF
 
 
 ovs-vsctl --if-exists del-port br0 $1
-ovs-vsctl add-port br1 $1 -- set Interface $1 type=internal
+ovs-vsctl add-port br0 $1 -- set Interface $1 type=internal
 ip addr add $2/$3 dev $1
 ip link set $1 address $4
 }
