@@ -44,6 +44,7 @@ chkconfig openvswitch on
 
 ovs-vsctl add-br br0
 
+ovs-vsctl add-br br1
 cat > /etc/sysconfig/network-scripts/ifcfg-br0 <<EOF
 DEVICE=br0
 TYPE=Ethernet
@@ -56,6 +57,12 @@ EOF
 
 echo "169.254.0.0/16 dev br0  scope link  metric 10" > /etc/sysconfig/network-scripts/route-br0
 
+if [ "$1" == "" ] ; then
+    MTU=$DefaultMTU
+else
+   MTU=$1
+fi
+
 sed -i 's/BOOTPROTO/#BOOTPROTO/'  /etc/sysconfig/network-scripts/ifcfg-eth0
 echo "MTU=$MTU" >> /etc/sysconfig/network-scripts/ifcfg-eth0
 
@@ -64,8 +71,23 @@ ovs-vsctl add-port br0 eth0 && service network restart
 }
 
 
-#$1 devicename $2 ipaddr $3 prefix $4 MACADDR
+ovssetgre(){
+for i in $* ;
+do
+          if [ "$i" == "$MyIp" ] ; then
+            continue
+          else
+            grename="gre-`echo $i | sed -e 's/\\./\\-/g'`"
+            ovs-vsctl --if-exists del-port br1 $grename
+            ovs-vsctl add-port br1 $grename -- set interface $grename type=gre options:remote_ip=$i            
+          fi
+done
+}
+
+#$1 devicename $2 ipaddr $3 prefix $4 macaddr
 ovscreateint(){
+br0MTU=`ip link show br0 | grep mtu | awk '{print $5}'`
+intMTU=`expr $br0MTU - 38`
 cat > /etc/sysconfig/network-scripts/ifcfg-$1 <<EOF
 DEVICE=$1
 TYPE=Ethernet
@@ -76,15 +98,18 @@ PREFIX=$3
 MACADDR=$4
 EOF
 
+vlanid=`echo $1 | perl -ne ' if (/([\d]+)/){ print $1}'`
 
-ovs-vsctl --if-exists del-port br0 $1
-ovs-vsctl add-port br0 $1 -- set Interface $1 type=internal
+ovs-vsctl --if-exists del-port br1 $1
+ovs-vsctl add-port br1 $1 tag=$vlanid -- set Interface $1 type=internal
 ip addr add $2/$3 dev $1
-ip link set $1 address $4
+ip link set $1 address $4 mtu $intMTU
+
 }
 
 case "$1" in
 "ovsinstall" ) shift;ovsinstall $*;;
 "ovsinit" ) shift;ovsinit $*;;
+"ovssetgre" ) shift;ovssetgre $*;;
 "ovscreateint" ) shift;ovscreateint $*;;
 esac
