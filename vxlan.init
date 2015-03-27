@@ -3,11 +3,21 @@
 # chkconfig:    2345 40 80
 # version:      0.1
 # author:       knopp
-
+#
+#VCONF samble
+#vInterface = vxlan10
+#Id = 10
+#Ether = eth0
+#List = /etc/vxlan/all.ip
+#Address = 192.168.0.11/24
+##mode=bridge
+#mode=vxlan
 VCONF=/etc/vxlan
 LOG=/var/log/vxlan
 ipcmd=/sbin/ip
 bridgecmd=/sbin/bridge
+brctlcmd=/sbin/brctl
+perlcmd=/bin/perl
 # Check the configuration directory                                                                                      
 if [ ! -d $VCONF ]; then                                         
     echo "**vxlan: configuration directory ($VCONF) not found!" >>$LOG
@@ -22,6 +32,7 @@ getvxlanconf()
   rdev="$(grep -i -e '^[[:space:]]*Ether' $conf | sed 's/[[:space:]]//g; s/^.*=//g')"
   addr="$(grep -i -e '^[[:space:]]*Address' $conf | sed 's/[[:space:]]//g; s/^.*=//g')"
   iplist="$(grep -i -e '^[[:space:]]*List' $conf | sed 's/[[:space:]]//g; s/^.*=//g')"
+  mode="$(grep -i -e '^[[:space:]]*Mode' $conf | sed 's/[[:space:]]//g; s/^.*=//g')"
   #get myip 
   myip=`$ipcmd addr show $rdev | grep 'inet ' | awk -F '[/ ]' '{print $6}'` 
   #get broadcast addr 
@@ -35,9 +46,30 @@ init_vxlan(){
   [ -n "$addr" ] && \
   [ -n "$BROADCAST" ] && \
   { 
-    exe_log "$ipcmd link add $vdev type vxlan id $id dev $rdev" 
-    exe_log "$ipcmd addr add $addr broadcast $BROADCAST dev $vdev" 
-    exe_log "$ipcmd link set $vdev up" 
+    if [ $mode == "bridge"]; then
+        brdev=br${vdev}
+        exe_log "$brctlcmd addbr $brdev"
+
+        #create virtual mac addr ref by http://d.ballade.jp/2008/03/vif-and-mac-address.html
+        vmac=`$perlcmd -e  'print sprintf("00:16:3e:%2.2x:%2.2x:%2.2x", rand()*255, rand()*255, rand()*255)'`
+        exe_log "$ipcmd link set $brdev address $vmac"
+        
+        exe_log "$ipcmd addr add $addr broadcast $BROADCAST dev $brdev" 
+        exe_log "$ipcmd link add $vdev type vxlan id $id ttl 4dev $rdev"
+        vmac=`$perlcmd -e  'print sprintf("00:16:3e:%2.2x:%2.2x:%2.2x", rand()*255, rand()*255, rand()*255)'`
+        exe_log "$ipcmd link set $vdev address $vmac"
+        
+        exe_log "$brctlcmd addif $brdev $vdev"
+        exe_log "$ipcmd link set $brdev up"
+        exe_log "$ipcmd link set $vdev up"
+                                                            
+    else
+        exe_log "$ipcmd link add $vdev type vxlan id $id ttl 4dev $rdev"
+        vmac=`$perlcmd -e  'print sprintf("00:16:3e:%2.2x:%2.2x:%2.2x", rand()*255, rand()*255, rand()*255)'`
+        exe_log "$ipcmd link set $vdev address $vmac"
+        exe_log "$ipcmd addr add $addr broadcast $BROADCAST dev $vdev" 
+        exe_log "$ipcmd link set $vdev up"
+    fi
   }
 }
 
@@ -48,7 +80,12 @@ stop_vxlan(){
   [ -n "$addr" ] && \
   [ -n "$BROADCAST" ] && \
   { 
-    exe_log "$ipcmd link del $vdev" 
+      if [ $mode == "bridge"]; then
+        brdev=br${vdev}
+        exe_log "$ipcmd link set $brdev down"
+        exe_log "$brctlcmd delbr $brdev"
+      fi
+    exe_log "$ipcmd link del $vdev"
   }
 }
 
