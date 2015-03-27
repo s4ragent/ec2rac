@@ -10,8 +10,8 @@
 #Ether = eth0
 #List = /etc/vxlan/all.ip
 #Address = 192.168.0.11/24
-##mode=bridge
-#mode=vxlan
+##Mode=bridge
+#Mode=vxlan
 VCONF=/etc/vxlan
 LOG=/var/log/vxlan
 ipcmd=/sbin/ip
